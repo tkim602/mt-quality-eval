@@ -7,9 +7,9 @@ import time
 PAIR_DIR = Path("data_pairs_by_gpt")
 BATCH_SIZE = 64
 models = [
-    # "sentence-transformers/LaBSE",
-    # "nlpai-lab/KoE5",
-    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+    "sentence-transformers/LaBSE",
+    # # "nlpai-lab/KoE5",
+    # "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
 ]
 
 # def cos_sim(a, b):
@@ -67,6 +67,6 @@ for name in models:
     print(f"model: {name}\nmean_low: {mean_low}\nmean_mid: {mean_mid}\nmean_high: {mean_high}\nexecution_time: {execution_t}\n")
     del model, emb_en, emb_ko, scores_low, scores_mid, scores_high
     
-out_file = Path("scores11.json")
+out_file = Path("scores_LaBSE_only.json")
 with out_file.open("w", encoding="utf-8") as f:
     json.dump(results, f, ensure_ascii=False, indent=2)
