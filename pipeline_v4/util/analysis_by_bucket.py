@@ -1,28 +1,14 @@
-"""
-Cosine vs COMET 분석 – 버킷별 통계 + 0.1‑간격 히스토그램 + 스캐터 플롯
-────────────────────────────────────────────────────────────────
-
-• JSON_PATH : 필터·중복 제거된 JSON 파일 경로
-• 출력 :
-    1. 버킷별 평균·표준편차 표
-    2. 전체 Pearson 상관계수
-    3. 0.1 단위 히스토그램(빈도표)
-    4. Cosine‑COMET 스캐터 플롯
-"""
-
 import json, numpy as np, pandas as pd, matplotlib.pyplot as plt
 from pathlib import Path
 
-# ── 1. 데이터 로드 ──────────────────────────────────────────────────────────
-JSON_PATH = Path(r"c:\Users\tkim602_global\Desktop\mt_eval\pipeline_v4\out\filtered_not_noun_no_duplicate.json")
+JSON_PATH = Path(r"c:\Users\tkim602_global\Desktop\mt_eval\pipeline_v4\out\filtered_ko_total_no_duplicates.json")
 
 with JSON_PATH.open(encoding="utf-8") as f:
     data = json.load(f)
 
 df = pd.DataFrame(data)[["bucket", "cos", "comet"]]
 
-# ── 2‑1. 0.1‑간격 히스토그램 (빈도표) ────────────────────────────────────────
-bins   = np.arange(0.0, 1.01, 0.1)                           # [0.0, 0.1, …, 1.0]
+bins   = np.arange(0.0, 1.01, 0.1)                       
 labels = [f"{b:.1f}–{b+0.1:.1f}" for b in bins[:-1]]
 
 df["cos_bin"]   = pd.cut(df["cos"],   bins=bins, labels=labels,
@@ -45,7 +31,6 @@ hist = (
 print("\nCos / COMET frequency by 0.1‑wide bins")
 print(hist.to_string())
 
-# ── 2‑2. 버킷별 통계 ────────────────────────────────────────────────────────
 stats = (
     df.groupby("bucket")
       .agg(mean_cos   = ("cos",   "mean"),
@@ -61,11 +46,9 @@ stats = (
 print("\nBucket‑level statistics")
 print(stats.to_string(index=False))
 
-# ── 3. 전체 상관계수 ────────────────────────────────────────────────────────
 corr_all = df["cos"].corr(df["comet"])
 print(f"\nOverall Pearson correlation (cos, comet): {corr_all:.4f}")
 
-# ── 4. 스캐터 플롯 ─────────────────────────────────────────────────────────
 fig, ax = plt.subplots(figsize=(6, 6))
 
 buckets = sorted(df["bucket"].unique())
@@ -77,7 +60,6 @@ for i, b in enumerate(buckets):
                label=b, alpha=0.6, s=20,
                marker='o', edgecolors='none')
 
-# 버킷 평균 위치 표시
 ax.scatter(stats["mean_cos"], stats["mean_comet"],
            color='black', marker='X', s=100, zorder=5)
 

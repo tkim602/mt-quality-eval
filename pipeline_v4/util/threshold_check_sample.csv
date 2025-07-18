@@ -1,0 +1,112 @@
+﻿key,src,mt,cos,comet
+rule.sca.l.common.7121.name,Ubuntu-font-1.0 라이선스 컴포넌트 사용,Using the Ubuntu-font-1.0 licensed component,0.9372472167015071,0.8516324758529661
+rule.sast.c.vbnet.2743.example.0.safe,라인 1: Main() 서브 루틴을 삭제합니다.,Line 1: Delete the Main() subroutine.,0.9501045942306511,0.8828649520874021
+rule.sast.sw.objc.2970.example.0.safe,라인 7: 두 번째 인자값을 SSL_VERIFY_PEER 로 설정하도록 합니다.,Line 7: Set the second argument to SSL_VERIFY_PEER.,0.951955676078796,0.8709328174591061
+cschk.WEAK_XML_TRANSFORMERS_SECURITY.CSHARP.defect.use,.Net Framework {0} 버전에서 {1}를 사용합니다.,The .Net Framework version {0} uses {1}.,0.9396930932998651,0.860552787780761
+rule.saqt.q.abap.1756.option.ignore_table.name,무시할 테이블명,Table name to ignore,0.9048548340797421,0.8560070991516111
+jfsyn.BAD_PARAMETER_IN_GEOCODER_GET_FROM_LOCATION_LATITUDE.defect,Geocoder.getFromLocation의 latitude 인자에 허용 범위를 벗어난 값이 전달되었습니다.,The value passed to parameter latitude of Geocoder.getFromLocation is out of allowed range.,0.9086916446685791,0.863810658454895
+rule.sast.q.ccpp.94.example.0.dangerous,"라인 2: set_sleep_func() 함수를 정의했습니다.
+라인 4: sleep_FB13() 함수를 호출했습니다.","Line 2: set_sleep_func() function is defined.
+Line 4: sleep_FB13() function is called.",0.952485918998718,0.8533806800842281
+rule.sca.l.common.7066.description,"fwlw License(SPDX ID: fwlw) 라이선스에는 고지 의무, 제약 사항, 코드 공개 범위 정보가 없습니다. 라이선스 전문을 확인해야 합니다.","The fwlw License (SPDX ID: fwlw) license has no notice obligations, restrictions, or code disclosure coverage information. You should read the full license.",0.9142817258834831,0.853475928306579
+rule.sast.sw.py.3127.example.0.dangerous,라인 6-9: 오류 페이지를 선언하지 않아 위험합니다.,Line 6-9: This is dangerous because it doesn't declare an error page.,0.922315120697021,0.853437185287475
+rule.sast.sw.php.1665.example.0.dangerous,라인 6: 외부의 신뢰할 수 없는 입력이 XQuery 쿼리문 문자열을 생성하는데 사용됩니다.,Line 6: An untrusted external input is used to generate XQuery strings.,0.9500846862792961,0.853784441947937
+rule.sast.sw.cs.2797.option.candidate_class.description,비밀번호를 사용하는 클래스 이름을 작성합니다.,Write a class name using a password.,0.9051324129104611,0.8654538393020631
+horus.COMMON.changed_field_0,{0} 필드의 값이 변경됩니다.,The value of the {0} field is changed.,0.9389425516128541,0.874436378479003
+kotlinchk.WEAK_ENCRYPTION.INSUFFICIENT_KEY_SIZE.KOTLIN.defect,{0} 크기를 갖는 키는 RSA 알고리즘에 사용되기에는 충분하지 않습니다. 키의 크기는 {1} 이상이어야 합니다.,A key of size {0} is not sufficient to be used in the RSA algorithm. The key must be at least {1} in size.,0.9149527549743651,0.882573068141937
+crulechk.BAD_CALL.REQUIRED.LIB_CALL.msg,이 함수는 필요한 함수 입니다.,This function is a necessary function.,0.9113889932632441,0.8817332386970521
+jfsyn.BAD_PARAMETER_IN_INTENT_FILTER_SET_PRIORITY.defect,IntentFilter.setPriority의 priority 인자에 허용 범위를 벗어난 값이 전달되었습니다.,The value passed to parameter priority of IntentFilter.setPriority is out of allowed range.,0.9078683853149411,0.858211398124694
+jfsyn.LOG_SENSITIVE_INFORMATION.defect,민감한 정보가 로그에 출력됩니다.,Sensitive information is output to the log.,0.9165048003196711,0.8604573607444761
+0.http.local_file_include.invocation.result.s1.o0,"분석 수행 결과, HTTP 요청을 구성할 때 설정한 값이 {0} 메소드의 {1} 매개변수에 존재함을 발견했습니다.","As a result of the analysis, the value set in the HTTP request configuration has been found in {1} parameter of {0} method.",0.9018869996070861,0.8503704667091371
+jfsyn.USING_WEAK_CRYPTOGRAPHIC_ALGORITHM.sca.desc.default,취약한 암호화 알고리즘 대신 {0}을 사용합니다.,Use {0} instead of weak cryptographic algorithm.,0.9142603874206541,0.8639920949935911
+rule.sast.q.ccpp.228.name,안전하지 않은 멀티 바이트 문자열 함수 사용,Use of unsafe multi-byte string function,0.9247101545333861,0.8605828881263731
+0.http.private_address_disclosure.pattern.attack.s1.o1,"하지만, 개별 IP 주소가 노출이 되면 공격자는 웹 애플리케이션의 공격하는데 사용할 수 있습니다.","However, when an individual IP address is exposed, an attacker can use it to attack web applications.",0.9213651418685911,0.8945099711418151
+WM__WARNING__PRE__OPENAPI__UNEXPECTED__FAILURE__TITLE,사전 분석 도중 예상치 못한 OpenAPI 처리 실패,Unexpected OpenAPI processing failures during pre-analysis,0.949159145355224,0.850771427154541
+rule.dast.sw.common.4557.name,애플리케이션 오류,Application Error,0.916511714458465,0.8775813579559321
+rule.saqt.c.js.1697.example.0.safe,라인 1: 불필요한 괄호가 제거되었습니다.,Line 1: Remove the unnecessary parentheses.,0.9269773960113521,0.8547902703285211
+desc.BAD_NAME.FU.ANNOTATION,FU 어노테이션 명명 규칙 위반 체커는 FU 어노테이션의 명명 규칙이 정해진 형태를 만족하지 않는 경우를 검출합니다.,The FU annotation naming convention violation checker detects cases where the naming convention of an FU annotation does not satisfy the prescribed form.,0.922034978866577,0.851009547710418
+0.http.absolute_path_disclosure.match.result.s0.o0,HTTP 요청에 대한 HTTP 응답은 다음과 같습니다.,The HTTP response for the HTTP request is shown as follow.,0.91882836818695,0.8606489896774291
+rule.sast.sw.asp.1594.name,HTTP 응답 분할,HTTP Response Splitting,0.953293323516845,0.873320698738098
+rule.sast.sw.kt.2891.example.0.safe,라인 15: 쿠키의 만료 기간은 해당 기능에 맞춰 최소로 설정합니다.,Line 15: Set the cookie expiration period to the minimum based on the features.,0.9082288742065431,0.870130240917205
+0.http.dast.sw.common.6501.both.solution.s0.o1,"예를 들어, 다음과 같은 CORS 정규식을 작성할 수 있습니다.","For example, you can write a CORS regular expression like this.",0.9070043563842771,0.8687195777893061
+0.socket.jmx_rmi_enable.connect.attack.s0.o2 ,"임의의 외부 사용자로부터 서버의 JMX/RMI 서비스로의 접근이 가능한 경우, 서버의 중요한 정보가 노출될 수 있습니다.","If access from any external user to the server's JMX / RMI service is possible, sensitive information on the server can be exposed.",0.929392337799072,0.878251194953918
+rule.saqt.q.objc.1909.example.0.safe,라인 4: dispatch_once() 함수의 인자로 사용할 pred 변수를 static으로 선언합니다.,Line 4: Declare the pred variable as static to be used as the argument of dispatch_once() function.,0.9272159934043881,0.854349732398986
+rule.sast.sw.php.1666.example.0.safe,라인 3: 안전한 XPath 쿼리문만 사용합니다.,Line 3: Use secure XPath strings only.,0.9206376075744621,0.8580963611602781
+0.http.dast.sw.common.6525.absolute_action.result.s1.o0,해당 form 태그의 action 속성값이 다음과 같습니다: {0} 이는 해당 form 태그를 통해 발생한 요청이 HTTP 프로토콜을 사용함을 의미합니다.,"The action attribute of that form tag has the following value {0}, which means that the request made through that form tag uses the HTTP protocol.
+",0.9296360611915581,0.8876591324806211
+1.http.directory_indexing.index.solution.s4.o1,원하는 디렉토리에 index.php 파일을 생성하세요.,Generate an index.php file in a desired directory.,0.9410349726676941,0.883277952671051
+jfsyn.SECURITY.ARGUMENT.READ.BYTE.defect.data_type,read() 반환 값 데이터 타입이 {1} 입니다. {0}의 데이터 타입을 변경해야합니다.,read() return value data type is {1}. Data type for {0} needs to be changed.,0.960806012153625,0.853508830070495
+rule.saqt.q.cpp.1233.example.0.dangerous,라인 1: Test 클래스에서 ostream을 위한 operator<<() 메소드를 제공하지 않았습니다.,Line 1: Test class does not provide operator<<() method for ostream.,0.9367542266845701,0.8644034266471861
+rule.saqt.q.c.6482.example.0.dangerous,라인 10: strerror()에서 반환된 포인터가 const 한정자로 처리되지 않아 위험합니다.,"Line 10: The pointer returned from strerror() is not treated as a const qualifier, which is dangerous.",0.9037593603134151,0.862739741802215
+0.event.invalid_html.error.attack.s0.o0,분석 대상 페이지에 도달하기 위해 다음과 같은 과정을 수행했습니다.,"To reach an analysis target page, the following process has been performed.",0.9126821756362911,0.8647298812866211
+rule.sca.l.common.7047.description,"BSD-Inferno-Nettverk(SPDX ID: BSD-Inferno-Nettverk) 라이선스에는 고지 의무, 제약 사항, 코드 공개 범위 정보가 없습니다. 라이선스 전문을 확인해야 합니다.","The BSD-Inferno-Nettverk (SPDX ID: BSD-Inferno-Nettverk) license has no notice obligations, restrictions, or code disclosure coverage information. You should read the full license.",0.93256664276123,0.853334963321685
+rule.saqt.q.c.2062.example.0.dangerous,라인 6: 같은 항목 [2]를 두 번 초기화했습니다.,Line 6: An identical item [2] is initialized twice.,0.9366133213043211,0.861068844795227
+0.http.mixed_content.http.solution.s0.o0,혼합된 콘텐츠를 막기 위해서는 HTTP 콘텐츠를 사용하지 말아야 합니다.,"To prevent mixed content, do not use HTTP content.",0.9126001000404351,0.8830567598342891
+0.http.dast.sw.common.6509.match.solution.s0.o4,Apache 설정 (httpd.conf),Apache settings (httpd.conf),0.969653367996215,0.876086592674255
+rule.sast.q.ccpp.2003.example.0.dangerous,"라인 17: 길이가 260 미만인 배열을 PathAppend()의 첫 번째 인자로 전달할 버퍼로 사용했습니다.
+라인 20: 길이가 260 미만인 배열을 PathAppend()의 첫 번째 인자로 전달할 버퍼로 사용했습니다.","Line 17: An array with less than 260 length is used as a buffer to be passed to the first argument of PathAppend().
+Line 20: An array with less than 260 length is used as a buffer to be passed to the first argument of PathAppend().",0.924776017665863,0.8563233613967891
+0.event.deprecated_components_in_html5.attr.solution.s0.o0,{0} 요소의 {1} 속성을 제거하세요.,Remove the {1} attribute of {0} element.,0.965228676795959,0.857997834682464
+crulechk.BAD_TYPE.NOT_TYPEDEF.PTR.msg,typedef 없이 포인터 타입은 허용되지 않습니다.,The pointer type is not allowed without typedef.,0.9020528793334961,0.866758942604064
+rule.sast.sw.swift.2275.example.0.safe,라인 5: 별도의 메소드로 비밀번호를 가져옵니다.,Line 5: Import the password with a separate method.,0.924303948879241,0.8640940189361571
+rule.sca.l.common.7021.description,"OAR License(SPDX ID: OAR) 라이선스에는 고지 의무, 제약 사항, 코드 공개 범위 정보가 없습니다. 라이선스 전문을 확인해야 합니다.","The OAR License (SPDX ID: OAR) license has no notice obligations, restrictions, or code disclosure coverage information. You should read the full license.",0.9190100431442261,0.8547117710113521
+nw.filesize_is_zero_0,다음 파일 사이즈가 0 입니다. : {0},The following file size is zero: : {0},0.9303131103515621,0.874280631542205
+rule.saqt.q.ccpp.1165.example.0.safe,라인 7: difftime() 함수를 사용하여 시간 차이를 구하도록 합니다.,Line 7: Use difftime() function to evaluate time gap.,0.9230636358261101,0.870424270629882
+rule.saqt.q.java.7227.example.0.dangerous,라인 3: 정해진 boolean 변수 명명 규칙에 의거하여 파일 경로 내 모든 boolean 변수 이름은 소문자로만 시작되어야 합니다. 주어진 boolean 변수 이름은 해당 규칙을 위반했습니다.,"Line 3: According to the established boolean variable naming convention, all boolean variable names in the file path should only start with lowercase. The given boolean variable name violated this rule.",0.9092944860458371,0.875443279743194
+objchk.BAD_PASSWORD.HARDCODED.OBJC.defect,하드코드된 암호가 사용되었습니다.,A hardcoded password has been used.,0.9322069287300111,0.888629913330078
+jfsyn.EXPOSURE_OF_SYSTEM_DATA.sca.desc.default,민감한 시스템 데이터를 노출시키는 코드를 삭제합니다.,Remove code that exposes sensitive system data.,0.919174909591674,0.8878920078277581
+rule.sast.sw.py.3133.example.0.safe,라인 4: 디버그 옵션이 False로 설정되어 안전합니다.,Line 4: This is secure because debug option is set to False.,0.9044303894042961,0.8596385717391961
+0.http.remote_file_include.execute.solution.s0.o1,"만약 사용자 입력을 사용해야 한다면, 사용자 인증을 강화하고 화이트리스트를 만들어 인증된 파일만 포함 및 실행하거나, 블랙리스트를 만들어 인증되지 않은 파일을 제외해야 합니다.","If you need to use the user input, enforce user authentication and create whitelists to include and execute only authenticated files, or create blacklists to exclude unauthorized files.",0.9062690734863281,0.8715246915817261
+desc.TOO_LONG_COLUMN_SCSS_SASS,SCSS/SASS 에서 너무 긴 컬럼을 사용하지 않도록 합니다.,Avoid using columns that are too long in SCSS/SASS.,0.920472919940948,0.868804156780242
+rule.sast.sw.java.728.example.0.safe,라인 14: 비밀번호를 변경 불가능한 String 객체 생성에 전달하지 않습니다.,Line 14: Do not send the password to create the immutable String object.,0.9015117287635801,0.85410338640213
+rule.saqt.c.cpp.2307.example.0.safe,라인 7: test() 함수의 반환 값을 정수 자료형 c에 저장합니다.,Line 7: Store the return value of test() function in integer data type c.,0.9161431789398191,0.8838981389999391
+rule.sast.sw.ccpp.2832.example.0.dangerous,라인 16: 오염된 값을 위험한 방식으로 사용했습니다.,Line 16: The tainted values were used in a dangerous way.,0.9144270420074461,0.856480658054351
+desc.FORBIDDEN.NULL_IN_SECURITY_MANAGER,setSecurityManager 함수의 인자에 null을 사용해서는 안됩니다.,You must not use null as an argument to the setSecurityManager function.,0.9103597402572631,0.8807985186576841
+rule.sast.sw.vbnet.1728.example.0.dangerous,"라인 6: 외부 입력값이 XPath 쿼리문에 포함됩니다.
+라인 7: 검증 없이 외부 입력값이 사용됩니다.","Line 6: An external input is included in XPath query.
+Line 7: An external input is used without validation.",0.9308134913444511,0.8727917075157161
+rule.sast.sw.swift.2361.example.0.dangerous,라인 4: http 헤더의 값을 확인없이 사용했습니다.,Line 4: An HTTP header value is used without validation.,0.904265880584716,0.871475398540496
+rule.sast.q.unknown.983.example.0.safe,라인 1: 신용 카드 정보를 소스 코드내에 작성하지 않도록 합니다.,Line 1: Do not include credit card information in code.,0.910058140754699,0.8608150482177731
+rule.sast.sw.java.399.example.0.safe,라인 2: 상수 문자열 대신 변수를 사용합니다.,Line 2: Use a variable instead of constant string.,0.902717530727386,0.8723655939102171
+rule.sast.sw.ccpp.238.example.0.safe,"라인 4: 안전한 3-DES, AES 암호화 알고리즘을 사용합니다.","Line 4: Use the secure 3-DES, or AES algorithm.",0.9142549633979791,0.8524013757705681
+0.http.dast.sw.common.6506.match.solution.s1.o2,SQL Injection과 마찬가지로 XPATH 쿼리에 입력되는 모든 값에 대한 유효성 검사를 수행해야 합니다.,"As with SQL Injection, you must perform validation on all values entered into the XPATH query.",0.9339468479156491,0.8687633275985711
+rule.saqt.q.cs.1030.example.0.safe,라인 3: 사용되지 않는 지역 변수를 제거합니다.,Line 3: Remove the unused local variable.,0.9126931428909301,0.8824532032012941
+0.socket.slow_http_dos.response.attack.s0.o0,Slow HTTP DOS (혹은 Slowloris) 공격은 HTTP 서비스를 대상으로하는 DOS(Denial of Service) 공격의 일종입니다.,Slow HTTP DoS (or Slowloris) attack is a type of Denial of Service (DoS) attack that targets an HTTP service.,0.9520795345306391,0.8655155897140501
+rule.saqt.c.cpp.2304.example.0.dangerous,라인 2: 헤더 파일에 있는 네임스페이스가 이름이 없습니다.,Line 2: A namespace in a header file does not have a name.,0.939189076423645,0.8723980188369751
+jfsyn.AVOID_USING_NATIVE_CODE.defect,JNI가 사용되었습니다.,JNI was used.,0.9529317617416381,0.8512935638427731
+0.http.crlf_injection.cookie.attack.s0.o3,이러한 CRLF 취약점을 검출하기 위해 {0} 공격 문자열이 포함된 다음과 같은 HTTP 요청을 보냈습니다.,"To check the CRLF vulnerabilities, the following HTTP request with {0} attack string has been sent:",0.9227196574211121,0.8532439470291131
+rule.sast.sw.ccpp.232.example.0.safe,라인 7: 취약한 암호화 알고리즘 대신 RSA 암호화 알고리즘을 사용합니다.,Line 7: Use RSA encryption algorithm instead of the weak one.,0.9143368601799011,0.8592727780342101
+checker.dast.sw.common.5815.delay.message,"0부터 60,000 사이의 값을 입력하세요.","Enter a number between 0 and 60,000.",0.9389687776565551,0.8897434473037721
+crulechk.INVOKE_VIRTUAL_FUNCTION_FROM_CTOR_OR_DTOR.sca.desc.remove,가상 함수 호출을 제거합니다.,remove virtual function call.,0.9171067476272581,0.85096526145935
+rule.sast.sw.js.1558.name,파일 생성 시 외부 데이터 사용,Use of external data for file creation,0.9076549410820001,0.8734778761863701
+rule.sast.q.c.2050.example.0.dangerous,라인 6: fn_a() 함수를 재귀 호출했습니다.,Line 6: fn_a() is recursively called.,0.9049410223960871,0.855984210968017
+rule.sca.l.common.7049.name,BSD-Systemics 라이선스 컴포넌트 사용,Using BSD-Systemics Licensed Components,0.907106041908264,0.8527840971946711
+jfsyn.CROSS_SITE_REQUEST_FORGERY.defect.missing_authentication,파일 내 토큰 비교를 통한 인증 과정이 존재하지 않습니다.,There is no authentication process via token comparison in the file.,0.913532137870788,0.8650875687599181
+jfsyn.EMPTY_CLASS_BLOCK.defect,빈 클래스 블록이 검출되었습니다.,An empty class block has been found.,0.9054676294326781,0.8653347492218011
+phpchk.LEAK.ERROR_INFORMATION.PHP.defect,오류 정보가 오류 메시지를 통해 노출될 수 있습니다.,The error information can be exposed through error messages.,0.926578998565673,0.860014855861663
+desc.IframeMissingSrcAttribute,IFrame은 반드시 src 속성을 가져야 합니다.,IFrame must have src attribute.,0.9357554316520691,0.854943990707397
+rule.sast.sw.dart.6465.example.0.safe,라인 12 : RSA 키 길이가 2048 bits 이상으로 설정되어 안전합니다.,"Line 12: RSA key length is set to 2048 bits or more, which is secure.",0.945414543151855,0.875271558761596
+rule.sast.sw.vbnet.1723.example.0.dangerous,라인 2: DNS를 사용하여 사용자 정보를 획득합니다.,Line 2: User information is obtained by using DNS.,0.9474692344665521,0.8748015165328981
+rule.sast.sw.php.928.example.0.dangerous,라인 1: open_basedir이 설정되지 않았습니다.,Line 1: open_basedir is not set.,0.9684366583824151,0.864467859268188
+rule.saqt.q.ccpp.2763.example.0.safe,"라인 10: 소멸자 함수를 정의합니다. 함수 내에서 메모리 해제가 됩니다.
+라인 18: tss_create() 함수의 두 번째 인자에서 소멸자를 호출합니다. 할당된 메모리가 해제됩니다.","Line 10: Define a destructor function. A memory will be freed within a function.
+Line 18: The destructor is called by the second argument of tss_create(). A allocated memory is freed.",0.9021909832954401,0.8510061502456661
+rule.saqt.m.ccpp.7187.example.0.dangerous,라인 1: 이 함수의 파라미터 수가 지나치게 많습니다.,Line 1: Too many parameters in the function.,0.905879855155944,0.8745369911193841
+rule.saqt.q.ccpp.1204.example.0.safe,라인 1: longjmp() 함수를 사용하지 않도록 합니다. 되도록이면 점프 구문이 필요하지 않도록 제어 흐름을 구성합니다.,Line 1: Do not use the longjmp() function. Configure a control flow that does not require a jump statement.,0.9235563278198241,0.852468609809875
+rule.sast.sw.asp.1644.example.0.safe,"라인 19: 첨부 파일의 종류, 크기, 이름 등을 확인한 후 저장합니다.","Line 19: Save the attachment files after checking their format, size, name, etc.",0.91623705625534,0.8711472153663631
+rule.sast.sw.js.1966.example.0.dangerous,라인 1: 데이터셋에는 비밀번호와 같은 민감한 정보를 저장하고 있습니다.,Line 1: Sensitive data such as password is stored in a dataset.,0.917610049247741,0.8792724609375
+rule.sast.q.swift.2354.name,HTTP 프로토콜을 통한 전송,Transmission via HTTP Protocol,0.9179906845092771,0.8814932107925411
+rule.sca.l.common.7023.description,"Sun PPP License (2000)(SPDX ID: Sun-PPP-2000) 라이선스에는 고지 의무, 제약 사항, 코드 공개 범위 정보가 없습니다. 라이선스 전문을 확인해야 합니다.","The Sun PPP License (2000) (SPDX ID: Sun-PPP-2000) license has no notice obligations, restrictions, or code disclosure scope information. You should read the full license.",0.9393979907035821,0.8560441732406611
+rule.sast.sw.php.936.name,CakePHP에서의 정보 누출,Information leak on CakePHP,0.9128980636596681,0.8689388036727901
+rule.sast.q.cs.948.example.0.safe,라인 1: SqlClientPermission 생성자의 두 번째 인자를 사용하지 않도록 합니다.,Line 1: Do not use the second argument of the SqlClientPermission constructor.,0.930344521999359,0.8702501058578491
+rule.sast.q.rust.5885.example.0.dangerous,라인 4: 프로그램을 패닉 상태로 만들고 예기치 않게 종료시킬 수 있는 assert!() 매크로를 사용하여 위험합니다.,"Line 4: Dangerous use of the assert!() macro, which can cause the programme to panic and terminate unexpectedly.",0.918600797653198,0.8649289608001701
+rule.sast.sw.php.1669.example.0.safe,"라인 3: 안전한 $_SESSION 변수에 인증 정보를 저장하도록 합니다.
+라인 5: 안전한 $_SESSION 변수에 인증 정보를 저장하도록 합니다.","Line 3: Store the authentication to a secure $_SESSION variable.
+Line 5: Store the authentication to a secure $_SESSION variable.",0.9359404444694511,0.8572727441787721
+rule.saqt.q.java.7244.example.0.dangerous,라인 2: 입력 파라미터에 직접 접근하여 값을 변경하고 있습니다.,Line 2: Directly accessing and changing the value of an input parameter.,0.9097906351089471,0.8521037101745601
+0.http.path_traversal.invocation.attack.s0.o2,"예를 들어, 다음과 같이 URL에 있는 매개변수 값이 파일을 불러오는데 쓰이는 경우,","For example, if the parameter values ​​in the URL are used to load a file as follow,",0.9100484848022461,0.851428091526031
+rule.sast.sw.java.844.option.password_recovery_method.description,비밀번호 복구 루틴의 이름을 작성합니다.<br/>예시) .+..*recoverPassword,Write the name of the password recovery routine.<br/>example) .+..*recoverPassword,0.9298907518386841,0.8749597072601311
+rule.sast.q.ccpp.95.example.0.safe,라인 2: printf() 함수를 사용하여 메시지를 출력하지 않습니다.,Line 2: Do not print out the message through printf() function.,0.9551395177841181,0.8775136470794671
+0.http.dacg.mvn.result.s0.o1,"해당 라이브러리의 버전은 {0}, 라이브러리 파일의 해시값은 {1} 입니다.","The version of this library is {0}, and a hash value of its file is {1}.",0.915154874324798,0.863019227981567
+rule.sast.sw.java.1553.example.0.dangerous,라인 11: 두 개의 synchronized 블록에서 this 와 ba 가 같을 경우 deadlock 이 발생합니다.,Line 11: A deadlock occurs when this and ba is equal in two synchronized blocks.,0.9012844562530511,0.850493013858795
+crulechk.BAD_TYPE.NOT_ALLOWED.ARRAY.msg,배열 타입은 허용되지 않습니다.,The array type is not allowed.,0.9054130315780641,0.8506813645362851
