@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from tenacity import retry, wait_random_exponential, stop_after_attempt
 
-INPUT_PATH  = Path(r"c:\Users\tkim602_global\Desktop\mt_eval\pipeline_v4\out\threshold_analysis\sample_for_manual_tagging3.json")
-OUTPUT_PATH = Path("sample_tagged3.json")
+INPUT_PATH  = Path(r"c:\Users\tkim602_global\Desktop\mt_eval\pipeline_v4\out\threshold_analysis\sample_for_manual_tagging1.json")
+OUTPUT_PATH = Path("sample_tagged1.json")
 MODEL       = "gpt-4o"         
 TEMPERATURE = 0.6
 

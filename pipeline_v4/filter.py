@@ -4,18 +4,21 @@ from sentence_transformers import SentenceTransformer
 from comet import load_from_checkpoint, download_model
 from tqdm import tqdm
 import cfg
+import random
 
 
 def bucket(sentence: str) -> str:
-    n = len(sentence.split())
-    if n <= 4:
-        return "short"
-    elif n <= 8:
-        return "medium"
+    n = len(sentence.strip())
+    if n <= 9:
+        return "very_short"            
     elif n <= 15:
-        return "long"
+        return "short"            
+    elif n <= 45:
+        return "medium"               
+    elif n <= 100:
+        return "long"                   
     else:
-        return "very_long"
+        return "very_long"            
 
 
 def main() -> None:
@@ -24,10 +27,19 @@ def main() -> None:
 
     ko = json.load(open(cfg.KO_JSON, encoding="utf-8"))
     en = json.load(open(cfg.EN_JSON, encoding="utf-8"))
-    keys = list(ko.keys())[: cfg.LIMIT] if cfg.LIMIT else list(ko.keys())
+
+    all_keys = list(ko.keys())
+
+    if cfg.LIMIT:
+        random.seed(getattr(cfg, "seed", 42))
+        keys = random.sample(all_keys, min(cfg.LIMIT, len(all_keys)))
+    else:c
+
 
     src = [ko[k] for k in keys]
-    mt  = [en[k] for k in keys]
+
+    # mt  = [en[k] for k in keys]
+    mt = [en.get(k, "") for k in keys]
 
     e_src = labse.encode(src, batch_size=128, normalize_embeddings=True, show_progress_bar=True)
     e_mt  = labse.encode(mt , batch_size=128, normalize_embeddings=True, show_progress_bar=True)
@@ -54,7 +66,7 @@ def main() -> None:
         )
 
     Path(cfg.OUT_DIR).mkdir(exist_ok=True, parents=True)
-    (cfg.OUT_DIR / "filtered.json").write_bytes(
+    (cfg.OUT_DIR / "filtered_v2.json").write_bytes(
         orjson.dumps(records, option=orjson.OPT_INDENT_2)
     )
 

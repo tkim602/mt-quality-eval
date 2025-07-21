@@ -1,5 +1,3 @@
-# ape_tower2b_cpu.py  ── Automatic Post‑Editing with Tower‑Plus‑2B (CPU)
-
 from __future__ import annotations
 import asyncio, os
 from concurrent.futures import ThreadPoolExecutor
@@ -16,28 +14,27 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     GenerationConfig,
-)
+)    
+from comet import download_model, load_from_checkpoint
 
 import cfg
 
 load_dotenv()
-MODEL_NAME = "Unbabel/Tower-Plus-2B"
+MODEL_NAME = "Unbabel/Tower-Plus-72B"
 MAX_TOKENS = getattr(cfg, "APE_MAX_TOKENS", 96)
-WORKERS    = 1
 torch.set_num_threads(1)
 
-print(f"loading {MODEL_NAME} on CPU …")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, use_fast=True)
 
 try:
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
-        torch_dtype=torch.bfloat16,
+        torch_dtype = torch.bfloat16,
         low_cpu_mem_usage=True,
     )
     BF16 = True
 except Exception as e:
-    print(f"[WARN] BF16 load failed → FP32 ({e})")
+    print(e)
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
         torch_dtype=torch.float32,
@@ -72,34 +69,28 @@ PROMPTS: Dict[str, str] = {
     ),
 }
 
-_EXEC = ThreadPoolExecutor(max_workers=WORKERS)
+EXE = ThreadPoolExecutor(max_thread=1)
 
-def _generate(prompt: str) -> str:
+def generate(prompt: str) -> str:
     messages = [{"role": "user", "content": prompt}]
     input_ids = tokenizer.apply_chat_template(
         messages, tokenize=True, add_generation_prompt=True
     )
-    with torch.cpu.amp.autocast(dtype=torch.bfloat16) if BF16 else torch.no_grad():
-        out_ids = model.generate(
-            torch.as_tensor([input_ids]),
-            generation_config=gen_cfg,
-        )[0]
+    with torch.cpu.amp(dtype=torch.bfloat16) if BF16 else torch.no_grad():
+        out_ids = model.generate(torch.as_tensor([input_ids]), generation_config=gen_cfg,)[0]
     return tokenizer.decode(out_ids[len(input_ids):], skip_special_tokens=True).strip()
 
 async def edit_sentence(src: str, mt: str, mode: str) -> str:
     prompt = PROMPTS[mode] + f"\n\nSRC (ko): {src}\nMT  (en): {mt}"
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(_EXEC, _generate, prompt)
+    return await loop.run_in_executor(EXE, generate, prompt)
 
 _labse = SentenceTransformer(
     getattr(cfg, "COS_MODEL", "sentence-transformers/LaBSE")
 ).to("cpu")
 
 try:
-    from comet import download_model, load_from_checkpoint
-    _comet = load_from_checkpoint(
-        download_model(getattr(cfg, "COMET_CKPT", "Unbabel/wmt22-cometkiwi-da"))
-    )
+    _comet = load_from_checkpoint(download_model(getattr(cfg, "COMET_CKPT", "Unbabel/wmt22-cometkiwi-da")))
     _comet.eval()
     _has_comet = True
 except Exception:
@@ -121,7 +112,7 @@ def comet_batch(src: List[str], tgt: List[str]) -> List[float]:
     return [float(s) for s in preds["scores"]]
 
 async def main() -> None:
-    in_path  = cfg.OUT_DIR / "test_tower+2B.json"
+    in_path = cfg.OUT_DIR / "test_tower+2B.json"
     out_path = cfg.OUT_DIR / "ape_tower.json"
 
     items = orjson.loads(in_path.read_bytes())
@@ -143,16 +134,15 @@ async def main() -> None:
     for idx, cos_v, comet_v in zip(tqdm(targets_idx, desc="Merging metrics"),
                                    ape_cos, ape_comet):
         rec = items[idx]
-        rec["ape_cos"]     = float(cos_v)
-        rec["ape_comet"]   = float(comet_v)
-        rec["delta_cos"]   = rec["ape_cos"]   - rec.get("cos", float("nan"))
+        rec["ape_cos"] = float(cos_v)
+        rec["ape_comet"] = float(comet_v)
+        rec["delta_cos"] = rec["ape_cos"]   - rec.get("cos", float("nan"))
         rec["delta_comet"] = rec["ape_comet"] - rec.get("comet", float("nan"))
 
     ordered: List[dict] = []
     for rec in items:
         od = OrderedDict()
-        for k in ("key", "src", "mt", "ape",
-                  "ape_cos", "delta_cos", "ape_comet", "delta_comet"):
+        for k in ("key", "src", "mt",   "ape", "ape_cos", "delta_cos", "ape_comet", "delta_comet"):
             if k in rec:
                 od[k] = rec[k]
         for k, v in rec.items():
@@ -162,7 +152,7 @@ async def main() -> None:
 
     out_path.write_bytes(orjson.dumps(
         ordered, option=orjson.OPT_INDENT_2 | orjson.OPT_SORT_KEYS))
-    print(f"[INFO] saved → {out_path}")
+    print(f"done")
 
 if __name__ == "__main__":
     asyncio.run(main())

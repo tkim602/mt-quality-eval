@@ -2,7 +2,7 @@ import pandas as pd, numpy as np
 from pathlib import Path
 
 JSON     = Path(r"c:\Users\tkim602_global\Desktop\mt_eval\pipeline_v4\out\filtered_ko_total_no_duplicates.json")
-TOP_PCT  = 0.23 
+TOP_PCT  = 0.30 
 COUNTS   = {"AND":30, "OR":30, "FAIL":30}
 OUT_FILE = Path("sample_for_manual_tagging3.json")
 

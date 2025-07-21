@@ -22,40 +22,37 @@ load_dotenv()
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def _sys_prompt(n: int) -> str:
-    """Stricter 3‑axis scoring with explicit deduction and evidence rules."""
-    return (
-        "You are a senior localization QA specialist assessing "
-        "Korean→English UI strings in the cybersecurity / software domain.\n\n"
-        "INPUT – JSON array; each element: {idx, source, translation}.\n\n"
-        "TASKS\n"
-        "1. Score each item on three axes (0‑100 integers, 5‑point steps).\n"
-        "   • overall  – holistic quality (after deductions, equals min(adequacy, fluency)).\n"
-        "   • adequacy – correctness & completeness vs. source meaning.\n"
-        "   • fluency  – naturalness, grammar, target‑language conventions.\n\n"
-        "2. Deduct **from 100** per axis (examples) – accumulate; floor at 0.\n"
-        "───────────────────────────────────────────────────────────────\n"
-        "ADEQUACY  −25  wrong meaning / mistranslation\n"
-        "          −15  glossary / placeholder violation\n"
-        "          −10  missing nuance or key term\n"
-        "FLUENCY   −10  major grammar / tense / word order error\n"
-        "          −5   awkward phrasing, passive abuse, article misuse\n"
-        "          −2   minor typo / casing / punctuation\n"
-        "───────────────────────────────────────────────────────────────\n"
-        "3. overall = min(adequacy, fluency) rounded to multiple of 5.\n\n"
-        "4. Evidence & improvement rules\n"
-        "   • overall ≥ 95 → evidence may be 'perfect'.\n"
-        "   • 90 > overall ≥ 75 → evidence MUST briefly state main issue(s).\n"
-        "   • overall < 75 → evidence + improved English suggestion (one line).\n"
-        "   Never return 'ok' for overall < 90.\n\n"
-        "5. Mandatory checks (deduct per rule above)\n"
-        "   • All numerals, placeholders, identifiers unchanged.\n"
-        "   • Glossary adherence – every Korean term maps exactly to prescribed English.\n"
-        "   • UI fragments ≤ 3 words may omit verbs (no fluency penalty).\n\n"
-        "OUTPUT – A JSON array (length "
-        f"{n}) with {{idx:int, overall:int, adequacy:int, fluency:int, evidence:str}}.\n"
-        "If JSON fails, fall back to one plain‑text line per item: "
-        "idx,overall,adequacy,fluency,evidence."
-    )
+    return f"""You are a senior KO→EN rater for the quality of machine translation\n.
+    Your task is to assess the quality of the translation.\n
+
+### Score (0‑100, step 5)
+• adequacy – fidelity & completeness to the source  
+• fluency  – grammar, naturalness, English conventions  
+• overall  = min(adequacy, fluency)
+
+### Deductions (subtract from 100 / floor 0)
+**ACCURACY**
+-20 wrong meaning / full mistranslation  
+-10 key term or placeholder omitted  
+-5 nuance / secondary info missing  
+
+**FLUENCY**
+-15 major grammar / word‑order error  
+-5 awkward phrasing, article misuse, passive voice abuse  
+-5 casing / punctuation (typo always 0)  
+
+### Evidence rule
+overall ≥ 90 → evidence must return "perfect"  
+else          → evidence = issue description for post editing
+**Evidence** should identify the errors correctly for APE.
+
+### Output
+Return a JSON array of length {n}:  
+[{{"idx":int, "overall":int, "adequacy":int, "fluency":int, "evidence":str}}, …]
+
+If valid JSON cannot be produced, fall back to one plain‑text line per item:
+idx,overall,adequacy,fluency,evidence
+"""
 
 
 def _messages(batch: List[dict]) -> List[dict]:
@@ -139,7 +136,7 @@ async def _score(batch: List[dict]):
 def _decide(cos: float, comet: float, gemba: float, bucket: str):
     checks = [
         cos >= cfg.COS_THR[bucket],
-        comet >= cfg.COMET_THR,
+        comet >= cfg.COMET_THR[bucket],
         gemba >= cfg.GEMBA_PASS,
     ]
     keys = ("cosine", "comet", "gemba")
@@ -166,8 +163,8 @@ def _ordered(rec: dict, tag: str, passed: List[str], failed: List[str]) -> dict:
     }
 
 async def main():
-    raw_path: Path = cfg.OUT_DIR / "filtered.json"
-    out_path: Path = cfg.OUT_DIR / "gemba.json"
+    raw_path: Path = cfg.OUT_DIR / "filtered_v2.json"
+    out_path: Path = cfg.OUT_DIR / "gemba_v3.json"
 
     raw: List[dict] = orjson.loads(raw_path.read_bytes())
 
