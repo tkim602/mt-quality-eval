@@ -10,7 +10,7 @@ OUT_DIR.mkdir(exist_ok=True)
 KO_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\ko_checker_dedup.json"
 EN_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\en-US_checker.json"
 
-LIMIT = 200  
+LIMIT = 50  # Small test run with conservative thresholds
 SEED = None  
 
 LABSE_MODEL = "sentence-transformers/LaBSE"
@@ -49,19 +49,19 @@ TERMBASE = {
 }
 
 COS_THR = {
-    "very_short": 0.75,
-    "short": 0.75,
-    "medium": 0.75,
-    "long": 0.75,
-    "very_long": 0.75,
+    "very_short": 0.700,
+    "short": 0.720,
+    "medium": 0.730,
+    "long": 0.795,
+    "very_long": 0.750,
 }
 
 COMET_THR = {
-    "very_short": 0.75,
-    "short": 0.75,
-    "medium": 0.75,
-    "long": 0.75,
-    "very_long": 0.75,
+    "very_short": 0.700,
+    "short": 0.720,
+    "medium": 0.765,
+    "long": 0.805,
+    "very_long": 0.750,
 }
 
 GEMBA_PASS = 65
@@ -82,19 +82,19 @@ BUSINESS_RULES = {
 } 
 
 STRICT_COS_THR = {
-    "very_short": 0.75,
-    "short": 0.75,
-    "medium": 0.75,
-    "long": 0.75,
-    "very_long": 0.75,
+    "very_short": 0.700,
+    "short": 0.720,
+    "medium": 0.730,
+    "long": 0.795,
+    "very_long": 0.750,
 }
 
 STRICT_COMET_THR = {
-    "very_short": 0.75,
-    "short": 0.75,
-    "medium": 0.75,
-    "long": 0.75,
-    "very_long": 0.75,
+    "very_short": 0.700,
+    "short": 0.720,
+    "medium": 0.765,
+    "long": 0.805,
+    "very_long": 0.750,
 }
 
 ENABLE_CACHING = True

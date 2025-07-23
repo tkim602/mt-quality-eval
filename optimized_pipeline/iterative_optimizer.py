@@ -8,7 +8,7 @@ from threshold_optimizer import ThresholdOptimizer
 import cfg
 
 class IterativeOptimizer:
-    def __init__(self, max_iterations: int = 5, min_improvement: float = 0.5):
+    def __init__(self, max_iterations: int = 5, min_improvement: float = 0.1):  # Reduced from 0.5% to 0.1%
         self.max_iterations = max_iterations
         self.min_improvement = min_improvement  
         self.iteration_results = []

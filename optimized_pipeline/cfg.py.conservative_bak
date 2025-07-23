@@ -49,19 +49,19 @@ TERMBASE = {
 }
 
 COS_THR = {
-    "very_short": 0.75,
-    "short": 0.75,
-    "medium": 0.75,
-    "long": 0.75,
-    "very_long": 0.75,
+    "very_short": 0.65,
+    "short": 0.65,
+    "medium": 0.65,
+    "long": 0.745,
+    "very_long": 0.65,
 }
 
 COMET_THR = {
-    "very_short": 0.75,
-    "short": 0.75,
-    "medium": 0.75,
-    "long": 0.75,
-    "very_long": 0.75,
+    "very_short": 0.65,
+    "short": 0.65,
+    "medium": 0.715,
+    "long": 0.725,
+    "very_long": 0.65,
 }
 
 GEMBA_PASS = 65
@@ -82,19 +82,19 @@ BUSINESS_RULES = {
 } 
 
 STRICT_COS_THR = {
-    "very_short": 0.75,
-    "short": 0.75,
-    "medium": 0.75,
-    "long": 0.75,
-    "very_long": 0.75,
+    "very_short": 0.65,
+    "short": 0.65,
+    "medium": 0.65,
+    "long": 0.745,
+    "very_long": 0.65,
 }
 
 STRICT_COMET_THR = {
-    "very_short": 0.75,
-    "short": 0.75,
-    "medium": 0.75,
-    "long": 0.75,
-    "very_long": 0.75,
+    "very_short": 0.65,
+    "short": 0.65,
+    "medium": 0.715,
+    "long": 0.725,
+    "very_long": 0.65,
 }
 
 ENABLE_CACHING = True

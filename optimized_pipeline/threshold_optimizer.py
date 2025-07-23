@@ -82,8 +82,9 @@ class ThresholdOptimizer:
         if len(bucket_data) == 0:
             return self.current_thresholds['cos'][bucket], self.current_thresholds['comet'][bucket], 0.0
         
-        cos_range = np.arange(0.75, 0.95, 0.01)
-        comet_range = np.arange(0.75, 0.95, 0.01)
+        # Expanded search range: 0.65-0.95 with finer 0.005 steps for more thorough optimization
+        cos_range = np.arange(0.65, 0.95, 0.005)
+        comet_range = np.arange(0.65, 0.95, 0.005)
         
         best_f1 = 0
         best_cos = self.current_thresholds['cos'][bucket]
