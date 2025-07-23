@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Production Monitoring System for MT Quality Pipeline
-Provides real-time monitoring, alerting, and performance tracking
-"""
 
 import json
 import time
@@ -20,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class QualityMetrics:
-    """Quality metrics for monitoring"""
     timestamp: str
     pass_rate: float
     soft_pass_rate: float
@@ -28,38 +23,33 @@ class QualityMetrics:
     avg_confidence: float
     avg_processing_time: float
     error_rate: float
-    throughput: float  # items per second
+    throughput: float
 
 @dataclass
 class AlertConfig:
-    """Alert configuration"""
-    pass_rate_threshold: float = 0.25  # Alert if pass rate < 25%
-    confidence_threshold: float = 0.60  # Alert if avg confidence < 60%
-    processing_time_threshold: float = 15.0  # Alert if avg time > 15s
-    error_rate_threshold: float = 0.05  # Alert if error rate > 5%
-    throughput_threshold: float = 0.1  # Alert if throughput < 0.1 items/s
+    pass_rate_threshold: float = 0.25
+    confidence_threshold: float = 0.60
+    processing_time_threshold: float = 15.0
+    error_rate_threshold: float = 0.05
+    throughput_threshold: float = 0.1
 
 class QualityMonitor:
     def __init__(self, alert_config: AlertConfig = None, window_size: int = 100):
         self.alert_config = alert_config or AlertConfig()
         self.window_size = window_size
         
-        # Sliding windows for metrics
         self.recent_results = deque(maxlen=window_size)
         self.processing_times = deque(maxlen=window_size)
         self.error_count = deque(maxlen=window_size)
         self.timestamps = deque(maxlen=window_size)
         
-        # Alert state
         self.active_alerts = set()
         self.alert_history = []
         
-        # Performance tracking
         self.start_time = time.time()
         self.total_processed = 0
         
     def record_result(self, result: Dict[str, Any], processing_time: float, error: bool = False):
-        """Record a processing result for monitoring"""
         timestamp = datetime.now().isoformat()
         
         self.recent_results.append(result)
@@ -68,11 +58,9 @@ class QualityMonitor:
         self.timestamps.append(time.time())
         self.total_processed += 1
         
-        # Check for alerts
         self._check_alerts()
     
     def get_current_metrics(self) -> QualityMetrics:
-        """Get current quality metrics"""
         if not self.recent_results:
             return QualityMetrics(
                 timestamp=datetime.now().isoformat(),
@@ -80,7 +68,6 @@ class QualityMonitor:
                 avg_confidence=0, avg_processing_time=0, error_rate=0, throughput=0
             )
         
-        # Calculate rates
         total = len(self.recent_results)
         strict_passes = sum(1 for r in self.recent_results if r.get('tag') == 'strict_pass')
         soft_passes = sum(1 for r in self.recent_results if r.get('tag') == 'soft_pass')
@@ -111,22 +98,18 @@ class QualityMonitor:
         )
     
     def _check_alerts(self):
-        """Check if any alert conditions are met"""
-        if len(self.recent_results) < 10:  # Need minimum data for reliable alerts
+        if len(self.recent_results) < 10:
             return
         
         metrics = self.get_current_metrics()
         new_alerts = set()
         
-        # Check pass rate
         if metrics.pass_rate < self.alert_config.pass_rate_threshold:
             new_alerts.add("low_pass_rate")
         
-        # Check confidence
         if metrics.avg_confidence < self.alert_config.confidence_threshold:
             new_alerts.add("low_confidence")
         
-        # Check processing time
         if metrics.avg_processing_time > self.alert_config.processing_time_threshold:
             new_alerts.add("slow_processing")
         

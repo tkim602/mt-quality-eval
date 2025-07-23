@@ -1,6 +1,58 @@
-# Enhanced MT Evaluation Pipeline
+# Enhanced MT Evaluation Pipeline with Automatic Threshold Optimization
 
-This folder contains the **enhanced** machine translation evaluation pipeline with advanced quality controls, monitoring, and analysis capabilities. This is the optimized version that includes all the improvements from our development work.
+This folder contains the **enhanced** machine translation evaluation pipeline with advanced quality controls, monitoring, analysis capabilities, and **automatic threshold optimization**.
+
+## 🎯 **NEW: Automatic Threshold Optimization**
+
+The pipeline now includes sophisticated threshold optimization tools that can automatically find optimal COS and COMET thresholds for maximum F1 performance.
+
+### **Threshold Optimization Tools:**
+
+1. **`threshold_analysis.py`** - Quick performance analysis
+   ```bash
+   python threshold_analysis.py
+   ```
+   - Analyzes current threshold performance
+   - Shows F1 scores by bucket
+   - Compares with reference optimal values
+
+2. **`threshold_optimizer.py`** - Single optimization run
+   ```bash
+   python threshold_optimizer.py
+   ```
+   - Grid search optimization on latest pipeline output
+   - Finds optimal thresholds for each length bucket
+   - Option to update cfg.py automatically
+
+3. **`iterative_optimizer.py`** - Automated iterative optimization
+   ```bash
+   python iterative_optimizer.py
+   ```
+   - Runs pipeline multiple times with threshold refinement
+   - Automatically converges to optimal thresholds
+   - Complete automation of optimization process
+
+4. **`apply_optimal_thresholds.py`** - Apply reference optimal values
+   ```bash
+   python apply_optimal_thresholds.py
+   ```
+   - Applies reference optimal thresholds from 100-dataset analysis
+   - Achieves F1 scores: 87.39% - 98.39%
+
+### **Reference Optimal Thresholds:**
+
+| Length Bucket | Optimal COS | Optimal COMET | F1 Score |
+|---------------|-------------|---------------|----------|
+| very_short    | 0.840       | 0.850         | 98.39%   |
+| short         | 0.850       | 0.830         | 95.65%   |
+| medium        | 0.820       | 0.840         | 87.39%   |
+| long          | 0.820       | 0.830         | 87.80%   |
+| very_long     | 0.830       | 0.830         | 93.33%   |
+
+### **Optimization Workflow:**
+1. Run pipeline: `python run_pipeline.py`
+2. Optimize thresholds: `python threshold_optimizer.py`
+3. Or use full automation: `python iterative_optimizer.py`
 
 ## 🚀 Key Enhancements
 

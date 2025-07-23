@@ -258,7 +258,21 @@ class PipelineRunner:
             else:
                 logger.error(f"  {stage}: ✗ {result['error']}")
         
+        # Suggest threshold optimization
+        self.suggest_threshold_optimization()
+        
         return all(r["success"] for r in results.values())
+    
+    def suggest_threshold_optimization(self):
+        """Suggest threshold optimization to the user"""
+        logger.info("\n" + "="*50)
+        logger.info("THRESHOLD OPTIMIZATION SUGGESTIONS")
+        logger.info("="*50)
+        logger.info("You can now optimize your thresholds using the new pipeline data:")
+        logger.info("1. Quick analysis:     python threshold_analysis.py")
+        logger.info("2. Single optimization: python threshold_optimizer.py") 
+        logger.info("3. Auto-optimization:  python iterative_optimizer.py")
+        logger.info("="*50)
 
 async def main():
     import argparse

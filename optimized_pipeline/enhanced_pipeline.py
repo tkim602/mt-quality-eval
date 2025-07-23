@@ -24,7 +24,6 @@ class EnhancedPipeline:
         self.config_file = config_file
         self.enable_monitoring = enable_monitoring
         
-        # Setup monitoring
         if enable_monitoring:
             alert_config = AlertConfig(
                 pass_rate_threshold=0.25,
@@ -43,19 +42,16 @@ class EnhancedPipeline:
         start_time = time.time()
         
         try:
-            # Extract metrics
             cos = item.get('cos', 0.0)
             comet = item.get('comet', 0.0)
             gemba = item.get('gemba', 0.0)
             bucket = item.get('bucket', 'medium')
             key = item.get('key', '')
             
-            # Apply enhanced quality decision
             tag, passed, failed, confidence = cfg.make_quality_decision_enhanced(
                 cos, comet, gemba, bucket, key
             )
             
-            # Add enhanced information to result
             enhanced_result = item.copy()
             enhanced_result.update({
                 'tag': tag,
@@ -119,16 +115,13 @@ class EnhancedPipeline:
             'business_rules_impact': self._analyze_business_rules_impact(data)
         }
         
-        # Run failure analysis if we have failures
         failures = [item for item in data if item.get('tag') == 'fail']
         if failures:
             logger.info("Running failure pattern analysis...")
             
-            # Create a custom failure analyzer that uses the processed data directly
             failure_analysis = self._run_custom_failure_analysis(data)
             results['failure_analysis'] = failure_analysis
         
-        # Save results
         output_file = output_dir / "enhanced_quality_analysis.json"
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(results, f, indent=2, ensure_ascii=False)
@@ -137,7 +130,6 @@ class EnhancedPipeline:
         return results
     
     def _analyze_quality_distribution(self, data: List[Dict]) -> Dict:
-        """Analyze distribution of quality decisions"""
         total = len(data)
         if total == 0:
             return {}
@@ -190,7 +182,6 @@ class EnhancedPipeline:
         }
     
     def _analyze_business_rules_impact(self, data: List[Dict]) -> Dict:
-        """Analyze impact of business rules"""
         string_types = {}
         
         for item in data:
@@ -210,13 +201,11 @@ class EnhancedPipeline:
             string_types[string_type]['tags'][tag] = string_types[string_type]['tags'].get(tag, 0) + 1
             string_types[string_type]['confidences'].append(confidence)
         
-        # Calculate averages
         for string_type, stats in string_types.items():
             if stats['confidences']:
                 stats['avg_confidence'] = sum(stats['confidences']) / len(stats['confidences'])
             del stats['confidences']  # Remove raw data
             
-            # Convert counts to percentages
             total = stats['count']
             stats['tag_distribution'] = {
                 tag: count/total for tag, count in stats['tags'].items()
@@ -225,7 +214,6 @@ class EnhancedPipeline:
         return string_types
     
     def _run_custom_failure_analysis(self, data: List[Dict]) -> Dict:
-        """Run custom failure analysis on processed data"""
         import pandas as pd
         df = pd.DataFrame(data)
         
@@ -247,7 +235,6 @@ class EnhancedPipeline:
             'confidence_analysis': {}
         }
         
-        # Analyze by bucket
         for bucket in df['bucket'].unique():
             bucket_data = df[df['bucket'] == bucket]
             bucket_failures = failures[failures['bucket'] == bucket]
@@ -258,7 +245,6 @@ class EnhancedPipeline:
                 'failures': len(bucket_failures)
             }
         
-        # Analyze by string type
         if 'string_type' in df.columns:
             for string_type in df['string_type'].unique():
                 type_data = df[df['string_type'] == string_type]
@@ -270,7 +256,6 @@ class EnhancedPipeline:
                     'failures': len(type_failures)
                 }
         
-        # Confidence analysis
         if 'confidence' in df.columns:
             low_conf_failures = failures[failures['confidence'] < 0.5]
             analysis['confidence_analysis'] = {
@@ -311,17 +296,14 @@ def main():
     
     args = parser.parse_args()
     
-    # Create enhanced pipeline
     pipeline = EnhancedPipeline(enable_monitoring=not args.disable_monitoring)
     
-    # Load input data
     logger.info(f"Loading data from {args.input}")
     with open(args.input, 'r', encoding='utf-8') as f:
         input_data = json.load(f)
     
     logger.info(f"Processing {len(input_data)} items with enhanced quality pipeline...")
     
-    # Process data in batches
     async def process_all():
         results = []
         for i in range(0, len(input_data), args.batch_size):
@@ -333,14 +315,12 @@ def main():
         
         return results
     
-    # Run async processing
     start_time = time.time()
     processed_data = asyncio.run(process_all())
     processing_time = time.time() - start_time
     
     logger.info(f"Processing completed in {processing_time:.1f} seconds")
     
-    # Save processed results
     args.output_dir.mkdir(exist_ok=True, parents=True)
     output_file = args.output_dir / "enhanced_results.json"
     
@@ -349,15 +329,12 @@ def main():
     
     logger.info(f"Enhanced results saved to {output_file}")
     
-    # Run comprehensive analysis
     logger.info("Running comprehensive quality analysis...")
     analysis_results = pipeline.run_quality_analysis(output_file, args.output_dir)
     
-    # Save monitoring report if enabled
     if not args.disable_monitoring:
         pipeline.save_monitoring_report(args.output_dir / "monitoring_report.json")
         
-        # Print monitoring summary
         dashboard = pipeline.get_monitoring_dashboard()
         print("\n" + "="*50)
         print("MONITORING SUMMARY")

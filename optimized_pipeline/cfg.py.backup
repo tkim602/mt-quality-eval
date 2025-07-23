@@ -10,8 +10,8 @@ OUT_DIR.mkdir(exist_ok=True)
 KO_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\ko_checker_dedup.json"
 EN_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\en-US_checker.json"
 
-LIMIT = 200  
-SEED = None  
+LIMIT = 100  
+SEED = None  # None for random selection, or specific number for reproducible results
 
 LABSE_MODEL = "sentence-transformers/LaBSE"
 COMET_CKPT = "Unbabel/wmt22-cometkiwi-da"
@@ -49,17 +49,17 @@ TERMBASE = {
 }
 
 COS_THR = {
-    "very_short": 0.75,
+    "very_short": 0.84,
     "short": 0.75,
-    "medium": 0.75,
+    "medium": 0.8,
     "long": 0.75,
-    "very_long": 0.75,
+    "very_long": 0.83,
 }
 
 COMET_THR = {
-    "very_short": 0.75,
+    "very_short": 0.85,
     "short": 0.75,
-    "medium": 0.75,
+    "medium": 0.77,
     "long": 0.75,
     "very_long": 0.75,
 }
@@ -82,17 +82,17 @@ BUSINESS_RULES = {
 } 
 
 STRICT_COS_THR = {
-    "very_short": 0.75,
+    "very_short": 0.84,
     "short": 0.75,
-    "medium": 0.75,
+    "medium": 0.8,
     "long": 0.75,
-    "very_long": 0.75,
+    "very_long": 0.83,
 }
 
 STRICT_COMET_THR = {
-    "very_short": 0.75,
+    "very_short": 0.85,
     "short": 0.75,
-    "medium": 0.75,
+    "medium": 0.77,
     "long": 0.75,
     "very_long": 0.75,
 }

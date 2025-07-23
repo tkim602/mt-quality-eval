@@ -3,6 +3,7 @@ import orjson
 import numpy as np
 import torch
 import os
+import hashlib
 from datetime import datetime
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
@@ -12,6 +13,49 @@ import cfg
 import random
 from validation import run_all_validations
 
+
+def get_cache_key(texts: list) -> str:
+    """Generate a cache key based on text content"""
+    content = ''.join(texts)
+    return hashlib.md5(content.encode('utf-8')).hexdigest()
+
+def load_labse_cache(cache_key: str) -> tuple:
+    """Load LaBSE embeddings from cache if available"""
+    cache_dir = Path(cfg.OUT_DIR) / "cache"
+    cache_file = cache_dir / f"labse_{cache_key}.npz"
+    
+    if cache_file.exists():
+        data = np.load(cache_file)
+        return data['e_src'], data['e_mt'], True
+    return None, None, False
+
+def save_labse_cache(cache_key: str, e_src: np.ndarray, e_mt: np.ndarray):
+    """Save LaBSE embeddings to cache"""
+    cache_dir = Path(cfg.OUT_DIR) / "cache"
+    cache_dir.mkdir(exist_ok=True)
+    cache_file = cache_dir / f"labse_{cache_key}.npz"
+    
+    np.savez_compressed(cache_file, e_src=e_src, e_mt=e_mt)
+    print(f"Saved LaBSE cache: {cache_file}")
+
+def load_comet_cache(cache_key: str) -> tuple:
+    """Load COMET scores from cache if available"""
+    cache_dir = Path(cfg.OUT_DIR) / "cache"
+    cache_file = cache_dir / f"comet_{cache_key}.npy"
+    
+    if cache_file.exists():
+        scores = np.load(cache_file)
+        return scores, True
+    return None, False
+
+def save_comet_cache(cache_key: str, scores: np.ndarray):
+    """Save COMET scores to cache"""
+    cache_dir = Path(cfg.OUT_DIR) / "cache"
+    cache_dir.mkdir(exist_ok=True)
+    cache_file = cache_dir / f"comet_{cache_key}.npy"
+    
+    np.save(cache_file, scores)
+    print(f"Saved COMET cache: {cache_file}")
 
 def bucket(sentence: str) -> str:
     n = len(sentence.strip())
@@ -31,43 +75,73 @@ def main() -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
     
-    labse = SentenceTransformer(cfg.LABSE_MODEL).to(device)
-    comet = load_from_checkpoint(download_model(cfg.COMET_CKPT)).to(device)
-
     ko = json.load(open(cfg.KO_JSON, encoding="utf-8"))
     en = json.load(open(cfg.EN_JSON, encoding="utf-8"))
 
     all_keys = list(ko.keys())
 
     if cfg.LIMIT:
-        random.seed(getattr(cfg, "seed", 42))
+        # Set seed only if SEED is not None
+        if cfg.SEED is not None:
+            random.seed(cfg.SEED)
         keys = random.sample(all_keys, min(cfg.LIMIT, len(all_keys)))
     else:
         keys = all_keys
 
-
     src = [ko[k] for k in keys]
-
-    # mt  = [en[k] for k in keys]
     mt = [en.get(k, "") for k in keys]
 
-    e_src = labse.encode(src, batch_size=128, normalize_embeddings=True, show_progress_bar=True)
-    e_mt  = labse.encode(mt , batch_size=128, normalize_embeddings=True, show_progress_bar=True)
-    cos   = (e_src * e_mt).sum(1)
+    # Generate cache key for this specific dataset
+    cache_key = get_cache_key(src + mt)
+    print(f"Cache key: {cache_key}")
 
-    scores = []
-    BATCH = 64
-    for i in tqdm(range(0, len(src), BATCH), desc="COMET"):
-        batch_data = [{"src": s, "mt": t} for s, t in zip(src[i : i + BATCH], mt[i : i + BATCH])]
-        scores.extend(comet.predict(batch_data, batch_size=BATCH)["scores"])
-    com = np.array(scores, dtype=np.float32)
+    # Check if we should force fresh computation (for optimization)
+    force_fresh = os.getenv('FORCE_FRESH', 'false').lower() == 'true'
+    if force_fresh:
+        print("FORCE_FRESH mode: Computing fresh embeddings and scores...")
 
-    # Load termbase if available
+    # Try to load LaBSE embeddings from cache
+    e_src, e_mt, cache_hit = load_labse_cache(cache_key)
+    
+    if cache_hit and not force_fresh:
+        print("OK: Loaded LaBSE embeddings from cache")
+        cos = (e_src * e_mt).sum(1)
+    else:
+        print("Computing LaBSE embeddings...")
+        labse = SentenceTransformer(cfg.LABSE_MODEL).to(device)
+        
+        e_src = labse.encode(src, batch_size=128, normalize_embeddings=True, show_progress_bar=True)
+        e_mt  = labse.encode(mt , batch_size=128, normalize_embeddings=True, show_progress_bar=True)
+        cos   = (e_src * e_mt).sum(1)
+        
+        # Save to cache if enabled and not in force fresh mode
+        if getattr(cfg, 'ENABLE_CACHING', True) and not force_fresh:
+            save_labse_cache(cache_key, e_src, e_mt)
+    
+    # Try to load COMET scores from cache
+    com, comet_cache_hit = load_comet_cache(cache_key)
+    
+    if comet_cache_hit and not force_fresh:
+        print("OK: Loaded COMET scores from cache")
+    else:
+        print("Computing COMET scores...")
+        comet = load_from_checkpoint(download_model(cfg.COMET_CKPT)).to(device)
+        
+        scores = []
+        BATCH = 64
+        for i in tqdm(range(0, len(src), BATCH), desc="COMET"):
+            batch_data = [{"src": s, "mt": t} for s, t in zip(src[i : i + BATCH], mt[i : i + BATCH])]
+            scores.extend(comet.predict(batch_data, batch_size=BATCH)["scores"])
+        com = np.array(scores, dtype=np.float32)
+        
+        # Save to cache if enabled and not in force fresh mode
+        if getattr(cfg, 'ENABLE_CACHING', True) and not force_fresh:
+            save_comet_cache(cache_key, com)
+
     termbase = {}
     if hasattr(cfg, 'TERMBASE_PATH') and Path(cfg.TERMBASE_PATH).exists():
         with open(cfg.TERMBASE_PATH, 'r', encoding='utf-8') as f:
             termbase_data = json.load(f)
-            # Convert from array of objects to simple key-value dictionary
             if isinstance(termbase_data, list):
                 termbase = {item['ko']: item['en-US'] for item in termbase_data if 'ko' in item and 'en-US' in item}
             else:
@@ -80,7 +154,6 @@ def main() -> None:
     for k, s, m, c, q in zip(keys, src, mt, cos, com):
         validation_results = run_all_validations(s, m, termbase)
         
-        # Apply enhanced quality decision with confidence scoring
         tag, passed, failed, confidence = cfg.make_quality_decision_enhanced(c, q, 0, bucket(s), k)
         
         records.append(
@@ -94,7 +167,7 @@ def main() -> None:
                 "tag": tag,
                 "passed_checks": passed,
                 "failed_checks": failed,
-                "confidence": confidence,
+                "confidence": float(confidence),
                 "string_type": cfg.get_string_type(k),
                 "validation": validation_results,
             }
