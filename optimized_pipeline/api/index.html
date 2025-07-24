@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MT Quality 분석기</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007acc;
+            padding-bottom: 10px;
+        }
+        
+        .search-box {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background: #005a9e;
+        }
+        
+        .result-card {
+            background: #f9f9f9;
+            border-left: 4px solid #007acc;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .fail { border-left-color: #dc3545; }
+        .soft_pass { border-left-color: #ffc107; }
+        .strict_pass { border-left-color: #28a745; }
+        
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .score-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007acc;
+        }
+        
+        .issues {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .suggestions {
+            background: #d1ecf1;
+            border: 1px solid #b8daff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .text-content {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        
+        .quick-filters {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .filter-btn:hover {
+            background: #545b62;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 MT Quality 분석기</h1>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="키를 입력하세요 (예: rule.sca.l.common.6268.name)">
+            <button onclick="searchKey()">검색</button>
+        </div>
+        
+        <div class="quick-filters">
+            <button class="filter-btn" onclick="loadFailed()">❌ 실패한 항목들</button>
+            <button class="filter-btn" onclick="loadLowScore()">📉 낮은 점수 (< 70)</button>
+            <button class="filter-btn" onclick="loadHighScore()">⭐ 높은 점수 (≥ 90)</button>
+            <button class="filter-btn" onclick="loadApeImproved()">🚀 APE 개선됨</button>
+            <button class="filter-btn" onclick="showAnalytics()">📊 전체 통계</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        async function searchKey() {
+            const key = document.getElementById('searchInput').value.trim();
+            if (!key) return;
+            
+            showLoading();
+            
+            try {
+                const response = await fetch(`${API_BASE}/records/${encodeURIComponent(key)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayRecord(data);
+                } else {
+                    showError('키를 찾을 수 없습니다.');
+                }
+            } catch (error) {
+                showError('API 연결 오류: ' + error.message);
+            }
+        }
+        
+        async function loadFailed() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/tags/fail`);
+                const data = await response.json();
+                displayMultipleRecords(data.records, '실패한 항목들');
+            } catch (error) {
+                showError('데이터 로드 오류: ' + error.message);
+            }
+        }
+        
+        async function loadLowScore() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/records?max_gemba=70&limit=20`);
+                const data = await response.json();
+                displayMultipleRecords(data.records, '낮은 점수 항목들 (GEMBA < 70)');
+            } catch (error) {
+                showError('데이터 로드 오류: ' + error.message);
+            }
+        }
+        
+        async function loadHighScore() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/records?min_gemba=90&limit=20`);
+                const data = await response.json();
+                displayMultipleRecords(data.records, '높은 점수 항목들 (GEMBA ≥ 90)');
+            } catch (error) {
+                showError('데이터 로드 오류: ' + error.message);
+            }
+        }
+        
+        async function loadApeImproved() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/records?has_ape=true&limit=20`);
+                const data = await response.json();
+                const improved = data.records.filter(r => (r.delta_comet || 0) > 0 || (r.delta_cos || 0) > 0);
+                displayMultipleRecords(improved, 'APE로 개선된 항목들');
+            } catch (error) {
+                showError('데이터 로드 오류: ' + error.message);
+            }
+        }
+        
+        async function showAnalytics() {
+            showLoading();
+            try {
+                const response = await fetch(`${API_BASE}/analytics`);
+                const data = await response.json();
+                displayAnalytics(data);
+            } catch (error) {
+                showError('분석 데이터 로드 오류: ' + error.message);
+            }
+        }
+        
+        function displayRecord(record) {
+            const tagClass = record.tag || 'unknown';
+            const hasApe = 'ape' in record;
+            
+            const html = `
+                <div class="result-card ${tagClass}">
+                    <h3>🔑 ${record.key}</h3>
+                    
+                    <div class="score-grid">
+                        <div class="score-item">
+                            <div class="score-value">${record.gemba || 0}</div>
+                            <div>GEMBA</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-value">${(record.comet || 0).toFixed(3)}</div>
+                            <div>COMET</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-value">${(record.cos || 0).toFixed(3)}</div>
+                            <div>Cosine</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-value">${record.tag}</div>
+                            <div>결과</div>
+                        </div>
+                    </div>
+                    
+                    <h4>📝 텍스트</h4>
+                    <div><strong>원문:</strong></div>
+                    <div class="text-content">${record.src || ''}</div>
+                    
+                    <div><strong>번역:</strong></div>
+                    <div class="text-content">${record.mt || ''}</div>
+                    
+                    ${hasApe ? `
+                        <div><strong>APE 개선:</strong></div>
+                        <div class="text-content">${record.ape}</div>
+                        <div><small>COMET 개선: ${(record.delta_comet || 0).toFixed(3)}, Cosine 개선: ${(record.delta_cos || 0).toFixed(3)}</small></div>
+                    ` : ''}
+                    
+                    ${record.flag && record.flag.failed && record.flag.failed.length > 0 ? `
+                        <div class="issues">
+                            <h4>⚠️ 문제점</h4>
+                            <div><strong>실패한 검사:</strong> ${record.flag.failed.join(', ')}</div>
+                            ${record.flag.gemba_reason ? `<div><strong>GEMBA 피드백:</strong> ${record.flag.gemba_reason}</div>` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <div class="suggestions">
+                        <h4>💡 빠른 액션</h4>
+                        <button onclick="searchSimilar('${record.bucket}', '${record.tag}')">비슷한 케이스 찾기</button>
+                        <button onclick="searchByText('${(record.src || '').substring(0, 10)}')">비슷한 텍스트 찾기</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('results').innerHTML = html;
+        }
+        
+        let currentRecords = [];
+        let currentTitle = '';
+        let displayedCount = 0;
+        
+        function displayMultipleRecords(records, title) {
+            if (!records || records.length === 0) {
+                document.getElementById('results').innerHTML = `<div class="error">결과가 없습니다.</div>`;
+                return;
+            }
+            
+            // Store records for pagination
+            currentRecords = records;
+            currentTitle = title;
+            displayedCount = 0;
+            
+            showMoreRecords(10);
+        }
+        
+        function showMoreRecords(count) {
+            const endIndex = Math.min(displayedCount + count, currentRecords.length);
+            
+            let html = `<h2>${currentTitle} (${currentRecords.length}개)</h2>`;
+            
+            // Display records from 0 to endIndex
+            currentRecords.slice(0, endIndex).forEach(record => {
+                const tagClass = record.tag || 'unknown';
+                html += `
+                    <div class="result-card ${tagClass}" style="margin: 10px 0; padding: 15px;">
+                        <div style="display: flex; justify-content: between; align-items: center;">
+                            <div style="flex: 1;">
+                                <strong>${record.key}</strong><br>
+                                <small>${(record.src || '').substring(0, 80)}...</small><br>
+                                <span style="color: #666;">GEMBA: ${record.gemba || 0}, COMET: ${(record.comet || 0).toFixed(3)}</span>
+                            </div>
+                            <div>
+                                <button onclick="document.getElementById('searchInput').value='${record.key}'; searchKey();">상세보기</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Add "더보기" button if there are more records
+            if (endIndex < currentRecords.length) {
+                const remaining = currentRecords.length - endIndex;
+                html += `
+                    <div style="text-align: center; margin: 20px;">
+                        <button onclick="showMoreRecords(10)" style="padding: 15px 30px; font-size: 16px;">
+                            더보기 (${remaining}개 더 있음)
+                        </button>
+                    </div>
+                `;
+            }
+            
+            displayedCount = endIndex;
+            document.getElementById('results').innerHTML = html;
+        }
+        
+        function displayAnalytics(data) {
+            const html = `
+                <div class="result-card">
+                    <h2>📊 전체 통계</h2>
+                    
+                    <div class="score-grid">
+                        <div class="score-item">
+                            <div class="score-value">${data.total_records}</div>
+                            <div>총 레코드</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-value">${data.scores.gemba.mean.toFixed(1)}</div>
+                            <div>평균 GEMBA</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-value">${((data.distributions.tags.strict_pass || 0) + (data.distributions.tags.soft_pass || 0))}/${data.total_records}</div>
+                            <div>통과율</div>
+                        </div>
+                        <div class="score-item">
+                            <div class="score-value">${data.ape_effectiveness.total_ape_records}</div>
+                            <div>APE 적용됨</div>
+                        </div>
+                    </div>
+                    
+                    <h3>태그 분포</h3>
+                    <div class="score-grid">
+                        <div class="score-item strict_pass">
+                            <div class="score-value">${data.distributions.tags.strict_pass || 0}</div>
+                            <div>Strict Pass</div>
+                        </div>
+                        <div class="score-item soft_pass">
+                            <div class="score-value">${data.distributions.tags.soft_pass || 0}</div>
+                            <div>Soft Pass</div>
+                        </div>
+                        <div class="score-item fail">
+                            <div class="score-value">${data.distributions.tags.fail || 0}</div>
+                            <div>Failed</div>
+                        </div>
+                    </div>
+                    
+                    <h3>길이별 분포</h3>
+                    <div class="score-grid">
+                        ${Object.entries(data.distributions.buckets).map(([bucket, count]) => `
+                            <div class="score-item">
+                                <div class="score-value">${count}</div>
+                                <div>${bucket}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('results').innerHTML = html;
+        }
+        
+        function showLoading() {
+            document.getElementById('results').innerHTML = '<div class="loading">🔄 로딩 중...</div>';
+        }
+        
+        function showError(message) {
+            document.getElementById('results').innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+        
+        // Enter 키로 검색
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchKey();
+            }
+        });
+        
+        // 페이지 로드시 통계 표시
+        window.onload = () => showAnalytics();
+    </script>
+</body>
+</html>
