@@ -3,439 +3,2436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MT Quality 분석기</title>
+    <title>번역품질 검사기 | MT Quality Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* 주식 웹사이트 컬러 팔레트 */
+            --primary-bg: #0a0e1a;
+            --secondary-bg: #1a1f2e;
+            --card-bg: #252d3d;
+            --accent-bg: #2a3441;
+            --success-color: #00d084;
+            --danger-color: #ff6b6b;
+            --warning-color: #ffa726;
+            --info-color: #42a5f5;
+            --neutral-color: #6c757d;
+            --text-primary: #ffffff;
+            --text-secondary: #b3bcc8;
+            --text-muted: #8b949e;
+            --border-color: #30374a;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.25);
+            --gradient-success: linear-gradient(135deg, #00d084, #00c477);
+            --gradient-danger: linear-gradient(135deg, #ff6b6b, #ff5252);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 1200px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+            min-height: 100vh;
+        }
+
+        .main-header {
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            color: #333;
-            border-bottom: 3px solid #007acc;
-            padding-bottom: 10px;
-        }
-        
-        .search-box {
-            margin: 20px 0;
             display: flex;
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
         }
-        
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
-            font-size: 16px;
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        
-        button {
-            padding: 12px 24px;
-            background: #007acc;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        
-        button:hover {
-            background: #005a9e;
-        }
-        
-        .result-card {
-            background: #f9f9f9;
-            border-left: 4px solid #007acc;
-            margin: 20px 0;
-            padding: 20px;
-            border-radius: 0 5px 5px 0;
-        }
-        
-        .fail { border-left-color: #dc3545; }
-        .soft_pass { border-left-color: #ffc107; }
-        .strict_pass { border-left-color: #28a745; }
-        
-        .score-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin: 15px 0;
-        }
-        
-        .score-item {
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-            border: 1px solid #ddd;
-        }
-        
-        .score-value {
+
+        .logo {
             font-size: 24px;
-            font-weight: bold;
-            color: #007acc;
+            font-weight: 700;
+            background: var(--gradient-success);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        
-        .issues {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 400;
         }
-        
-        .suggestions {
-            background: #d1ecf1;
-            border: 1px solid #b8daff;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-        }
-        
-        .text-content {
-            background: white;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
-            white-space: pre-wrap;
-        }
-        
-        .quick-filters {
+
+        .header-stats {
             display: flex;
-            gap: 10px;
-            margin: 20px 0;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .sidebar {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            height: fit-content;
+        }
+
+        .main-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: visible;
+        }
+
+        .nav-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .nav-item:hover {
+            background: var(--accent-bg);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--success-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        .search-section {
+            padding: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 3px rgba(0, 208, 132, 0.1);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        .filter-group {
+            margin-bottom: 16px;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
             flex-wrap: wrap;
         }
-        
+
         .filter-btn {
-            padding: 8px 16px;
-            background: #6c757d;
-            color: white;
-            border: none;
-            border-radius: 20px;
+            padding: 8px 12px;
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
             cursor: pointer;
-            font-size: 14px;
+            transition: all 0.2s;
         }
-        
-        .filter-btn:hover {
-            background: #545b62;
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
         }
-        
-        .loading {
+
+        /* 범위 슬라이더 스타일 */
+        .range-filter {
+            margin-bottom: 16px;
+        }
+
+        .range-slider-container {
+            position: relative;
+            margin: 12px 0;
+        }
+
+        .dual-range-slider {
+            position: relative;
+            height: 6px;
+            background: var(--accent-bg);
+            border-radius: 3px;
+            margin: 20px 0;
+        }
+
+        .dual-range-slider input[type="range"] {
+            position: absolute;
+            width: 100%;
+            height: 6px;
+            background: transparent;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            pointer-events: none;
+        }
+
+        .dual-range-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--success-color);
+            cursor: pointer;
+            border: 2px solid var(--secondary-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            pointer-events: all;
+        }
+
+        .dual-range-slider input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--success-color);
+            cursor: pointer;
+            border: 2px solid var(--secondary-bg);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            pointer-events: all;
+        }
+
+        .range-track {
+            position: absolute;
+            height: 6px;
+            background: var(--success-color);
+            border-radius: 3px;
+            top: 0;
+        }
+
+        .range-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .range-current {
+            font-size: 12px;
+            color: var(--success-color);
+            font-weight: 500;
             text-align: center;
-            padding: 40px;
-            color: #666;
+            margin-top: 4px;
         }
-        
-        .error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
+
+        .delta-toggle {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 6px 8px;
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .toggle-btn:hover,
+        .toggle-btn.active {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .content-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--accent-bg);
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            border-color: var(--success-color);
+        }
+
+        .btn.primary {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .btn.primary:hover {
+            background: #00c477;
+        }
+
+        /* 주식 스타일 레코드 카드 */
+        .record-grid {
+            padding: 24px;
+        }
+
+        .record-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: visible;
+            transition: all 0.2s;
+        }
+
+        .record-card:hover {
+            border-color: var(--success-color);
+            box-shadow: 0 4px 12px rgba(0, 208, 132, 0.1);
+        }
+
+        .record-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .record-id {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--accent-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .quality-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quality-badge-improved {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .quality-badge-original {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .quality-badge-original::before {
+            content: '기존: ';
+            font-size: 9px;
+            opacity: 0.8;
+        }
+
+        .quality-improvement-arrow {
+            color: var(--success-color);
+            font-size: 14px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        .quality-badge-mini {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: inline-block;
+        }
+
+        .quality-badge-mini.quality-excellent {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .quality-badge-mini.quality-very-good {
+            background: rgba(132, 204, 22, 0.2);
+            color: #84cc16;
+            border: 1px solid rgba(132, 204, 22, 0.3);
+        }
+
+        .quality-badge-mini.quality-good {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .quality-badge-mini.quality-poor {
+            background: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .quality-badge-mini.quality-very-poor {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .quality-excellent {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .quality-very-good {
+            background: rgba(132, 204, 22, 0.2);
+            color: #84cc16;
+            border: 1px solid rgba(132, 204, 22, 0.3);
+        }
+
+        .quality-good {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .quality-poor {
+            background: rgba(249, 115, 22, 0.2);
+            color: #f97316;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .quality-very-poor {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* 주식 스타일 점수 섹션 */
+        .scores-section {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .score-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .score-card:hover {
+            border-color: var(--success-color);
+            transform: translateY(-2px);
+        }
+
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--neutral-color);
+        }
+
+        .score-card.improvement::before {
+            background: var(--gradient-success);
+        }
+
+        .score-card.decline::before {
+            background: var(--gradient-danger);
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .score-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .score-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .score-arrow {
+            font-size: 16px;
+        }
+
+        .score-positive {
+            color: var(--success-color);
+        }
+
+        .score-negative {
+            color: var(--danger-color);
+        }
+
+        .score-neutral {
+            color: var(--neutral-color);
+        }
+
+        .score-percentage {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .score-gauge {
+            height: 4px;
+            background: var(--accent-bg);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: var(--success-color);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* 텍스트 diff 스타일 */
+        .text-section {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .text-row {
+            margin-bottom: 16px;
+        }
+
+        .text-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .text-content {
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .text-diff {
+            position: relative;
+        }
+
+        .diff-original {
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff8a80;
+            padding: 2px 4px;
+            border-radius: 3px;
+            text-decoration: line-through;
+            margin-right: 4px;
+        }
+
+        .diff-improved {
+            background: rgba(0, 208, 132, 0.15);
+            color: #4ade80;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        /* APE 개선 표시 */
+        .ape-improvement {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 208, 132, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .ape-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .ape-icon {
+            color: var(--success-color);
+            font-size: 16px;
+        }
+
+        .ape-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success-color);
+        }
+
+        /* 툴팁 스타일 */
+        .tooltip {
+            position: absolute;
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            max-width: 320px;
+            line-height: 1.4;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .tooltip-header {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--success-color);
+        }
+
+        .tooltip-section {
+            margin-bottom: 8px;
+        }
+
+        .tooltip-label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tooltip-value {
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        /* Evidence 표시 스타일 */
+        .evidence-indicator {
+            position: relative;
+            display: inline-block;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+
+        .evidence-icon {
+            background: var(--warning-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .evidence-icon.critical {
+            background: var(--danger-color);
+        }
+
+        .evidence-icon.info {
+            background: var(--info-color);
+        }
+
+        .evidence-tooltip {
+            position: fixed;
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            min-width: 200px;
+            max-width: 400px;
+            width: auto;
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 1.4;
+            pointer-events: none;
+        }
+
+        .evidence-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .score-info-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 4px;
+            transition: color 0.2s;
+        }
+
+        .score-info-btn:hover {
+            color: var(--success-color);
+        }
+
+        .load-more-section {
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            position: relative;
+        }
+
+        .load-more-section .btn.primary {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            border-radius: 50px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            font-size: 14px;
+            padding: 12px 20px;
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--text-muted);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 99;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-to-top:hover {
+            background: var(--success-color);
+            color: white;
+            transform: translateX(-50%) translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 208, 132, 0.3);
+        }
+
+        .record-count-info {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            flex: 1;
+        }
+
+        .record-count-info span {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* 스크롤 투 탑 버튼 */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--text-muted);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 99;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-to-top:hover {
+            background: var(--success-color);
+            color: white;
+            transform: translateX(-50%) translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 208, 132, 0.3);
+        }
+
+        /* 통계 차트 모달 */
+        .stats-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stats-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .stats-modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .stats-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stats-modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stats-modal-close {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .stats-modal-close:hover {
+            background: var(--accent-bg);
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-stat {
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .chart-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--success-color);
+            margin-bottom: 8px;
+        }
+
+        .chart-stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-stat-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        /* 간단한 바 차트 스타일 */
+        .simple-chart {
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+            height: 300px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--accent-bg);
+        }
+
+        .chart-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            margin: 0 8px;
+        }
+
+        .bar {
+            width: 100%;
+            max-width: 60px;
+            background: linear-gradient(to top, var(--success-color), rgba(0, 208, 132, 0.6));
+            border-radius: 4px 4px 0 0;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .bar:hover {
+            background: linear-gradient(to top, var(--warning-color), rgba(251, 191, 36, 0.6));
+            transform: scale(1.05);
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--card-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .bar:hover .bar-value {
+            opacity: 1;
+        }
+
+        .bar-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* 도넛 차트 스타일 */
+        .donut-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            position: relative;
+        }
+
+        .donut-svg {
+            width: 200px;
+            height: 200px;
+        }
+
+        .donut-legend {
+            margin-left: 40px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+
+        .legend-label {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .legend-value {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .scores-section {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .header-stats {
+                display: none;
+            }
+
+            .stats-modal-content {
+                margin: 20px;
+                padding: 20px;
+                max-width: none;
+                width: auto;
+            }
+
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .donut-chart {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .donut-legend {
+                margin-left: 0;
+                margin-top: 20px;
+            }
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--accent-bg);
+            border-top: 3px solid var(--success-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">번역품질 검사기</div>
+                <div class="subtitle">MT Quality Analytics</div>
+            </div>
+            <div class="header-stats" id="headerStats">
+                <div class="stat-item" onclick="showStatsChart('records')">
+                    <div class="stat-value" id="totalRecords">-</div>
+                    <div class="stat-label">총 레코드</div>
+                </div>
+                <div class="stat-item" onclick="showStatsChart('pass-rate')">
+                    <div class="stat-value" id="passRate">-</div>
+                    <div class="stat-label">통과율</div>
+                </div>
+                <div class="stat-item" onclick="showStatsChart('ape-effect')">
+                    <div class="stat-value" id="apeEffectiveness">-</div>
+                    <div class="stat-label">개선율</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
     <div class="container">
-        <h1>🔍 MT Quality 분석기</h1>
-        
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="키를 입력하세요 (예: rule.sca.l.common.6268.name)">
-            <button onclick="searchKey()">검색</button>
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <div class="nav-section">
+                    <div class="nav-title">분석 도구</div>
+                    <div class="nav-item active" data-view="all">
+                        <span>�</span> 전체 데이터
+                    </div>
+                    <div class="nav-item" data-view="high-quality">
+                        <span>⭐</span> 고품질 번역
+                    </div>
+                    <div class="nav-item" data-view="failed">
+                        <span>⚠</span> 품질 미달
+                    </div>
+                    <div class="nav-item" data-view="ape-improved">
+                        <span>✨</span> APE 개선사례
+                    </div>
+                </div>
+
+                <div class="search-section">
+                    <div class="search-box">
+                        <select id="searchType" style="width: 100%; padding: 8px 12px; background: var(--accent-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">
+                            <option value="all">전체 필드 검색</option>
+                            <option value="key">Key 검색</option>
+                            <option value="src">원문 검색</option>
+                            <option value="mt">기계번역 검색</option>
+                            <option value="ape">APE 검색</option>
+                        </select>
+                        <input type="text" id="searchInput" placeholder="검색어를 입력하세요...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">품질 등급</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">전체</button>
+                            <button class="filter-btn" data-filter="excellent">매우우수</button>
+                            <button class="filter-btn" data-filter="very-good">우수</button>
+                            <button class="filter-btn" data-filter="good">양호</button>
+                            <button class="filter-btn" data-filter="poor">나쁨</button>
+                            <button class="filter-btn" data-filter="very-poor">매우나쁨</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">텍스트 길이</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-bucket="all">전체</button>
+                            <button class="filter-btn" data-bucket="very_short">매우짧음</button>
+                            <button class="filter-btn" data-bucket="short">짧음</button>
+                            <button class="filter-btn" data-bucket="medium">보통</button>
+                            <button class="filter-btn" data-bucket="long">김</button>
+                            <button class="filter-btn" data-bucket="very_long">매우김</button>
+                        </div>
+                    </div>
+
+                    <div class="range-filter">
+                        <label class="filter-label">GEMBA 점수</label>
+                        <div class="range-slider-container">
+                            <div class="dual-range-slider">
+                                <div class="range-track" id="gembaTrack"></div>
+                                <input type="range" id="gembaMin" min="0" max="100" value="0" step="1">
+                                <input type="range" id="gembaMax" min="0" max="100" value="100" step="1">
+                            </div>
+                            <div class="range-values">
+                                <span>0</span>
+                                <span>100</span>
+                            </div>
+                            <div class="range-current" id="gembaRangeCurrent">전체 범위 (0 ~ 100)</div>
+                        </div>
+                    </div>
+
+                    <div class="range-filter">
+                        <label class="filter-label">COMET 점수</label>
+                        <div class="range-slider-container">
+                            <div class="dual-range-slider">
+                                <div class="range-track" id="cometTrack"></div>
+                                <input type="range" id="cometMin" min="0" max="100" value="0" step="1">
+                                <input type="range" id="cometMax" min="0" max="100" value="100" step="1">
+                            </div>
+                            <div class="range-values">
+                                <span>0.0</span>
+                                <span>1.0</span>
+                            </div>
+                            <div class="range-current" id="cometRangeCurrent">전체 범위 (0.00 ~ 1.00)</div>
+                        </div>
+                    </div>
+
+                    <div class="range-filter">
+                        <label class="filter-label">COS 점수</label>
+                        <div class="range-slider-container">
+                            <div class="dual-range-slider">
+                                <div class="range-track" id="cosTrack"></div>
+                                <input type="range" id="cosMin" min="0" max="100" value="0" step="1">
+                                <input type="range" id="cosMax" min="0" max="100" value="100" step="1">
+                            </div>
+                            <div class="range-values">
+                                <span>0.0</span>
+                                <span>1.0</span>
+                            </div>
+                            <div class="range-current" id="cosRangeCurrent">전체 범위 (0.00 ~ 1.00)</div>
+                        </div>
+                    </div>
+
+                    <div class="range-filter">
+                        <label class="filter-label">개선도</label>
+                        <div class="delta-toggle">
+                            <button class="toggle-btn active" data-delta="comet">COMET 개선</button>
+                            <button class="toggle-btn" data-delta="cos">COS 개선</button>
+                        </div>
+                        <div class="range-slider-container">
+                            <div class="dual-range-slider">
+                                <div class="range-track" id="deltaTrack"></div>
+                                <input type="range" id="deltaMin" min="-50" max="50" value="-50" step="1">
+                                <input type="range" id="deltaMax" min="-50" max="50" value="50" step="1">
+                            </div>
+                            <div class="range-values">
+                                <span>-0.5</span>
+                                <span>+0.5</span>
+                            </div>
+                            <div class="range-current" id="deltaRangeCurrent">전체 범위 (-0.50 ~ +0.50)</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <div class="content-header">
+                    <div class="content-title" id="contentTitle">전체 번역품질 현황</div>
+                    <div class="view-controls">
+                        <button class="btn" onclick="refreshData()">
+                            <span>↻</span> 새로고침
+                        </button>
+                        <button class="btn primary" onclick="exportData()">
+                            <span>⬇</span> 데이터 내보내기
+                        </button>
+                    </div>
+                </div>
+
+                <div class="record-grid" id="recordGrid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        데이터를 불러오는 중...
+                    </div>
+                </div>
+
+                <div id="loadMoreSection" class="load-more-section" style="display: none;">
+                    <div class="record-count-info">
+                        현재 <span id="currentCount">0</span>개 / 전체 <span id="totalCount">0</span>개 표시중
+                    </div>
+                    <button class="btn primary" id="loadMoreBtn" onclick="loadMoreRecords()">
+                        <span>⋯</span> 더보기
+                    </button>
+                </div>
+            </main>
         </div>
-        
-        <div class="quick-filters">
-            <button class="filter-btn" onclick="loadFailed()">❌ 실패한 항목들</button>
-            <button class="filter-btn" onclick="loadLowScore()">📉 낮은 점수 (< 70)</button>
-            <button class="filter-btn" onclick="loadHighScore()">⭐ 높은 점수 (≥ 90)</button>
-            <button class="filter-btn" onclick="loadApeImproved()">🚀 APE 개선됨</button>
-            <button class="filter-btn" onclick="showAnalytics()">📊 전체 통계</button>
+    </div>
+
+    <!-- 스크롤 투 탑 버튼 -->
+    <div class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()">
+        ↑
+    </div>
+
+    <!-- 통계 차트 모달 -->
+    <div class="stats-modal" id="statsModal">
+        <div class="stats-modal-content">
+            <div class="stats-modal-header">
+                <div class="stats-modal-title" id="modalTitle">통계 분석</div>
+                <button class="stats-modal-close" onclick="closeStatsModal()">×</button>
+            </div>
+            <div id="modalContent">
+                <!-- 차트 내용이 여기에 동적으로 삽입됩니다 -->
+            </div>
         </div>
-        
-        <div id="results"></div>
     </div>
 
     <script>
         const API_BASE = 'http://localhost:8000';
-        
-        async function searchKey() {
-            const key = document.getElementById('searchInput').value.trim();
-            if (!key) return;
+        let currentData = [];
+        let allData = []; // 전체 데이터 저장
+        let displayLimit = 10; // 현재 표시 개수
+        let currentFilters = {
+            view: 'all',
+            quality: 'all',
+            bucket: 'all',
+            search: '',
+            searchType: 'all',
+            ranges: {
+                gemba: { min: 0, max: 100, enabled: false },
+                comet: { min: 0, max: 1, enabled: false },
+                cos: { min: 0, max: 1, enabled: false },
+                delta: { min: -0.5, max: 0.5, enabled: false, type: 'comet' }
+            }
+        };
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHeaderStats();
+            loadRecords();
+            setupEventListeners();
+            setupScrollToTop();
+        });
+
+        function setupScrollToTop() {
+            const scrollToTopBtn = document.getElementById('scrollToTop');
             
-            showLoading();
-            
-            try {
-                const response = await fetch(`${API_BASE}/records/${encodeURIComponent(key)}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    displayRecord(data);
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    scrollToTopBtn.classList.add('visible');
                 } else {
-                    showError('키를 찾을 수 없습니다.');
+                    scrollToTopBtn.classList.remove('visible');
                 }
-            } catch (error) {
-                showError('API 연결 오류: ' + error.message);
-            }
+            });
         }
-        
-        async function loadFailed() {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/tags/fail`);
-                const data = await response.json();
-                displayMultipleRecords(data.records, '실패한 항목들');
-            } catch (error) {
-                showError('데이터 로드 오류: ' + error.message);
-            }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
-        
-        async function loadLowScore() {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/records?max_gemba=70&limit=20`);
-                const data = await response.json();
-                displayMultipleRecords(data.records, '낮은 점수 항목들 (GEMBA < 70)');
-            } catch (error) {
-                showError('데이터 로드 오류: ' + error.message);
-            }
+
+        function setupEventListeners() {
+            // 내비게이션 아이템
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilters.view = this.dataset.view;
+                    updateContentTitle();
+                    resetPagination();
+                    loadRecords();
+                });
+            });
+
+            // 필터 버튼들
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const group = this.parentElement;
+                    group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.dataset.filter) {
+                        currentFilters.quality = this.dataset.filter;
+                    }
+                    if (this.dataset.bucket) {
+                        currentFilters.bucket = this.dataset.bucket;
+                    }
+                    
+                    resetPagination();
+                    loadRecords();
+                });
+            });
+
+            // 검색
+            document.getElementById('searchInput').addEventListener('input', function() {
+                currentFilters.search = this.value;
+                currentFilters.searchType = document.getElementById('searchType').value;
+                resetPagination();
+                debounce(loadRecords, 300)();
+            });
+
+            document.getElementById('searchType').addEventListener('change', function() {
+                currentFilters.searchType = this.value;
+                if (currentFilters.search) {
+                    resetPagination();
+                    loadRecords();
+                }
+            });
+
+            // 범위 슬라이더 이벤트
+            setupRangeSliders();
         }
-        
-        async function loadHighScore() {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/records?min_gemba=90&limit=20`);
-                const data = await response.json();
-                displayMultipleRecords(data.records, '높은 점수 항목들 (GEMBA ≥ 90)');
-            } catch (error) {
-                showError('데이터 로드 오류: ' + error.message);
+
+        function setupRangeSliders() {
+            // GEMBA 듀얼 레인지 슬라이더
+            const gembaMin = document.getElementById('gembaMin');
+            const gembaMax = document.getElementById('gembaMax');
+            const gembaTrack = document.getElementById('gembaTrack');
+            
+            function updateGembaRange() {
+                let minVal = parseInt(gembaMin.value);
+                let maxVal = parseInt(gembaMax.value);
+                
+                if (minVal > maxVal) {
+                    [minVal, maxVal] = [maxVal, minVal];
+                    gembaMin.value = minVal;
+                    gembaMax.value = maxVal;
+                }
+                
+                currentFilters.ranges.gemba.min = minVal;
+                currentFilters.ranges.gemba.max = maxVal;
+                currentFilters.ranges.gemba.enabled = minVal > 0 || maxVal < 100;
+                
+                // 트랙 업데이트
+                const minPercent = (minVal / 100) * 100;
+                const maxPercent = (maxVal / 100) * 100;
+                gembaTrack.style.left = minPercent + '%';
+                gembaTrack.style.width = (maxPercent - minPercent) + '%';
+                
+                document.getElementById('gembaRangeCurrent').textContent = 
+                    currentFilters.ranges.gemba.enabled ? `범위: ${minVal} ~ ${maxVal}점` : '전체 범위 (0 ~ 100)';
+                
+                debounce(loadRecordsWithReset, 300)();
             }
-        }
-        
-        async function loadApeImproved() {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/records?has_ape=true&limit=20`);
-                const data = await response.json();
-                const improved = data.records.filter(r => (r.delta_comet || 0) > 0 || (r.delta_cos || 0) > 0);
-                displayMultipleRecords(improved, 'APE로 개선된 항목들');
-            } catch (error) {
-                showError('데이터 로드 오류: ' + error.message);
+            
+            gembaMin.addEventListener('input', updateGembaRange);
+            gembaMax.addEventListener('input', updateGembaRange);
+            updateGembaRange(); // 초기화
+
+            // COMET 듀얼 레인지 슬라이더
+            const cometMin = document.getElementById('cometMin');
+            const cometMax = document.getElementById('cometMax');
+            const cometTrack = document.getElementById('cometTrack');
+            
+            function updateCometRange() {
+                let minVal = parseInt(cometMin.value);
+                let maxVal = parseInt(cometMax.value);
+                
+                if (minVal > maxVal) {
+                    [minVal, maxVal] = [maxVal, minVal];
+                    cometMin.value = minVal;
+                    cometMax.value = maxVal;
+                }
+                
+                const minScore = minVal / 100;
+                const maxScore = maxVal / 100;
+                
+                currentFilters.ranges.comet.min = minScore;
+                currentFilters.ranges.comet.max = maxScore;
+                currentFilters.ranges.comet.enabled = minVal > 0 || maxVal < 100;
+                
+                // 트랙 업데이트
+                const minPercent = (minVal / 100) * 100;
+                const maxPercent = (maxVal / 100) * 100;
+                cometTrack.style.left = minPercent + '%';
+                cometTrack.style.width = (maxPercent - minPercent) + '%';
+                
+                document.getElementById('cometRangeCurrent').textContent = 
+                    currentFilters.ranges.comet.enabled ? `범위: ${minScore.toFixed(2)} ~ ${maxScore.toFixed(2)}` : '전체 범위 (0.00 ~ 1.00)';
+                
+                debounce(loadRecordsWithReset, 300)();
             }
+            
+            cometMin.addEventListener('input', updateCometRange);
+            cometMax.addEventListener('input', updateCometRange);
+            updateCometRange(); // 초기화
+
+            // COS 듀얼 레인지 슬라이더
+            const cosMin = document.getElementById('cosMin');
+            const cosMax = document.getElementById('cosMax');
+            const cosTrack = document.getElementById('cosTrack');
+            
+            function updateCosRange() {
+                let minVal = parseInt(cosMin.value);
+                let maxVal = parseInt(cosMax.value);
+                
+                if (minVal > maxVal) {
+                    [minVal, maxVal] = [maxVal, minVal];
+                    cosMin.value = minVal;
+                    cosMax.value = maxVal;
+                }
+                
+                const minScore = minVal / 100;
+                const maxScore = maxVal / 100;
+                
+                currentFilters.ranges.cos.min = minScore;
+                currentFilters.ranges.cos.max = maxScore;
+                currentFilters.ranges.cos.enabled = minVal > 0 || maxVal < 100;
+                
+                // 트랙 업데이트
+                const minPercent = (minVal / 100) * 100;
+                const maxPercent = (maxVal / 100) * 100;
+                cosTrack.style.left = minPercent + '%';
+                cosTrack.style.width = (maxPercent - minPercent) + '%';
+                
+                document.getElementById('cosRangeCurrent').textContent = 
+                    currentFilters.ranges.cos.enabled ? `범위: ${minScore.toFixed(2)} ~ ${maxScore.toFixed(2)}` : '전체 범위 (0.00 ~ 1.00)';
+                
+                debounce(loadRecordsWithReset, 300)();
+            }
+            
+            cosMin.addEventListener('input', updateCosRange);
+            cosMax.addEventListener('input', updateCosRange);
+            updateCosRange(); // 초기화
+
+            // Delta 듀얼 레인지 슬라이더
+            const deltaMin = document.getElementById('deltaMin');
+            const deltaMax = document.getElementById('deltaMax');
+            const deltaTrack = document.getElementById('deltaTrack');
+            
+            function updateDeltaRange() {
+                let minVal = parseInt(deltaMin.value);
+                let maxVal = parseInt(deltaMax.value);
+                
+                if (minVal > maxVal) {
+                    [minVal, maxVal] = [maxVal, minVal];
+                    deltaMin.value = minVal;
+                    deltaMax.value = maxVal;
+                }
+                
+                const minScore = minVal / 100;
+                const maxScore = maxVal / 100;
+                
+                currentFilters.ranges.delta.min = minScore;
+                currentFilters.ranges.delta.max = maxScore;
+                currentFilters.ranges.delta.enabled = minVal > -50 || maxVal < 50;
+                
+                // 트랙 업데이트 (음수 범위 고려)
+                const minPercent = ((minVal + 50) / 100) * 100;
+                const maxPercent = ((maxVal + 50) / 100) * 100;
+                deltaTrack.style.left = minPercent + '%';
+                deltaTrack.style.width = (maxPercent - minPercent) + '%';
+                
+                document.getElementById('deltaRangeCurrent').textContent = 
+                    currentFilters.ranges.delta.enabled ? 
+                    `범위: ${minScore >= 0 ? '+' : ''}${minScore.toFixed(2)} ~ ${maxScore >= 0 ? '+' : ''}${maxScore.toFixed(2)}` : 
+                    '전체 범위 (-0.50 ~ +0.50)';
+                
+                debounce(loadRecordsWithReset, 300)();
+            }
+            
+            deltaMin.addEventListener('input', updateDeltaRange);
+            deltaMax.addEventListener('input', updateDeltaRange);
+            updateDeltaRange(); // 초기화
+
+            // Delta 타입 토글
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilters.ranges.delta.type = this.dataset.delta;
+                    if (currentFilters.ranges.delta.enabled) {
+                        loadRecordsWithReset();
+                    }
+                });
+            });
         }
-        
-        async function showAnalytics() {
-            showLoading();
+
+        function loadRecordsWithReset() {
+            resetPagination();
+            loadRecords();
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function updateContentTitle() {
+            const titles = {
+                'all': '전체 번역품질 현황',
+                'high-quality': '고품질 번역 (매우우수 + 우수)',
+                'failed': '품질 미달 번역 분석 (나쁨 + 매우나쁨)',
+                'ape-improved': 'APE 개선 효과 분석'
+            };
+            
+            document.getElementById('contentTitle').textContent = titles[currentFilters.view] || '번역품질 분석';
+        }
+
+        function resetPagination() {
+            displayLimit = 10;
+            allData = [];
+        }
+
+        async function loadHeaderStats() {
             try {
                 const response = await fetch(`${API_BASE}/analytics`);
                 const data = await response.json();
-                displayAnalytics(data);
+                
+                document.getElementById('totalRecords').textContent = data.total_records.toLocaleString();
+                
+                const passRate = ((data.distributions.tags.strict_pass || 0) + 
+                                 (data.distributions.tags.soft_pass || 0)) / data.total_records * 100;
+                document.getElementById('passRate').textContent = passRate.toFixed(1) + '%';
+                
+                const apeEffect = data.ape_effectiveness.avg_comet_improvement;
+                document.getElementById('apeEffectiveness').textContent = 
+                    (apeEffect > 0 ? '+' : '') + (apeEffect * 100).toFixed(1) + '%';
             } catch (error) {
-                showError('분석 데이터 로드 오류: ' + error.message);
+                console.error('헤더 통계 로드 실패:', error);
             }
         }
-        
-        function displayRecord(record) {
-            const tagClass = record.tag || 'unknown';
-            const hasApe = 'ape' in record;
-            
-            const html = `
-                <div class="result-card ${tagClass}">
-                    <h3>🔑 ${record.key}</h3>
-                    
-                    <div class="score-grid">
-                        <div class="score-item">
-                            <div class="score-value">${record.gemba || 0}</div>
-                            <div>GEMBA</div>
-                        </div>
-                        <div class="score-item">
-                            <div class="score-value">${(record.comet || 0).toFixed(3)}</div>
-                            <div>COMET</div>
-                        </div>
-                        <div class="score-item">
-                            <div class="score-value">${(record.cos || 0).toFixed(3)}</div>
-                            <div>Cosine</div>
-                        </div>
-                        <div class="score-item">
-                            <div class="score-value">${record.tag}</div>
-                            <div>결과</div>
-                        </div>
-                    </div>
-                    
-                    <h4>📝 텍스트</h4>
-                    <div><strong>원문:</strong></div>
-                    <div class="text-content">${record.src || ''}</div>
-                    
-                    <div><strong>번역:</strong></div>
-                    <div class="text-content">${record.mt || ''}</div>
-                    
-                    ${hasApe ? `
-                        <div><strong>APE 개선:</strong></div>
-                        <div class="text-content">${record.ape}</div>
-                        <div><small>COMET 개선: ${(record.delta_comet || 0).toFixed(3)}, Cosine 개선: ${(record.delta_cos || 0).toFixed(3)}</small></div>
-                    ` : ''}
-                    
-                    ${record.flag && record.flag.failed && record.flag.failed.length > 0 ? `
-                        <div class="issues">
-                            <h4>⚠️ 문제점</h4>
-                            <div><strong>실패한 검사:</strong> ${record.flag.failed.join(', ')}</div>
-                            ${record.flag.gemba_reason ? `<div><strong>GEMBA 피드백:</strong> ${record.flag.gemba_reason}</div>` : ''}
-                        </div>
-                    ` : ''}
-                    
-                    <div class="suggestions">
-                        <h4>💡 빠른 액션</h4>
-                        <button onclick="searchSimilar('${record.bucket}', '${record.tag}')">비슷한 케이스 찾기</button>
-                        <button onclick="searchByText('${(record.src || '').substring(0, 10)}')">비슷한 텍스트 찾기</button>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('results').innerHTML = html;
+
+        async function loadRecords() {
+            const grid = document.getElementById('recordGrid');
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div>데이터를 불러오는 중...</div>';
+
+            try {
+                let url = `${API_BASE}/records?limit=1000`; // 더 많은 데이터를 가져옴
+                
+                // 뷰별 필터링 - 5단계 품질에 맞게 조정
+                switch (currentFilters.view) {
+                    case 'high-quality':
+                        // 매우우수 + 우수 등급만
+                        url += '&tag=strict_pass';
+                        break;
+                    case 'failed':
+                        // 나쁨 + 매우나쁨 등급 (fail 태그)
+                        url += '&tag=fail';
+                        break;
+                    case 'ape-improved':
+                        url += '&has_ape=true';
+                        break;
+                }
+
+                // 추가 필터링
+                if (currentFilters.bucket !== 'all') {
+                    url += `&bucket=${currentFilters.bucket}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+                allData = data.records; // 전체 데이터 저장
+
+                // 품질 등급 필터 적용
+                if (currentFilters.quality !== 'all') {
+                    allData = allData.filter(record => {
+                        // APE 개선이 있는 경우 개선 후 품질로 필터링
+                        const hasApe = record.ape && record.ape !== record.mt && 
+                                      (record.delta_comet || record.delta_cos);
+                        
+                        let qualityClass;
+                        if (hasApe) {
+                            // 개선 후 점수로 품질 계산
+                            const improvedGemba = record.gemba;
+                            const improvedComet = record.comet + (record.delta_comet || 0);
+                            const improvedCos = record.cos + (record.delta_cos || 0);
+                            qualityClass = getQualityClassByScores(improvedGemba, improvedComet, improvedCos);
+                        } else {
+                            // 개선이 없는 경우 원래 품질
+                            qualityClass = getQualityClass(record);
+                        }
+                        
+                        const qualityMap = {
+                            'excellent': 'quality-excellent',
+                            'very-good': 'quality-very-good', 
+                            'good': 'quality-good',
+                            'poor': 'quality-poor',
+                            'very-poor': 'quality-very-poor'
+                        };
+                        return qualityClass === qualityMap[currentFilters.quality];
+                    });
+                }
+
+                // 검색 필터 적용
+                if (currentFilters.search) {
+                    allData = allData.filter(record => {
+                        const searchTerm = currentFilters.search.toLowerCase();
+                        const searchType = currentFilters.searchType || 'all';
+                        
+                        switch(searchType) {
+                            case 'key':
+                                return (record.key || '').toLowerCase().includes(searchTerm);
+                            case 'src':
+                                return (record.src || '').toLowerCase().includes(searchTerm);
+                            case 'mt':
+                                return (record.mt || '').toLowerCase().includes(searchTerm);
+                            case 'ape':
+                                return (record.ape || '').toLowerCase().includes(searchTerm);
+                            case 'all':
+                            default:
+                                return (record.key || '').toLowerCase().includes(searchTerm) ||
+                                       (record.src || '').toLowerCase().includes(searchTerm) ||
+                                       (record.mt || '').toLowerCase().includes(searchTerm) ||
+                                       (record.ape || '').toLowerCase().includes(searchTerm);
+                        }
+                    });
+                }
+
+                // 범위 필터 적용
+                allData = allData.filter(record => {
+                    // GEMBA 범위 필터
+                    if (currentFilters.ranges.gemba.enabled) {
+                        const gembaScore = record.gemba || 0;
+                        if (gembaScore < currentFilters.ranges.gemba.min || 
+                            gembaScore > currentFilters.ranges.gemba.max) {
+                            return false;
+                        }
+                    }
+
+                    // COMET 범위 필터
+                    if (currentFilters.ranges.comet.enabled) {
+                        const cometScore = record.comet + (record.delta_comet || 0);
+                        if (cometScore < currentFilters.ranges.comet.min || 
+                            cometScore > currentFilters.ranges.comet.max) {
+                            return false;
+                        }
+                    }
+
+                    // COS 범위 필터
+                    if (currentFilters.ranges.cos.enabled) {
+                        const cosScore = record.cos + (record.delta_cos || 0);
+                        if (cosScore < currentFilters.ranges.cos.min || 
+                            cosScore > currentFilters.ranges.cos.max) {
+                            return false;
+                        }
+                    }
+
+                    // Delta 범위 필터
+                    if (currentFilters.ranges.delta.enabled) {
+                        const deltaType = currentFilters.ranges.delta.type;
+                        const deltaValue = deltaType === 'comet' ? 
+                            (record.delta_comet || 0) : (record.delta_cos || 0);
+                        if (deltaValue < currentFilters.ranges.delta.min || 
+                            deltaValue > currentFilters.ranges.delta.max) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+
+                // 현재 표시할 데이터 설정
+                currentData = allData.slice(0, displayLimit);
+                renderRecords(currentData);
+                updateLoadMoreSection();
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+                grid.innerHTML = '<div class="loading">❌ 데이터 로드에 실패했습니다.</div>';
+            }
         }
-        
-        let currentRecords = [];
-        let currentTitle = '';
-        let displayedCount = 0;
-        
-        function displayMultipleRecords(records, title) {
+
+        function loadMoreRecords() {
+            const newLimit = displayLimit + 20;
+            currentData = allData.slice(0, newLimit);
+            displayLimit = newLimit;
+            
+            // 기존 레코드 유지하고 새 레코드만 추가
+            const grid = document.getElementById('recordGrid');
+            const newRecords = allData.slice(displayLimit - 20, displayLimit);
+            const newHtml = newRecords.map(record => createRecordCard(record)).join('');
+            grid.innerHTML += newHtml;
+            
+            updateLoadMoreSection();
+        }
+
+        function updateLoadMoreSection() {
+            const loadMoreSection = document.getElementById('loadMoreSection');
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            const currentCount = document.getElementById('currentCount');
+            const totalCount = document.getElementById('totalCount');
+            
+            const hasMore = displayLimit < allData.length;
+            
+            if (allData.length > 0) {
+                loadMoreSection.style.display = 'block';
+                currentCount.textContent = Math.min(displayLimit, allData.length).toLocaleString();
+                totalCount.textContent = allData.length.toLocaleString();
+                
+                if (hasMore) {
+                    loadMoreBtn.style.display = 'block';
+                    const remaining = allData.length - displayLimit;
+                    const nextLoad = Math.min(20, remaining);
+                    loadMoreBtn.innerHTML = `<span>⋯</span> 더보기 (${nextLoad}개 추가)`;
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            } else {
+                loadMoreSection.style.display = 'none';
+            }
+        }
+
+        function renderRecords(records) {
+            const grid = document.getElementById('recordGrid');
+            
             if (!records || records.length === 0) {
-                document.getElementById('results').innerHTML = `<div class="error">결과가 없습니다.</div>`;
+                grid.innerHTML = '<div class="loading">📭 표시할 데이터가 없습니다.</div>';
                 return;
             }
-            
-            // Store records for pagination
-            currentRecords = records;
-            currentTitle = title;
-            displayedCount = 0;
-            
-            showMoreRecords(10);
+
+            const html = records.map(record => createRecordCard(record)).join('');
+            grid.innerHTML = html;
         }
+
+        function createRecordCard(record) {
+            const hasApe = record.ape && record.ape !== record.mt;
+
+            return `
+<div class="record-card">
+    <div class="record-header">
+        <div class="record-id">${record.key || 'N/A'}</div>
+        ${createQualityBadge(record)}
+    </div>
+    
+    <div class="scores-section">
+        ${createScoreCard('GEMBA', record.gemba, record.gemba_improved, 'gemba')}
+        ${createScoreCard('COMET', record.comet, record.comet + (record.delta_comet || 0), 'comet')}
+        ${createScoreCard('COS', record.cos, record.cos + (record.delta_cos || 0), 'cos')}
+    </div>
+    
+    <div class="text-section">
+        <div class="text-row">
+            <div class="text-label">원문</div>
+            <div class="text-content">${record.src || 'N/A'}</div>
+        </div>
         
-        function showMoreRecords(count) {
-            const endIndex = Math.min(displayedCount + count, currentRecords.length);
-            
-            let html = `<h2>${currentTitle} (${currentRecords.length}개)</h2>`;
-            
-            // Display records from 0 to endIndex
-            currentRecords.slice(0, endIndex).forEach(record => {
-                const tagClass = record.tag || 'unknown';
-                html += `
-                    <div class="result-card ${tagClass}" style="margin: 10px 0; padding: 15px;">
-                        <div style="display: flex; justify-content: between; align-items: center;">
-                            <div style="flex: 1;">
-                                <strong>${record.key}</strong><br>
-                                <small>${(record.src || '').substring(0, 80)}...</small><br>
-                                <span style="color: #666;">GEMBA: ${record.gemba || 0}, COMET: ${(record.comet || 0).toFixed(3)}</span>
-                            </div>
-                            <div>
-                                <button onclick="document.getElementById('searchInput').value='${record.key}'; searchKey();">상세보기</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            // Add "더보기" button if there are more records
-            if (endIndex < currentRecords.length) {
-                const remaining = currentRecords.length - endIndex;
-                html += `
-                    <div style="text-align: center; margin: 20px;">
-                        <button onclick="showMoreRecords(10)" style="padding: 15px 30px; font-size: 16px;">
-                            더보기 (${remaining}개 더 있음)
-                        </button>
+        <div class="text-row">
+            <div class="text-label">기계번역</div>
+            <div class="text-content">
+                ${record.mt || 'N/A'}
+                ${createEvidenceIndicator(record)}
+            </div>
+        </div>
+        
+        ${hasApe ? createApeImprovement(record) : ''}
+    </div>
+</div>
+            `;
+        }
+
+        function createScoreCard(label, originalScore, improvedScore, type) {
+            if (!originalScore && originalScore !== 0) {
+                return `
+                    <div class="score-card">
+                        <div class="score-label">${label}</div>
+                        <div class="score-value">N/A</div>
                     </div>
                 `;
             }
-            
-            displayedCount = endIndex;
-            document.getElementById('results').innerHTML = html;
-        }
-        
-        function displayAnalytics(data) {
-            const html = `
-                <div class="result-card">
-                    <h2>📊 전체 통계</h2>
-                    
-                    <div class="score-grid">
-                        <div class="score-item">
-                            <div class="score-value">${data.total_records}</div>
-                            <div>총 레코드</div>
-                        </div>
-                        <div class="score-item">
-                            <div class="score-value">${data.scores.gemba.mean.toFixed(1)}</div>
-                            <div>평균 GEMBA</div>
-                        </div>
-                        <div class="score-item">
-                            <div class="score-value">${((data.distributions.tags.strict_pass || 0) + (data.distributions.tags.soft_pass || 0))}/${data.total_records}</div>
-                            <div>통과율</div>
-                        </div>
-                        <div class="score-item">
-                            <div class="score-value">${data.ape_effectiveness.total_ape_records}</div>
-                            <div>APE 적용됨</div>
-                        </div>
+
+            const hasImprovement = improvedScore && improvedScore !== originalScore;
+            const delta = hasImprovement ? improvedScore - originalScore : 0;
+            const deltaPercent = originalScore ? (delta / originalScore * 100) : 0;
+            const cardClass = delta > 0 ? 'improvement' : delta < 0 ? 'decline' : '';
+
+            let displayValue = originalScore;
+            let changeDisplay = '';
+
+            if (hasImprovement) {
+                const arrow = delta > 0 ? '↗' : delta < 0 ? '↘' : '→';
+                const changeClass = delta > 0 ? 'score-positive' : delta < 0 ? 'score-negative' : 'score-neutral';
+                
+                displayValue = improvedScore;
+                changeDisplay = `
+                    <div class="score-change ${changeClass}">
+                        <span class="score-arrow">${arrow}</span>
+                        <span>${delta > 0 ? '+' : ''}${type === 'gemba' ? delta.toFixed(0) : delta.toFixed(3)}</span>
+                        <span class="score-percentage">(${deltaPercent > 0 ? '+' : ''}${deltaPercent.toFixed(1)}%)</span>
                     </div>
-                    
-                    <h3>태그 분포</h3>
-                    <div class="score-grid">
-                        <div class="score-item strict_pass">
-                            <div class="score-value">${data.distributions.tags.strict_pass || 0}</div>
-                            <div>Strict Pass</div>
-                        </div>
-                        <div class="score-item soft_pass">
-                            <div class="score-value">${data.distributions.tags.soft_pass || 0}</div>
-                            <div>Soft Pass</div>
-                        </div>
-                        <div class="score-item fail">
-                            <div class="score-value">${data.distributions.tags.fail || 0}</div>
-                            <div>Failed</div>
-                        </div>
+                `;
+            }
+
+            const percentage = getScorePercentage(type, displayValue);
+
+            return `
+                <div class="score-card ${cardClass}" onclick="showScoreInfo('${type}', ${displayValue}, ${originalScore}, ${delta})">
+                    <div class="score-label">
+                        ${label}
+                        <button class="score-info-btn" onclick="event.stopPropagation(); showScoreInfo('${type}', ${displayValue}, ${originalScore}, ${delta})">ℹ</button>
                     </div>
-                    
-                    <h3>길이별 분포</h3>
-                    <div class="score-grid">
-                        ${Object.entries(data.distributions.buckets).map(([bucket, count]) => `
-                            <div class="score-item">
-                                <div class="score-value">${count}</div>
-                                <div>${bucket}</div>
-                            </div>
-                        `).join('')}
+                    <div class="score-main">
+                        <div class="score-value">${type === 'gemba' ? displayValue.toFixed(0) : displayValue.toFixed(3)}</div>
+                    </div>
+                    ${changeDisplay}
+                    <div class="score-gauge">
+                        <div class="score-fill" style="width: ${percentage}%"></div>
                     </div>
                 </div>
             `;
+        }
+
+        function createApeImprovement(record) {
+            const textDiff = generateTextDiff(record.mt, record.ape);
             
-            document.getElementById('results').innerHTML = html;
-        }
-        
-        function showLoading() {
-            document.getElementById('results').innerHTML = '<div class="loading">🔄 로딩 중...</div>';
-        }
-        
-        function showError(message) {
-            document.getElementById('results').innerHTML = `<div class="error">❌ ${message}</div>`;
-        }
-        
-        // Enter 키로 검색
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchKey();
+            // 품질 등급 변화 계산
+            const originalClass = getQualityClass(record);
+            const originalLabel = getQualityLabelByClass(originalClass);
+            
+            const improvedGemba = record.gemba;
+            const improvedComet = record.comet + (record.delta_comet || 0);
+            const improvedCos = record.cos + (record.delta_cos || 0);
+            const improvedClass = getQualityClassByScores(improvedGemba, improvedComet, improvedCos);
+            const improvedLabel = getQualityLabelByClass(improvedClass);
+            
+            const qualityOrder = {
+                'quality-very-poor': 1,
+                'quality-poor': 2, 
+                'quality-good': 3,
+                'quality-very-good': 4,
+                'quality-excellent': 5
+            };
+            
+            const isQualityImproved = qualityOrder[improvedClass] > qualityOrder[originalClass];
+            
+            let qualityChangeInfo = '';
+            if (isQualityImproved) {
+                qualityChangeInfo = `
+<div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(0, 208, 132, 0.1); border-radius: 6px; border-left: 3px solid var(--success-color);">
+    <div style="font-size: 11px; color: var(--success-color); font-weight: 600;">품질 등급 개선</div>
+    <div style="font-size: 12px; color: var(--text-primary);">
+        <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
+        <span style="margin: 0 8px; color: var(--success-color);">→</span>
+        <span class="quality-badge-mini ${improvedClass}">${improvedLabel}</span>
+    </div>
+</div>
+                `;
             }
-        });
-        
-        // 페이지 로드시 통계 표시
-        window.onload = () => showAnalytics();
+            
+            return `
+<div class="ape-improvement">
+    <div class="ape-header">
+        <span class="ape-icon">✨</span>
+        <span class="ape-title">APE 개선 결과</span>
+    </div>
+    ${qualityChangeInfo}
+    <div class="text-content text-diff">${textDiff}</div>
+</div>
+            `;
+        }
+
+        function generateTextDiff(original, improved) {
+            if (!original || !improved || original === improved) {
+                return improved || original || 'N/A';
+            }
+
+            // 단순한 단어 기반 diff (실제로는 더 정교한 diff 알고리즘 필요)
+            const originalWords = original.split(' ');
+            const improvedWords = improved.split(' ');
+            
+            // 간단한 구현: 다른 부분을 하이라이트
+            if (originalWords.join(' ') === improvedWords.join(' ')) {
+                return improved;
+            }
+
+            return `
+                <span class="diff-original">${original}</span>
+                <span class="diff-improved">${improved}</span>
+            `;
+        }
+
+        function createEvidenceIndicator(record) {
+            const evidence = record.flag?.gemba_reason || '';
+            const hasEvidence = evidence && evidence.trim().length > 0;
+            
+            if (!hasEvidence) return '';
+            
+            // 이미 우수한 품질의 레코드는 evidence 표시하지 않음
+            const isHighQuality = record.tag === 'strict_pass';
+            const currentQuality = getQualityClass(record);
+            const isExcellentOrVeryGood = currentQuality === 'quality-excellent' || currentQuality === 'quality-very-good';
+            
+            if (isHighQuality && isExcellentOrVeryGood) {
+                return ''; // 우수한 품질이면 evidence 표시 안함
+            }
+            
+            // Evidence 중요도 판단
+            const isFailRecord = record.tag === 'fail';
+            const isCritical = evidence.toLowerCase().includes('error') || 
+                              evidence.toLowerCase().includes('incorrect') ||
+                              evidence.toLowerCase().includes('wrong');
+            
+            let iconClass = 'info';
+            if (isFailRecord) iconClass = 'critical';
+            else if (isCritical) iconClass = 'critical';
+            
+            const iconText = iconClass === 'critical' ? '!' : 'i';
+            
+            return `
+<div class="evidence-indicator" data-evidence="${encodeURIComponent(evidence)}" data-type="${iconClass}" onmouseenter="showEvidenceTooltipFromData(this)" onmouseleave="hideEvidenceTooltip(this)">
+    <div class="evidence-icon ${iconClass}">${iconText}</div>
+    <div class="evidence-tooltip">
+        <strong>평가 근거:</strong><br>
+        <span class="evidence-text"></span>
+    </div>
+</div>
+            `;
+        }
+
+        function showEvidenceTooltipFromData(element) {
+            const evidenceEncoded = element.getAttribute('data-evidence');
+            const type = element.getAttribute('data-type');
+            const evidence = decodeURIComponent(evidenceEncoded);
+            
+            // 툴팁 내용 업데이트
+            const evidenceText = element.querySelector('.evidence-text');
+            evidenceText.textContent = evidence;
+            
+            showEvidenceTooltip(element, evidence, type);
+        }
+
+        function showEvidenceTooltip(element, evidence, type) {
+            const tooltip = element.querySelector('.evidence-tooltip');
+            const icon = element.querySelector('.evidence-icon');
+            
+            // 먼저 툴팁을 보이게 해서 실제 크기 측정
+            tooltip.style.visibility = 'hidden';
+            tooltip.style.opacity = '1';
+            tooltip.classList.add('show');
+            
+            // 아이콘의 위치 계산
+            const iconRect = icon.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+            
+            // 실제 툴팁 크기
+            const tooltipWidth = Math.min(tooltipRect.width, 400); // 최대 400px
+            const tooltipHeight = tooltipRect.height;
+            
+            // 화면 크기 계산
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // 기본 위치 (아이콘 위쪽 중앙)
+            let left = iconRect.left + iconRect.width / 2 - tooltipWidth / 2;
+            let top = iconRect.top - tooltipHeight - 10;
+            
+            // 화면 경계 조정
+            if (left < 10) left = 10;
+            if (left + tooltipWidth > viewportWidth - 10) left = viewportWidth - tooltipWidth - 10;
+            
+            // 위쪽 공간이 부족하면 아래쪽으로 이동
+            if (top < 10) {
+                top = iconRect.bottom + 10;
+                // 아래쪽도 공간이 부족하면 화면 내에 맞추기
+                if (top + tooltipHeight > viewportHeight - 10) {
+                    top = viewportHeight - tooltipHeight - 10;
+                }
+            }
+            
+            // 최종 위치 설정
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            tooltip.style.width = tooltipWidth + 'px';
+            tooltip.style.visibility = 'visible';
+        }
+
+        function hideEvidenceTooltip(element) {
+            const tooltip = element.querySelector('.evidence-tooltip');
+            tooltip.classList.remove('show');
+            // 스타일 초기화
+            tooltip.style.left = '';
+            tooltip.style.top = '';
+            tooltip.style.width = '';
+            tooltip.style.visibility = '';
+        }
+
+        function showScoreInfo(scoreType, currentValue, originalValue, delta) {
+            const scoreInfos = {
+                'gemba': {
+                    name: 'GEMBA Score',
+                    description: 'GPT 기반 번역품질 평가 점수',
+                    range: '0-100점',
+                    interpretation: '85+ 우수, 75+ 양호, 65+ 허용, 45+ 나쁨, 45미만 매우나쁨',
+                    usage: '전반적인 번역 품질을 종합 평가. 유창성과 적절성을 모두 고려한 점수입니다.',
+                    analysis: '• 85점 이상: 게시/출간 가능한 고품질 번역\n• 75-84점: 경미한 후편집 필요\n• 65-74점: 상당한 후편집 필요\n• 45-64점: 재번역 권장\n• 45점 미만: 심각한 품질 문제'
+                },
+                'comet': {
+                    name: 'COMET Score', 
+                    description: '신경망 기반 번역품질 메트릭',
+                    range: '0.0-1.0 (실제 0.2-0.9)',
+                    interpretation: '0.80+ 매우우수, 0.75+ 우수, 0.70+ 양호, 0.50+ 나쁨, 0.50미만 매우나쁨',
+                    usage: '참조 번역 없이 원문과 번역문만으로 품질을 측정합니다.',
+                    analysis: '• 0.80+: 인간 수준의 번역 품질\n• 0.75-0.79: 실용적 사용 가능\n• 0.70-0.74: 이해 가능하나 개선 필요\n• 0.50-0.69: 품질 문제 심각\n• 0.50 미만: 사용 불가 수준'
+                },
+                'cos': {
+                    name: 'Cosine Similarity',
+                    description: 'LaBSE 임베딩 기반 의미 유사도',
+                    range: '0.0-1.0 (실제 0.5-0.95)',
+                    interpretation: '0.85+ 매우우수, 0.75+ 우수, 0.70+ 양호, 0.50+ 나쁨, 0.50미만 매우나쁨',
+                    usage: '원문과 번역문의 의미적 유사도를 벡터 공간에서 측정합니다.',
+                    analysis: '• 0.85+: 의미 보존 탁월\n• 0.75-0.84: 핵심 의미 보존\n• 0.70-0.74: 일부 의미 손실\n• 0.50-0.69: 의미 왜곡 위험\n• 0.50 미만: 심각한 의미 손실'
+                }
+            };
+
+            const info = scoreInfos[scoreType];
+            if (!info) return;
+
+            let changeInfo = '';
+            if (delta !== 0) {
+                const direction = delta > 0 ? '개선' : '악화';
+                const percent = originalValue ? (Math.abs(delta) / originalValue * 100).toFixed(1) : '0';
+                changeInfo = `\n\nAPE 개선 효과:\n${delta > 0 ? '+' : ''}${scoreType === 'gemba' ? delta.toFixed(0) : delta.toFixed(3)} (${percent}% ${direction})`;
+            }
+
+            alert(`${info.name}\n\n${info.description}\n\n범위: ${info.range}\n해석: ${info.interpretation}\n\n활용법:\n${info.usage}\n\n분석 가이드:\n${info.analysis}${changeInfo}`);
+        }
+
+        function getQualityClass(record) {
+            const tag = record.tag;
+            const gemba = record.gemba || 0;
+            const comet = record.comet || 0;
+            const cos = record.cos || 0;
+            
+            // Back translation 점수 확인 (가정: back_translation 필드가 있다면)
+            const hasBackTranslation = record.back_translation_score && record.back_translation_score > 0.8;
+            
+            if (tag === 'strict_pass') {
+                // 엄격통과 중에서도 back translation 통과하면 매우 우수
+                if (hasBackTranslation) {
+                    return 'quality-excellent'; // 매우 우수 (초록)
+                } else {
+                    return 'quality-very-good'; // 우수 (연두)
+                }
+            } else if (tag === 'soft_pass') {
+                return 'quality-good'; // 양호 (노란색)
+            } else if (tag === 'fail') {
+                // 품질미달 중에서도 극히 낮은 점수는 매우나쁨
+                // 기존 임계값에서 -0.2씩 더 낮은 기준
+                const veryPoorThresholds = {
+                    gemba: 45,    // 65 - 20
+                    comet: 0.50,  // 0.70 - 0.20  
+                    cos: 0.50     // 0.70 - 0.20
+                };
+                
+                if (gemba < veryPoorThresholds.gemba || 
+                    comet < veryPoorThresholds.comet || 
+                    cos < veryPoorThresholds.cos) {
+                    return 'quality-very-poor';
+                } else {
+                    return 'quality-poor';
+                }
+            }
+            
+            return 'quality-good'; 
+        }
+
+        function getQualityClassByScores(gemba, comet, cos) {
+            const hasBackTranslation = false; 
+            
+            if (gemba >= 85 && comet >= 0.80 && cos >= 0.85) {
+                return hasBackTranslation ? 'quality-excellent' : 'quality-very-good';
+            } else if (gemba >= 75 && comet >= 0.75 && cos >= 0.75) {
+                return 'quality-good';
+            } else if (gemba >= 65 && comet >= 0.70 && cos >= 0.70) {
+                return 'quality-good'; 
+            } else if (gemba >= 45 && comet >= 0.50 && cos >= 0.50) {
+                return 'quality-poor';
+            } else {
+                return 'quality-very-poor';
+            }
+        }
+
+        function getQualityLabel(record) {
+            const qualityClass = getQualityClass(record);
+            const labels = {
+                'quality-excellent': '매우우수',
+                'quality-very-good': '우수',
+                'quality-good': '양호',
+                'quality-poor': '나쁨',
+                'quality-very-poor': '매우나쁨'
+            };
+            return labels[qualityClass] || '미분류';
+        }
+
+        function getQualityLabelByClass(qualityClass) {
+            const labels = {
+                'quality-excellent': '매우우수',
+                'quality-very-good': '우수',
+                'quality-good': '양호',
+                'quality-poor': '나쁨',
+                'quality-very-poor': '매우나쁨'
+            };
+            return labels[qualityClass] || '미분류';
+        }
+
+        function createQualityBadge(record) {
+            const hasApe = record.ape && record.ape !== record.mt && 
+                          (record.delta_comet || record.delta_cos);
+                          
+            if (!hasApe) {
+                // APE 개선이 없는 경우 - 기존 방식
+                const qualityClass = getQualityClass(record);
+                const qualityLabel = getQualityLabel(record);
+                return `<div class="quality-badge ${qualityClass}">${qualityLabel}</div>`;
+            }
+            
+            // APE 개선이 있는 경우 - 개선 전후 표시
+            const originalClass = getQualityClass(record); // 원래 등급
+            const originalLabel = getQualityLabel(record);
+            
+            // 개선 후 점수로 등급 계산
+            const improvedGemba = record.gemba; // 이미 개선된 점수라고 가정
+            const improvedComet = record.comet + (record.delta_comet || 0);
+            const improvedCos = record.cos + (record.delta_cos || 0);
+            
+            const improvedClass = getQualityClassByScores(improvedGemba, improvedComet, improvedCos);
+            const improvedLabel = getQualityLabelByClass(improvedClass);
+            
+            // 개선 여부 확인
+            const qualityOrder = {
+                'quality-very-poor': 1,
+                'quality-poor': 2, 
+                'quality-good': 3,
+                'quality-very-good': 4,
+                'quality-excellent': 5
+            };
+            
+            const isImproved = qualityOrder[improvedClass] > qualityOrder[originalClass];
+            
+            if (isImproved) {
+                return `
+                    <div class="quality-badge-improved">
+                        <div class="quality-badge ${improvedClass}">${improvedLabel}</div>
+                        <div class="quality-improvement-arrow">⬆</div>
+                        <div class="quality-badge-original ${originalClass}">${originalLabel}</div>
+                    </div>
+                `;
+            } else {
+                // 개선되지 않았으면 기존 방식
+                return `<div class="quality-badge ${originalClass}">${originalLabel}</div>`;
+            }
+        }
+
+        function getScorePercentage(scoreType, value) {
+            let min, max;
+            switch(scoreType) {
+                case 'gemba':
+                    min = 20; max = 100;
+                    break;
+                case 'comet':
+                    min = 0.2; max = 0.9;
+                    break;
+                case 'cos':
+                    min = 0.5; max = 0.95;
+                    break;
+                default:
+                    return 50;
+            }
+            
+            return Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
+        }
+
+        function refreshData() {
+            resetPagination();
+            loadHeaderStats();
+            loadRecords();
+        }
+
+        function exportData() {
+            if (!currentData || currentData.length === 0) {
+                alert('내보낼 데이터가 없습니다.');
+                return;
+            }
+
+            const csv = convertToCSV(currentData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `mt_quality_analysis_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function convertToCSV(data) {
+            const headers = ['Key', 'Source', 'MT', 'APE', 'GEMBA', 'COMET', 'COS', 'Tag', 'Bucket'];
+            const rows = data.map(record => [
+                record.key || '',
+                record.src || '',
+                record.mt || '',
+                record.ape || '',
+                record.gemba || '',
+                record.comet || '',
+                record.cos || '',
+                record.tag || '',
+                record.bucket || ''
+            ]);
+
+            return [headers, ...rows].map(row => 
+                row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
     </script>
 </body>
 </html>

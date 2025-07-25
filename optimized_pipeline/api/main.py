@@ -15,7 +15,7 @@ from pathlib import Path
 from enum import Enum
 
 # Load data
-DATA_FILE = Path("../out/v12/ape_evidence.json")
+DATA_FILE = Path("../out/v13/ape_evidence.json")
 
 class BucketType(str, Enum):
     very_short = "very_short"

@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>번역품질 분석센터 | MT Quality Analytics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 주식 웹사이트 컬러 팔레트 */
+            --primary-bg: #0a0e1a;
+            --secondary-bg: #1a1f2e;
+            --card-bg: #252d3d;
+            --accent-bg: #2a3441;
+            --success-color: #00d084;
+            --danger-color: #ff6b6b;
+            --warning-color: #ffa726;
+            --info-color: #42a5f5;
+            --neutral-color: #6c757d;
+            --text-primary: #ffffff;
+            --text-secondary: #b3bcc8;
+            --text-muted: #8b949e;
+            --border-color: #30374a;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.25);
+            --gradient-success: linear-gradient(135deg, #00d084, #00c477);
+            --gradient-danger: linear-gradient(135deg, #ff6b6b, #ff5252);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-size: 14px;
+            min-height: 100vh;
+        }
+
+        .main-header {
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: var(--gradient-success);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .sidebar {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            height: fit-content;
+        }
+
+        .main-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .nav-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .nav-item:hover {
+            background: var(--accent-bg);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--success-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        .search-section {
+            padding: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 3px rgba(0, 208, 132, 0.1);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        .filter-group {
+            margin-bottom: 16px;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 12px;
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .content-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--accent-bg);
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            border-color: var(--success-color);
+        }
+
+        .btn.primary {
+            background: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+
+        .btn.primary:hover {
+            background: #00c477;
+        }
+
+        /* 주식 스타일 레코드 카드 */
+        .record-grid {
+            padding: 24px;
+        }
+
+        .record-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .record-card:hover {
+            border-color: var(--success-color);
+            box-shadow: 0 4px 12px rgba(0, 208, 132, 0.1);
+        }
+
+        .record-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .record-id {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--accent-bg);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .quality-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .quality-excellent {
+            background: rgba(0, 208, 132, 0.2);
+            color: var(--success-color);
+            border: 1px solid rgba(0, 208, 132, 0.3);
+        }
+
+        .quality-good {
+            background: rgba(66, 165, 245, 0.2);
+            color: var(--info-color);
+            border: 1px solid rgba(66, 165, 245, 0.3);
+        }
+
+        .quality-fair {
+            background: rgba(255, 167, 38, 0.2);
+            color: var(--warning-color);
+            border: 1px solid rgba(255, 167, 38, 0.3);
+        }
+
+        .quality-poor {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--danger-color);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        /* 주식 스타일 점수 섹션 */
+        .scores-section {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .score-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .score-card:hover {
+            border-color: var(--success-color);
+            transform: translateY(-2px);
+        }
+
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--neutral-color);
+        }
+
+        .score-card.improvement::before {
+            background: var(--gradient-success);
+        }
+
+        .score-card.decline::before {
+            background: var(--gradient-danger);
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .score-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .score-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .score-arrow {
+            font-size: 16px;
+        }
+
+        .score-positive {
+            color: var(--success-color);
+        }
+
+        .score-negative {
+            color: var(--danger-color);
+        }
+
+        .score-neutral {
+            color: var(--neutral-color);
+        }
+
+        .score-percentage {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .score-gauge {
+            height: 4px;
+            background: var(--accent-bg);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: var(--success-color);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* 텍스트 diff 스타일 */
+        .text-section {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .text-row {
+            margin-bottom: 16px;
+        }
+
+        .text-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .text-content {
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .text-diff {
+            position: relative;
+        }
+
+        .diff-original {
+            background: rgba(255, 107, 107, 0.15);
+            color: #ff8a80;
+            padding: 2px 4px;
+            border-radius: 3px;
+            text-decoration: line-through;
+            margin-right: 4px;
+        }
+
+        .diff-improved {
+            background: rgba(0, 208, 132, 0.15);
+            color: #4ade80;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        /* APE 개선 표시 */
+        .ape-improvement {
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 208, 132, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .ape-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .ape-icon {
+            color: var(--success-color);
+            font-size: 16px;
+        }
+
+        .ape-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--success-color);
+        }
+
+        /* 툴팁 스타일 */
+        .tooltip {
+            position: absolute;
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            max-width: 300px;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .scores-section {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .header-stats {
+                display: none;
+            }
+        }
+
+        /* 로딩 애니메이션 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--accent-bg);
+            border-top: 3px solid var(--success-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">MTQE</div>
+                <div class="subtitle">MT Quality Analytics</div>
+            </div>
+            <div class="header-stats" id="headerStats">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalRecords">-</div>
+                    <div class="stat-label">총 레코드</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="passRate">-</div>
+                    <div class="stat-label">통과율</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="apeEffectiveness">-</div>
+                    <div class="stat-label">APE 효과</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <div class="nav-section">
+                    <div class="nav-title">분석 도구</div>
+                    <div class="nav-item active" data-view="all">
+                        <span>📊</span> 전체 데이터
+                    </div>
+                    <div class="nav-item" data-view="high-quality">
+                        <span>🌟</span> 고품질 번역
+                    </div>
+                    <div class="nav-item" data-view="failed">
+                        <span>🔴</span> 품질 미달
+                    </div>
+                    <div class="nav-item" data-view="ape-improved">
+                        <span>🚀</span> APE 개선사례
+                    </div>
+                </div>
+
+                <div class="search-section">
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="텍스트 검색...">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">품질 등급</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">전체</button>
+                            <button class="filter-btn" data-filter="excellent">우수</button>
+                            <button class="filter-btn" data-filter="good">양호</button>
+                            <button class="filter-btn" data-filter="fair">보통</button>
+                            <button class="filter-btn" data-filter="poor">미흡</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">텍스트 길이</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-bucket="all">전체</button>
+                            <button class="filter-btn" data-bucket="very_short">매우짧음</button>
+                            <button class="filter-btn" data-bucket="short">짧음</button>
+                            <button class="filter-btn" data-bucket="medium">보통</button>
+                            <button class="filter-btn" data-bucket="long">김</button>
+                            <button class="filter-btn" data-bucket="very_long">매우김</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <div class="content-header">
+                    <div class="content-title" id="contentTitle">전체 번역품질 현황</div>
+                    <div class="view-controls">
+                        <button class="btn" onclick="refreshData()">
+                            <span>🔄</span> 새로고침
+                        </button>
+                        <button class="btn primary" onclick="exportData()">
+                            <span>📊</span> 데이터 내보내기
+                        </button>
+                    </div>
+                </div>
+
+                <div class="record-grid" id="recordGrid">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        데이터를 불러오는 중...
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentData = [];
+        let currentFilters = {
+            view: 'all',
+            quality: 'all',
+            bucket: 'all',
+            search: ''
+        };
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHeaderStats();
+            loadRecords();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // 내비게이션 아이템
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilters.view = this.dataset.view;
+                    updateContentTitle();
+                    loadRecords();
+                });
+            });
+
+            // 필터 버튼들
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const group = this.parentElement;
+                    group.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.dataset.filter) {
+                        currentFilters.quality = this.dataset.filter;
+                    }
+                    if (this.dataset.bucket) {
+                        currentFilters.bucket = this.dataset.bucket;
+                    }
+                    
+                    loadRecords();
+                });
+            });
+
+            // 검색
+            document.getElementById('searchInput').addEventListener('input', function() {
+                currentFilters.search = this.value;
+                debounce(loadRecords, 300)();
+            });
+        }
+
+        function updateContentTitle() {
+            const titles = {
+                'all': '전체 번역품질 현황',
+                'high-quality': '고품질 번역 (GEMBA ≥ 85)',
+                'failed': '품질 미달 번역 분석',
+                'ape-improved': 'APE 개선 효과 분석'
+            };
+            
+            document.getElementById('contentTitle').textContent = titles[currentFilters.view] || '번역품질 분석';
+        }
+
+        async function loadHeaderStats() {
+            try {
+                const response = await fetch(`${API_BASE}/analytics`);
+                const data = await response.json();
+                
+                document.getElementById('totalRecords').textContent = data.total_records.toLocaleString();
+                
+                const passRate = ((data.distributions.tags.strict_pass || 0) + 
+                                 (data.distributions.tags.soft_pass || 0)) / data.total_records * 100;
+                document.getElementById('passRate').textContent = passRate.toFixed(1) + '%';
+                
+                const apeEffect = data.ape_effectiveness.avg_comet_improvement;
+                document.getElementById('apeEffectiveness').textContent = 
+                    (apeEffect > 0 ? '+' : '') + (apeEffect * 100).toFixed(1) + '%';
+            } catch (error) {
+                console.error('헤더 통계 로드 실패:', error);
+            }
+        }
+
+        async function loadRecords() {
+            const grid = document.getElementById('recordGrid');
+            grid.innerHTML = '<div class="loading"><div class="spinner"></div>데이터를 불러오는 중...</div>';
+
+            try {
+                let url = `${API_BASE}/records?limit=20`;
+                
+                // 뷰별 필터링
+                switch (currentFilters.view) {
+                    case 'high-quality':
+                        url += '&min_gemba=85&tag=strict_pass';
+                        break;
+                    case 'failed':
+                        url += '&tag=fail';
+                        break;
+                    case 'ape-improved':
+                        url += '&has_ape=true';
+                        break;
+                }
+
+                // 추가 필터링
+                if (currentFilters.bucket !== 'all') {
+                    url += `&bucket=${currentFilters.bucket}`;
+                }
+
+                const response = await fetch(url);
+                const data = await response.json();
+                currentData = data.records;
+
+                // 검색 필터 적용
+                if (currentFilters.search) {
+                    currentData = currentData.filter(record => {
+                        const searchTerm = currentFilters.search.toLowerCase();
+                        return (record.src || '').toLowerCase().includes(searchTerm) ||
+                               (record.mt || '').toLowerCase().includes(searchTerm) ||
+                               (record.ape || '').toLowerCase().includes(searchTerm);
+                    });
+                }
+
+                renderRecords(currentData);
+            } catch (error) {
+                console.error('데이터 로드 실패:', error);
+                grid.innerHTML = '<div class="loading">❌ 데이터 로드에 실패했습니다.</div>';
+            }
+        }
+
+        function renderRecords(records) {
+            const grid = document.getElementById('recordGrid');
+            
+            if (!records || records.length === 0) {
+                grid.innerHTML = '<div class="loading">📭 표시할 데이터가 없습니다.</div>';
+                return;
+            }
+
+            const html = records.map(record => createRecordCard(record)).join('');
+            grid.innerHTML = html;
+        }
+
+        function createRecordCard(record) {
+            const hasApe = record.ape && record.ape !== record.mt;
+            const qualityClass = getQualityClass(record.tag);
+            const qualityLabel = getQualityLabel(record.tag);
+
+            return `
+                <div class="record-card">
+                    <div class="record-header">
+                        <div class="record-id">${record.key || 'N/A'}</div>
+                        <div class="quality-badge ${qualityClass}">${qualityLabel}</div>
+                    </div>
+                    
+                    <div class="scores-section">
+                        ${createScoreCard('GEMBA', record.gemba, record.gemba_improved, 'gemba')}
+                        ${createScoreCard('COMET', record.comet, record.comet + (record.delta_comet || 0), 'comet')}
+                        ${createScoreCard('COS', record.cos, record.cos + (record.delta_cos || 0), 'cos')}
+                    </div>
+                    
+                    <div class="text-section">
+                        <div class="text-row">
+                            <div class="text-label">원문</div>
+                            <div class="text-content">${record.src || 'N/A'}</div>
+                        </div>
+                        
+                        <div class="text-row">
+                            <div class="text-label">기계번역</div>
+                            <div class="text-content">${record.mt || 'N/A'}</div>
+                        </div>
+                        
+                        ${hasApe ? createApeImprovement(record) : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createScoreCard(label, originalScore, improvedScore, type) {
+            if (!originalScore && originalScore !== 0) {
+                return `
+                    <div class="score-card">
+                        <div class="score-label">${label}</div>
+                        <div class="score-value">N/A</div>
+                    </div>
+                `;
+            }
+
+            const hasImprovement = improvedScore && improvedScore !== originalScore;
+            const delta = hasImprovement ? improvedScore - originalScore : 0;
+            const deltaPercent = originalScore ? (delta / originalScore * 100) : 0;
+            const cardClass = delta > 0 ? 'improvement' : delta < 0 ? 'decline' : '';
+
+            let displayValue = originalScore;
+            let changeDisplay = '';
+
+            if (hasImprovement) {
+                const arrow = delta > 0 ? '↗' : delta < 0 ? '↘' : '→';
+                const changeClass = delta > 0 ? 'score-positive' : delta < 0 ? 'score-negative' : 'score-neutral';
+                
+                displayValue = improvedScore;
+                changeDisplay = `
+                    <div class="score-change ${changeClass}">
+                        <span class="score-arrow">${arrow}</span>
+                        <span>${delta > 0 ? '+' : ''}${type === 'gemba' ? delta.toFixed(0) : delta.toFixed(3)}</span>
+                        <span class="score-percentage">(${deltaPercent > 0 ? '+' : ''}${deltaPercent.toFixed(1)}%)</span>
+                    </div>
+                `;
+            }
+
+            const percentage = getScorePercentage(type, displayValue);
+
+            return `
+                <div class="score-card ${cardClass}">
+                    <div class="score-label">${label}</div>
+                    <div class="score-main">
+                        <div class="score-value">${type === 'gemba' ? displayValue.toFixed(0) : displayValue.toFixed(3)}</div>
+                    </div>
+                    ${changeDisplay}
+                    <div class="score-gauge">
+                        <div class="score-fill" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createApeImprovement(record) {
+            const textDiff = generateTextDiff(record.mt, record.ape);
+            
+            return `
+                <div class="ape-improvement">
+                    <div class="ape-header">
+                        <span class="ape-icon">🚀</span>
+                        <span class="ape-title">APE 개선 결과</span>
+                    </div>
+                    <div class="text-content text-diff">${textDiff}</div>
+                </div>
+            `;
+        }
+
+        function generateTextDiff(original, improved) {
+            if (!original || !improved || original === improved) {
+                return improved || original || 'N/A';
+            }
+
+            // 단순한 단어 기반 diff (실제로는 더 정교한 diff 알고리즘 필요)
+            const originalWords = original.split(' ');
+            const improvedWords = improved.split(' ');
+            
+            // 간단한 구현: 다른 부분을 하이라이트
+            if (originalWords.join(' ') === improvedWords.join(' ')) {
+                return improved;
+            }
+
+            return `
+                <span class="diff-original">${original}</span>
+                <span class="diff-improved">${improved}</span>
+            `;
+        }
+
+        function getQualityClass(tag) {
+            const classes = {
+                'strict_pass': 'quality-excellent',
+                'soft_pass': 'quality-good',
+                'fail': 'quality-poor'
+            };
+            return classes[tag] || 'quality-fair';
+        }
+
+        function getQualityLabel(tag) {
+            const labels = {
+                'strict_pass': '엄격통과',
+                'soft_pass': '소프트통과',
+                'fail': '품질미달'
+            };
+            return labels[tag] || '미분류';
+        }
+
+        function getScorePercentage(scoreType, value) {
+            let min, max;
+            switch(scoreType) {
+                case 'gemba':
+                    min = 20; max = 100;
+                    break;
+                case 'comet':
+                    min = 0.2; max = 0.9;
+                    break;
+                case 'cos':
+                    min = 0.5; max = 0.95;
+                    break;
+                default:
+                    return 50;
+            }
+            
+            return Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100));
+        }
+
+        function refreshData() {
+            loadHeaderStats();
+            loadRecords();
+        }
+
+        function exportData() {
+            if (!currentData || currentData.length === 0) {
+                alert('내보낼 데이터가 없습니다.');
+                return;
+            }
+
+            const csv = convertToCSV(currentData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `mt_quality_analysis_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function convertToCSV(data) {
+            const headers = ['Key', 'Source', 'MT', 'APE', 'GEMBA', 'COMET', 'COS', 'Tag', 'Bucket'];
+            const rows = data.map(record => [
+                record.key || '',
+                record.src || '',
+                record.mt || '',
+                record.ape || '',
+                record.gemba || '',
+                record.comet || '',
+                record.cos || '',
+                record.tag || '',
+                record.bucket || ''
+            ]);
+
+            return [headers, ...rows].map(row => 
+                row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>
