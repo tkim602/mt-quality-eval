@@ -129,7 +129,8 @@ class QualityAnalyzer:
             improvement.update({
                 "comet_delta": record.get("delta_comet", 0),
                 "cosine_delta": record.get("delta_cos", 0),
-                "ape_improved": record.get("delta_comet", 0) > 0 or record.get("delta_cos", 0) > 0
+                "gemba_delta": record.get("delta_gemba", 0),
+                "ape_improved": record.get("delta_comet", 0) > 0 or record.get("delta_cos", 0) > 0 or record.get("delta_gemba", 0) > 0
             })
         
         return improvement

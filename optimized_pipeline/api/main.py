@@ -14,8 +14,12 @@ import statistics
 from pathlib import Path
 from enum import Enum
 
-# Load data
-DATA_FILE = Path("../out/v13/ape_evidence.json")
+# Load data - delta_gemba가 포함된 파일 우선 사용
+DELTA_GEMBA_FILE = Path("../out/v16/ape_evidence.json")
+ORIGINAL_FILE = Path("../out/v16/ape_evidence.json")
+
+# delta_gemba 파일이 있으면 그것을 사용, 없으면 원본 파일 사용
+DATA_FILE = DELTA_GEMBA_FILE if DELTA_GEMBA_FILE.exists() else ORIGINAL_FILE
 
 class BucketType(str, Enum):
     very_short = "very_short"
@@ -38,8 +42,19 @@ async def lifespan(app: FastAPI):
     global evaluation_data
     try:
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            evaluation_data = json.load(f)
-        print(f"✅ Loaded {len(evaluation_data)} evaluation records")
+            data = json.load(f)
+        
+        # 새로운 형식(metadata + records)인지 확인
+        if isinstance(data, dict) and 'records' in data:
+            evaluation_data = data['records']
+            print(f"✅ Loaded {len(evaluation_data)} evaluation records (with delta_gemba)")
+            if 'metadata' in data and data['metadata'].get('delta_gemba_added'):
+                print("🎯 Delta GEMBA 데이터 포함됨")
+        else:
+            # 기존 형식 (레코드 배열)
+            evaluation_data = data
+            print(f"✅ Loaded {len(evaluation_data)} evaluation records (original format)")
+            
     except FileNotFoundError:
         print(f"❌ Data file not found: {DATA_FILE}")
         evaluation_data = []
@@ -166,7 +181,8 @@ async def get_analytics():
     ape_records = [r for r in evaluation_data if "ape" in r]
     ape_improvements = {
         "delta_comet": [r.get("delta_comet", 0) for r in ape_records if "delta_comet" in r],
-        "delta_cos": [r.get("delta_cos", 0) for r in ape_records if "delta_cos" in r]
+        "delta_cos": [r.get("delta_cos", 0) for r in ape_records if "delta_cos" in r],
+        "delta_gemba": [r.get("delta_gemba", 0) for r in ape_records if "delta_gemba" in r]
     }
     
     return {
@@ -197,7 +213,8 @@ async def get_analytics():
         "ape_effectiveness": {
             "total_ape_records": len(ape_records),
             "avg_comet_improvement": statistics.mean(ape_improvements["delta_comet"]) if ape_improvements["delta_comet"] else 0,
-            "avg_cosine_improvement": statistics.mean(ape_improvements["delta_cos"]) if ape_improvements["delta_cos"] else 0
+            "avg_cosine_improvement": statistics.mean(ape_improvements["delta_cos"]) if ape_improvements["delta_cos"] else 0,
+            "avg_gemba_improvement": statistics.mean(ape_improvements["delta_gemba"]) if ape_improvements["delta_gemba"] else 0
         }
     }
 
