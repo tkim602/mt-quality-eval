@@ -1071,6 +1071,219 @@
             color: var(--text-primary);
         }
 
+        /* 스코어 정보 모달 */
+        .score-info-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .score-info-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .score-info-modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 0;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85%;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .score-info-header {
+            background: linear-gradient(135deg, var(--success-color), #4ade80);
+            color: white;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score-info-title {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .score-info-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .score-info-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .score-info-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        .score-current-value {
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .score-current-value .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--success-color);
+            margin-bottom: 8px;
+        }
+
+        .score-current-value .label {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .score-section {
+            margin-bottom: 24px;
+        }
+
+        .score-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-section-content {
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .score-improvement-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(34, 197, 94, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .score-improvement-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--info-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-improvement-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 16px;
+        }
+
+        .score-improvement-item {
+            text-align: center;
+        }
+
+        .score-improvement-item .value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .score-improvement-item .value.positive {
+            color: var(--success-color);
+        }
+
+        .score-improvement-item .value.negative {
+            color: var(--error-color);
+        }
+
+        .score-improvement-item .label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .quality-scale {
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .quality-scale-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .quality-scale-item:last-child {
+            border-bottom: none;
+        }
+
+        .quality-scale-range {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .quality-scale-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
         .chart-container {
             width: 100%;
             height: 400px;
@@ -1501,6 +1714,73 @@
             </div>
             <div id="modalContent">
                 <!-- 차트 내용이 여기에 동적으로 삽입됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 스코어 정보 모달 -->
+    <div class="score-info-modal" id="scoreInfoModal">
+        <div class="score-info-modal-content">
+            <div class="score-info-header">
+                <div class="score-info-title">
+                    📊 <span id="scoreModalTitle">점수 상세 정보</span>
+                </div>
+                <button class="score-info-close" onclick="closeScoreInfoModal()">×</button>
+            </div>
+            <div class="score-info-body">
+                <div class="score-current-value">
+                    <div class="value" id="scoreCurrentValue">85.2</div>
+                    <div class="label" id="scoreCurrentLabel">GEMBA SCORE</div>
+                </div>
+
+                <div class="score-improvement-info" id="scoreImprovementInfo" style="display: none;">
+                    <div class="score-improvement-title">
+                        📈 개선 분석 결과
+                    </div>
+                    <div class="score-improvement-details">
+                        <div class="score-improvement-item">
+                            <div class="value positive" id="deltaValue">+12.3</div>
+                            <div class="label">개선 정도</div>
+                        </div>
+                        <div class="score-improvement-item">
+                            <div class="value" id="beforeValue">72.9</div>
+                            <div class="label">원본 점수</div>
+                        </div>
+                        <div class="score-improvement-item">
+                            <div class="value" id="afterValue">85.2</div>
+                            <div class="label">개선 후 점수</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="score-section">
+                    <div class="score-section-title">
+                        📏 품질 평가 기준
+                    </div>
+                    <div class="score-section-content">
+                        <div class="quality-scale" id="qualityScale">
+                            <!-- 품질 기준이 여기에 동적으로 추가됩니다 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="score-section">
+                    <div class="score-section-title">
+                        📖 점수 해석 가이드
+                    </div>
+                    <div class="score-section-content" id="scoreInterpretation">
+                        <!-- 점수 해석 내용이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+
+                <div class="score-section">
+                    <div class="score-section-title">
+                        💡 평가 방법
+                    </div>
+                    <div class="score-section-content" id="evaluationMethod">
+                        <!-- 평가 방법 설명이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2354,7 +2634,14 @@
                     range: '0-100점',
                     interpretation: '85+ 우수, 75+ 양호, 65+ 허용, 45+ 나쁨, 45미만 매우나쁨',
                     usage: '전반적인 번역 품질을 종합 평가. 유창성과 적절성을 모두 고려한 점수입니다.',
-                    analysis: '• 85점 이상: 게시/출간 가능한 고품질 번역\n• 75-84점: 경미한 후편집 필요\n• 65-74점: 상당한 후편집 필요\n• 45-64점: 재번역 권장\n• 45점 미만: 심각한 품질 문제'
+                    analysis: '• 85점 이상: 게시/출간 가능한 고품질 번역\n• 75-84점: 경미한 후편집 필요\n• 65-74점: 상당한 후편집 필요\n• 45-64점: 재번역 권장\n• 45점 미만: 심각한 품질 문제',
+                    qualityScale: [
+                        { range: '85-100', description: '우수 - 게시/출간 가능' },
+                        { range: '75-84', description: '양호 - 경미한 편집 필요' },
+                        { range: '65-74', description: '허용 - 상당한 편집 필요' },
+                        { range: '45-64', description: '나쁨 - 재번역 권장' },
+                        { range: '0-44', description: '매우나쁨 - 사용 불가' }
+                    ]
                 },
                 'comet': {
                     name: 'COMET Score', 
@@ -2362,7 +2649,14 @@
                     range: '0.0-1.0 (실제 0.2-0.9)',
                     interpretation: '0.80+ 매우우수, 0.75+ 우수, 0.70+ 양호, 0.50+ 나쁨, 0.50미만 매우나쁨',
                     usage: '참조 번역 없이 원문과 번역문만으로 품질을 측정합니다.',
-                    analysis: '• 0.80+: 인간 수준의 번역 품질\n• 0.75-0.79: 실용적 사용 가능\n• 0.70-0.74: 이해 가능하나 개선 필요\n• 0.50-0.69: 품질 문제 심각\n• 0.50 미만: 사용 불가 수준'
+                    analysis: '• 0.80+: 인간 수준의 번역 품질\n• 0.75-0.79: 실용적 사용 가능\n• 0.70-0.74: 이해 가능하나 개선 필요\n• 0.50-0.69: 품질 문제 심각\n• 0.50 미만: 사용 불가 수준',
+                    qualityScale: [
+                        { range: '0.80-1.0', description: '매우우수 - 인간 수준' },
+                        { range: '0.75-0.79', description: '우수 - 실용적 사용' },
+                        { range: '0.70-0.74', description: '양호 - 개선 필요' },
+                        { range: '0.50-0.69', description: '나쁨 - 품질 문제' },
+                        { range: '0.0-0.49', description: '매우나쁨 - 사용 불가' }
+                    ]
                 },
                 'cos': {
                     name: 'Cosine Similarity',
@@ -2370,22 +2664,86 @@
                     range: '0.0-1.0 (실제 0.5-0.95)',
                     interpretation: '0.85+ 매우우수, 0.75+ 우수, 0.70+ 양호, 0.50+ 나쁨, 0.50미만 매우나쁨',
                     usage: '원문과 번역문의 의미적 유사도를 벡터 공간에서 측정합니다.',
-                    analysis: '• 0.85+: 의미 보존 탁월\n• 0.75-0.84: 핵심 의미 보존\n• 0.70-0.74: 일부 의미 손실\n• 0.50-0.69: 의미 왜곡 위험\n• 0.50 미만: 심각한 의미 손실'
+                    analysis: '• 0.85+: 의미 보존 탁월\n• 0.75-0.84: 핵심 의미 보존\n• 0.70-0.74: 일부 의미 손실\n• 0.50-0.69: 의미 왜곡 위험\n• 0.50 미만: 심각한 의미 손실',
+                    qualityScale: [
+                        { range: '0.85-1.0', description: '매우우수 - 의미 보존 탁월' },
+                        { range: '0.75-0.84', description: '우수 - 핵심 의미 보존' },
+                        { range: '0.70-0.74', description: '양호 - 일부 의미 손실' },
+                        { range: '0.50-0.69', description: '나쁨 - 의미 왜곡 위험' },
+                        { range: '0.0-0.49', description: '매우나쁨 - 심각한 의미 손실' }
+                    ]
                 }
             };
 
             const info = scoreInfos[scoreType];
             if (!info) return;
 
-            let changeInfo = '';
-            if (delta !== 0) {
-                const direction = delta > 0 ? '개선' : '악화';
-                const percent = originalValue ? (Math.abs(delta) / originalValue * 100).toFixed(1) : '0';
-                changeInfo = `\n\nAPE 개선 효과:\n${delta > 0 ? '+' : ''}${scoreType === 'gemba' ? delta.toFixed(0) : delta.toFixed(3)} (${percent}% ${direction})`;
+            // 모달 타이틀 설정
+            document.getElementById('scoreModalTitle').textContent = info.name + ' 상세 정보';
+            
+            // 현재 점수 표시
+            document.getElementById('scoreCurrentValue').textContent = 
+                scoreType === 'gemba' ? currentValue.toFixed(0) : currentValue.toFixed(3);
+            document.getElementById('scoreCurrentLabel').textContent = info.name.toUpperCase();
+
+            // 개선 정보 표시 (APE가 적용된 경우에만)
+            const improvementInfo = document.getElementById('scoreImprovementInfo');
+            if (delta !== 0 && originalValue !== null) {
+                improvementInfo.style.display = 'block';
+                
+                const deltaElement = document.getElementById('deltaValue');
+                deltaElement.textContent = (delta > 0 ? '+' : '') + 
+                    (scoreType === 'gemba' ? delta.toFixed(0) : delta.toFixed(3));
+                deltaElement.className = `value ${delta > 0 ? 'positive' : 'negative'}`;
+                
+                document.getElementById('beforeValue').textContent = 
+                    scoreType === 'gemba' ? originalValue.toFixed(0) : originalValue.toFixed(3);
+                document.getElementById('afterValue').textContent = 
+                    scoreType === 'gemba' ? currentValue.toFixed(0) : currentValue.toFixed(3);
+            } else {
+                improvementInfo.style.display = 'none';
             }
 
-            alert(`${info.name}\n\n${info.description}\n\n범위: ${info.range}\n해석: ${info.interpretation}\n\n활용법:\n${info.usage}\n\n분석 가이드:\n${info.analysis}${changeInfo}`);
+            // 품질 평가 기준 생성
+            const qualityScale = document.getElementById('qualityScale');
+            qualityScale.innerHTML = info.qualityScale.map(item => `
+                <div class="quality-scale-item">
+                    <span class="quality-scale-range">${item.range}</span>
+                    <span class="quality-scale-description">${item.description}</span>
+                </div>
+            `).join('');
+
+            // 점수 해석 가이드
+            document.getElementById('scoreInterpretation').innerHTML = `
+                <strong>점수 범위:</strong> ${info.range}<br>
+                <strong>해석 기준:</strong> ${info.interpretation}<br><br>
+                <strong>분석 가이드:</strong><br>
+                ${info.analysis.replace(/\n/g, '<br>')}
+            `;
+
+            // 평가 방법 설명
+            document.getElementById('evaluationMethod').innerHTML = `
+                <strong>설명:</strong> ${info.description}<br><br>
+                <strong>활용 방법:</strong><br>
+                ${info.usage}
+            `;
+
+            // 모달 표시
+            const modal = document.getElementById('scoreInfoModal');
+            modal.classList.add('show');
         }
+
+        function closeScoreInfoModal() {
+            const modal = document.getElementById('scoreInfoModal');
+            modal.classList.remove('show');
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('scoreInfoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeScoreInfoModal();
+            }
+        });
 
         function getQualityClass(record) {
             const tag = record.tag;
