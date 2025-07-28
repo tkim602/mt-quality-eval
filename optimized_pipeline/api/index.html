@@ -107,7 +107,7 @@
         }
 
         .stat-item::before {
-            content: '📊';
+            content: '▦';
             position: absolute;
             top: -8px;
             right: -8px;
@@ -123,6 +123,39 @@
             transform: scale(0.8);
             transition: all 0.3s ease;
         }
+
+        /* Professional Icon Styles */
+        .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .icon-chart::before { content: '■'; color: var(--info-color); }
+        .icon-star::before { content: '★'; color: var(--warning-color); }
+        .icon-warning::before { content: '⚠'; color: var(--danger-color); }
+        .icon-improve::before { content: '▲'; color: var(--success-color); }
+        .icon-trend-up::before { content: '▲'; color: var(--success-color); }
+        .icon-info::before { 
+            content: 'i'; 
+            background: var(--info-color); 
+            border-radius: 50%; 
+            width: 14px; 
+            height: 14px; 
+            font-size: 10px; 
+            font-weight: bold; 
+            color: white; 
+            text-align: center;
+            line-height: 14px;
+        }
+        .icon-arrow-up::before { content: '▲'; color: var(--text-secondary); }
+        .icon-more::before { content: '•••'; color: var(--text-secondary); letter-spacing: 2px; }
+        .icon-scale::before { content: '⚖'; color: var(--info-color); }
+        .icon-guide::before { content: '≡'; color: var(--info-color); }
 
         .stat-item:hover::before {
             opacity: 1;
@@ -151,6 +184,10 @@
             margin-top: 4px;
             opacity: 0.8;
         }
+
+        .stat-item:hover::before {
+            opacity: 1;
+            transform: scale(1);
         }
 
         .stat-label {
@@ -1519,7 +1556,7 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo-section">
-                <div class="logo">번역품질 검사기</div>
+                <div class="logo" onclick="location.reload()" style="cursor: pointer;">번역품질 검사기</div>
                 <div class="subtitle">MT Quality Analytics</div>
             </div>
             <div class="header-stats" id="headerStats">
@@ -1548,16 +1585,16 @@
                 <div class="nav-section">
                     <div class="nav-title">분석 도구</div>
                     <div class="nav-item active" data-view="all">
-                        <span>�</span> 전체 데이터
+                        <span class="icon icon-chart"></span> 전체 데이터
                     </div>
                     <div class="nav-item" data-view="high-quality">
-                        <span>⭐</span> 고품질 번역
+                        <span class="icon icon-star"></span> 고품질 번역
                     </div>
                     <div class="nav-item" data-view="failed">
-                        <span>⚠</span> 품질 미달
+                        <span class="icon icon-warning"></span> 품질 미달
                     </div>
                     <div class="nav-item" data-view="ape-improved">
-                        <span>✨</span> APE 개선사례
+                        <span class="icon icon-improve"></span> APE 개선사례
                     </div>
                 </div>
 
@@ -1571,6 +1608,13 @@
                             <option value="ape">APE 검색</option>
                         </select>
                         <input type="text" id="searchInput" placeholder="검색어를 입력하세요...">
+                    </div>
+                    
+                    <!-- 필터 초기화 버튼 -->
+                    <div style="margin-bottom: 16px; display: flex; justify-content: flex-end;">
+                        <button onclick="resetAllFilters()" style="width: 24px; height: 24px; padding: 0; background: var(--accent-bg); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all 0.2s;" onmouseover="this.style.background='var(--success-color)'; this.style.color='white';" onmouseout="this.style.background='var(--accent-bg)'; this.style.color='var(--text-secondary)';" title="모든 필터 초기화">
+                            ↻
+                        </button>
                     </div>
                     
                     <div class="filter-group">
@@ -1692,7 +1736,7 @@
                         현재 <span id="currentCount">0</span>개 / 전체 <span id="totalCount">0</span>개 표시중
                     </div>
                     <button class="btn primary" id="loadMoreBtn" onclick="loadMoreRecords()">
-                        <span>⋯</span> 더보기
+                        <span class="icon icon-more"></span> 더보기
                     </button>
                 </div>
             </main>
@@ -1701,7 +1745,7 @@
 
     <!-- 스크롤 투 탑 버튼 -->
     <div class="scroll-to-top" id="scrollToTop" onclick="scrollToTop()">
-        ↑
+        <span class="icon icon-arrow-up"></span>
     </div>
 
     <!-- 통계 차트 모달 -->
@@ -1722,31 +1766,31 @@
         <div class="score-info-modal-content">
             <div class="score-info-header">
                 <div class="score-info-title">
-                    📊 <span id="scoreModalTitle">점수 상세 정보</span>
+                    <span class="icon icon-chart"></span> <span id="scoreModalTitle">점수 상세 정보</span>
                 </div>
                 <button class="score-info-close" onclick="closeScoreInfoModal()">×</button>
             </div>
             <div class="score-info-body">
                 <div class="score-current-value">
-                    <div class="value" id="scoreCurrentValue">85.2</div>
-                    <div class="label" id="scoreCurrentLabel">GEMBA SCORE</div>
+                    <div class="value" id="scoreCurrentValue">-</div>
+                    <div class="label" id="scoreCurrentLabel">점수</div>
                 </div>
 
                 <div class="score-improvement-info" id="scoreImprovementInfo" style="display: none;">
                     <div class="score-improvement-title">
-                        📈 개선 분석 결과
+                        <span class="icon icon-trend-up"></span> 개선 분석 결과
                     </div>
                     <div class="score-improvement-details">
                         <div class="score-improvement-item">
-                            <div class="value positive" id="deltaValue">+12.3</div>
+                            <div class="value" id="deltaValue">-</div>
                             <div class="label">개선 정도</div>
                         </div>
                         <div class="score-improvement-item">
-                            <div class="value" id="beforeValue">72.9</div>
+                            <div class="value" id="beforeValue">-</div>
                             <div class="label">원본 점수</div>
                         </div>
                         <div class="score-improvement-item">
-                            <div class="value" id="afterValue">85.2</div>
+                            <div class="value" id="afterValue">-</div>
                             <div class="label">개선 후 점수</div>
                         </div>
                     </div>
@@ -1754,7 +1798,7 @@
 
                 <div class="score-section">
                     <div class="score-section-title">
-                        📏 품질 평가 기준
+                        <span class="icon icon-scale"></span> 품질 평가 기준
                     </div>
                     <div class="score-section-content">
                         <div class="quality-scale" id="qualityScale">
@@ -1765,7 +1809,7 @@
 
                 <div class="score-section">
                     <div class="score-section-title">
-                        📖 점수 해석 가이드
+                        <span class="icon icon-guide"></span> 점수 해석 가이드
                     </div>
                     <div class="score-section-content" id="scoreInterpretation">
                         <!-- 점수 해석 내용이 여기에 동적으로 추가됩니다 -->
@@ -1774,7 +1818,7 @@
 
                 <div class="score-section">
                     <div class="score-section-title">
-                        💡 평가 방법
+                        <span class="icon icon-info"></span> 평가 방법
                     </div>
                     <div class="score-section-content" id="evaluationMethod">
                         <!-- 평가 방법 설명이 여기에 동적으로 추가됩니다 -->
@@ -2052,6 +2096,11 @@
             loadRecords();
         }
 
+        function resetAllFilters() {
+            // 페이지 새로고침으로 모든 설정을 완전히 초기화
+            location.reload();
+        }
+
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -2293,7 +2342,7 @@
                     loadMoreBtn.style.display = 'block';
                     const remaining = allData.length - displayLimit;
                     const nextLoad = Math.min(20, remaining);
-                    loadMoreBtn.innerHTML = `<span>⋯</span> 더보기 (${nextLoad}개 추가)`;
+                    loadMoreBtn.innerHTML = `<span class="icon icon-more"></span> 더보기 (${nextLoad}개 추가)`;
                 } else {
                     loadMoreBtn.style.display = 'none';
                 }
@@ -2306,7 +2355,7 @@
             const grid = document.getElementById('recordGrid');
             
             if (!records || records.length === 0) {
-                grid.innerHTML = '<div class="loading">📭 표시할 데이터가 없습니다.</div>';
+                grid.innerHTML = '<div class="loading"><span class="icon icon-warning"></span> 표시할 데이터가 없습니다.</div>';
                 return;
             }
 
@@ -2491,7 +2540,7 @@
             return `
 <div class="ape-improvement">
     <div class="ape-header">
-        <span class="ape-icon">✨</span>
+        <span class="ape-icon icon icon-improve"></span>
         <span class="ape-title">APE 개선 결과</span>
     </div>
     ${qualityChangeInfo}
@@ -2680,6 +2729,15 @@
             // 모달 타이틀 설정
             document.getElementById('scoreModalTitle').textContent = info.name + ' 상세 정보';
             
+            // 헤더 색상을 점수 타입에 따라 동적으로 설정
+            const header = document.querySelector('.score-info-header');
+            const colorMap = {
+                'gemba': 'linear-gradient(135deg, #10b981, #34d399)',
+                'comet': 'linear-gradient(135deg, #10b981, #34d399)',
+                'cos': 'linear-gradient(135deg, #10b981, #34d399)'    
+            };
+            header.style.background = colorMap[scoreType] || 'linear-gradient(135deg, #10b981, #34d399)';
+            
             // 현재 점수 표시
             document.getElementById('scoreCurrentValue').textContent = 
                 scoreType === 'gemba' ? currentValue.toFixed(0) : currentValue.toFixed(3);
@@ -2713,10 +2771,16 @@
             `).join('');
 
             // 점수 해석 가이드
+            const interpretationColor = {
+                'gemba': '#10b981',
+                'comet': '#10b981', 
+                'cos': '#10b981'
+            }[scoreType] || '#10b981';
+            
             document.getElementById('scoreInterpretation').innerHTML = `
-                <strong>점수 범위:</strong> ${info.range}<br>
-                <strong>해석 기준:</strong> ${info.interpretation}<br><br>
-                <strong>분석 가이드:</strong><br>
+                <strong style="color: ${interpretationColor};">점수 범위:</strong> ${info.range}<br>
+                <strong style="color: ${interpretationColor};">해석 기준:</strong> ${info.interpretation}<br><br>
+                <strong style="color: ${interpretationColor};">분석 가이드:</strong><br>
                 ${info.analysis.replace(/\n/g, '<br>')}
             `;
 
@@ -2849,7 +2913,7 @@
                 return `
                     <div class="quality-badge-improved">
                         <div class="quality-badge ${improvedClass}">${improvedLabel}</div>
-                        <div class="quality-improvement-arrow">⬆</div>
+                        <div class="quality-improvement-arrow">▲</div>
                         <div class="quality-badge-original ${originalClass}">${originalLabel}</div>
                     </div>
                 `;
@@ -3301,7 +3365,7 @@
                     </div>
                     ` : `
                     <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                        <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+                        <div style="font-size: 48px; margin-bottom: 16px;">▦</div>
                         <div style="font-size: 16px; margin-bottom: 8px;">APE 개선 데이터가 없습니다</div>
                         <div style="font-size: 14px;">APE(Automatic Post-Editing)가 적용된 레코드가 발견되지 않았습니다.</div>
                     </div>
