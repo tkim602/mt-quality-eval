@@ -2153,7 +2153,7 @@
             grid.innerHTML = '<div class="loading"><div class="spinner"></div>데이터를 불러오는 중...</div>';
 
             try {
-                let url = `${API_BASE}/records?limit=1000`; // 더 많은 데이터를 가져옴
+                let url = `${API_BASE}/records?limit=10000`; // 모든 APE 데이터를 가져옴
                 
                 // 뷰별 필터링 - 개선 후 품질 등급 기준으로 클라이언트에서 필터링
                 // API에서는 모든 데이터를 가져오고, 클라이언트에서 개선 후 품질 등급으로 필터링
@@ -2819,36 +2819,32 @@
             const comet = hasApe ? (record.comet || 0) + (record.delta_comet || 0) : (record.comet || 0);
             const cos = hasApe ? (record.cos || 0) + (record.delta_cos || 0) : (record.cos || 0);
             
-            // Back translation 점수 확인 (가정: back_translation 필드가 있다면)
-            const hasBackTranslation = record.back_translation_score && record.back_translation_score > 0.8;
-            
-            // 일관된 품질 등급 기준 사용 (getQualityClassByScores와 동일)
+            // 백엔드와 동일한 로직 사용 - 매우우수 등급 허용
             if (gemba >= 85 && comet >= 0.80 && cos >= 0.85) {
-                return hasBackTranslation ? 'quality-excellent' : 'quality-very-good';
+                return 'quality-excellent';  // 매우우수
             } else if (gemba >= 75 && comet >= 0.75 && cos >= 0.75) {
-                return 'quality-very-good';
+                return 'quality-very-good';  // 우수
             } else if (gemba >= 65 && comet >= 0.70 && cos >= 0.70) {
-                return 'quality-good';
+                return 'quality-good';       // 양호
             } else if (gemba >= 45 && comet >= 0.50 && cos >= 0.50) {
-                return 'quality-poor';
+                return 'quality-poor';       // 나쁨
             } else {
-                return 'quality-very-poor';
+                return 'quality-very-poor';  // 매우나쁨
             }
         }
 
         function getQualityClassByScores(gemba, comet, cos) {
-            const hasBackTranslation = false; 
-            
+            // 백엔드 로직과 동일하게 수정 - 매우우수 등급 허용
             if (gemba >= 85 && comet >= 0.80 && cos >= 0.85) {
-                return hasBackTranslation ? 'quality-excellent' : 'quality-very-good';
+                return 'quality-excellent';  // 매우우수
             } else if (gemba >= 75 && comet >= 0.75 && cos >= 0.75) {
-                return 'quality-very-good';
+                return 'quality-very-good';  // 우수
             } else if (gemba >= 65 && comet >= 0.70 && cos >= 0.70) {
-                return 'quality-good'; 
+                return 'quality-good';       // 양호
             } else if (gemba >= 45 && comet >= 0.50 && cos >= 0.50) {
-                return 'quality-poor';
+                return 'quality-poor';       // 나쁨
             } else {
-                return 'quality-very-poor';
+                return 'quality-very-poor';  // 매우나쁨
             }
         }
 
@@ -3025,7 +3021,7 @@
                         chartHTML = await generatePassRateChart(data);
                         break;
                     case 'ape-effect':
-                        chartHTML = generateApeEffectChart(data);
+                        chartHTML = await generateApeEffectChart(data);
                         break;
                     default:
                         chartHTML = '<div class="loading">알 수 없는 차트 타입입니다.</div>';
@@ -3133,176 +3129,188 @@
         async function generatePassRateChart(data) {
             const total = data.total_records;
             
-            // 개별 레코드를 가져와서 APE 개선 후 점수로 재분류
-            let veryExcellent = 0, excellent = 0, good = 0, poor = 0, veryPoor = 0;
+            // API에서 before/after 품질분포 데이터 가져오기
+            const qualityDist = data.quality_distribution || {};
+            const beforeDist = qualityDist.before || {};
+            const afterDist = qualityDist.after || {};
             
-            try {
-                // 모든 레코드를 가져와서 실제 개선 후 점수로 분류
-                const recordsResponse = await fetch(`${API_BASE}/records?limit=10000`);
-                const recordsData = await recordsResponse.json();
-                
-                recordsData.records.forEach(record => {
-                    // 개선 후 점수 계산
-                    const hasApe = record.ape && record.ape !== record.mt && 
-                                  (record.delta_comet || record.delta_cos);
-                    
-                    const gemba = record.gemba || 0;
-                    const comet = hasApe ? (record.comet || 0) + (record.delta_comet || 0) : (record.comet || 0);
-                    const cos = hasApe ? (record.cos || 0) + (record.delta_cos || 0) : (record.cos || 0);
-                    
-                    // Back translation 점수 확인
-                    const hasBackTranslation = record.back_translation_score && record.back_translation_score > 0.8;
-                    
-                    // 개선 후 점수 기준으로 품질 등급 분류
-                    if (gemba >= 85 && comet >= 0.80 && cos >= 0.85) {
-                        if (hasBackTranslation) {
-                            veryExcellent++;
-                        } else {
-                            excellent++;
-                        }
-                    } else if (gemba >= 75 && comet >= 0.75 && cos >= 0.75) {
-                        good++;
-                    } else if (gemba >= 65 && comet >= 0.70 && cos >= 0.70) {
-                        good++;
-                    } else if (gemba >= 45 && comet >= 0.50 && cos >= 0.50) {
-                        poor++;
-                    } else {
-                        veryPoor++;
-                    }
-                });
-            } catch (error) {
-                console.error('개별 레코드 분류 실패, 기본 분류 사용:', error);
-                // 오류 시 기본 분류 사용
-                const strictPass = data.distributions.tags.strict_pass || 0;
-                const softPass = data.distributions.tags.soft_pass || 0;
-                const fail = data.distributions.tags.fail || 0;
-                
-                veryExcellent = 0;
-                excellent = strictPass;
-                good = softPass;
-                veryPoor = Math.floor(fail * 0.3);
-                poor = fail - veryPoor;
-            }
+            // Before APE 데이터
+            const beforeVeryPoor = beforeDist.very_poor || 0;
+            const beforePoor = beforeDist.poor || 0;
+            const beforeGood = beforeDist.good || 0;
+            const beforeVeryGood = beforeDist.very_good || 0;
+            const beforeExcellent = beforeDist.excellent || 0;
             
-            const passRate = ((excellent + good) / total * 100).toFixed(1);
-            const excellentRate = ((veryExcellent + excellent) / total * 100).toFixed(1);
-            const failRate = ((poor + veryPoor) / total * 100).toFixed(1);
+            // After APE 데이터
+            const afterVeryPoor = afterDist.very_poor || 0;
+            const afterPoor = afterDist.poor || 0;
+            const afterGood = afterDist.good || 0;
+            const afterVeryGood = afterDist.very_good || 0;
+            const afterExcellent = afterDist.excellent || 0;
+            
+            // 통계 계산
+            const beforePassRate = (((beforeGood + beforeVeryGood + beforeExcellent) / total) * 100).toFixed(1);
+            const afterPassRate = (((afterGood + afterVeryGood + afterExcellent) / total) * 100).toFixed(1);
+            const beforeExcellentRate = (((beforeVeryGood + beforeExcellent) / total) * 100).toFixed(1);
+            const afterExcellentRate = (((afterVeryGood + afterExcellent) / total) * 100).toFixed(1);
+            const beforeFailRate = (((beforeVeryPoor + beforePoor) / total) * 100).toFixed(1);
+            const afterFailRate = (((afterVeryPoor + afterPoor) / total) * 100).toFixed(1);
+            
+            // 개선률 계산
+            const passRateImprovement = (afterPassRate - beforePassRate).toFixed(1);
+            const excellentRateImprovement = (afterExcellentRate - beforeExcellentRate).toFixed(1);
+            const failRateReduction = (beforeFailRate - afterFailRate).toFixed(1);
             
             return `
                 <div class="chart-grid">
                     <div class="chart-stat">
-                        <div class="chart-stat-value">${passRate}%</div>
-                        <div class="chart-stat-label">전체 통과율</div>
+                        <div class="chart-stat-value">${afterPassRate}%</div>
+                        <div class="chart-stat-label">현재 통과율</div>
+                        <div class="chart-stat-change" style="color: ${passRateImprovement >= 0 ? '#22c55e' : '#ef4444'};">
+                            ${passRateImprovement >= 0 ? '+' : ''}${passRateImprovement}%p
+                        </div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value">${excellentRate}%</div>
-                        <div class="chart-stat-label">우수 등급율</div>
+                        <div class="chart-stat-value">${afterExcellentRate}%</div>
+                        <div class="chart-stat-label">현재 우수등급율</div>
+                        <div class="chart-stat-change" style="color: ${excellentRateImprovement >= 0 ? '#22c55e' : '#ef4444'};">
+                            ${excellentRateImprovement >= 0 ? '+' : ''}${excellentRateImprovement}%p
+                        </div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value" style="color: #ef4444;">${failRate}%</div>
-                        <div class="chart-stat-label">품질 미달율</div>
+                        <div class="chart-stat-value" style="color: #ef4444;">${afterFailRate}%</div>
+                        <div class="chart-stat-label">현재 품질미달율</div>
+                        <div class="chart-stat-change" style="color: ${failRateReduction >= 0 ? '#22c55e' : '#ef4444'};">
+                            ${failRateReduction >= 0 ? '-' : '+'}${Math.abs(failRateReduction)}%p
+                        </div>
                     </div>
                 </div>
                 
-                <div class="chart-container">
-                    <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center;">5단계 품질 등급별 분포</h3>
-                    <div class="donut-chart">
-                        <svg class="donut-svg" viewBox="0 0 200 200">
-                            ${generateDonutChart([
-                                { label: '매우우수', value: veryExcellent, color: '#00d084' },
-                                { label: '우수', value: excellent, color: '#4ade80' },
-                                { label: '양호', value: good, color: '#ffa726' },
-                                { label: '나쁨', value: poor, color: '#ff8a65' },
-                                { label: '매우나쁨', value: veryPoor, color: '#ff6b6b' }
-                            ].filter(item => item.value > 0), total)}
-                        </svg>
-                        <div class="donut-legend">
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #00d084;"></div>
-                                <div class="legend-label">매우우수</div>
-                                <div class="legend-value">${(veryExcellent / total * 100).toFixed(1)}%</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
+                    <!-- APE 이전 품질등급표 -->
+                    <div class="chart-container">
+                        <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center; font-size: 16px;">APE 적용 이전 품질등급</h3>
+                        <div class="donut-chart">
+                            <svg class="donut-svg" viewBox="0 0 200 200">
+                                ${generateDonutChart([
+                                    { label: '매우우수', value: beforeExcellent, color: '#00d084' },
+                                    { label: '우수', value: beforeVeryGood, color: '#4ade80' },
+                                    { label: '양호', value: beforeGood, color: '#ffa726' },
+                                    { label: '나쁨', value: beforePoor, color: '#ff8a65' },
+                                    { label: '매우나쁨', value: beforeVeryPoor, color: '#ff6b6b' }
+                                ].filter(item => item.value > 0), total)}
+                            </svg>
+                            <div class="donut-legend">
+                                ${[
+                                    { label: '매우우수', value: beforeExcellent, color: '#00d084' },
+                                    { label: '우수', value: beforeVeryGood, color: '#4ade80' },
+                                    { label: '양호', value: beforeGood, color: '#ffa726' },
+                                    { label: '나쁨', value: beforePoor, color: '#ff8a65' },
+                                    { label: '매우나쁨', value: beforeVeryPoor, color: '#ff6b6b' }
+                                ].filter(item => item.value > 0).map(item => `
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background-color: ${item.color};"></span>
+                                        <span class="legend-text">${item.label}: ${item.value} (${(item.value/total*100).toFixed(1)}%)</span>
+                                    </div>
+                                `).join('')}
                             </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #4ade80;"></div>
-                                <div class="legend-label">우수</div>
-                                <div class="legend-value">${(excellent / total * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    
+                    <!-- APE 이후 품질등급표 -->
+                    <div class="chart-container">
+                        <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center; font-size: 16px;">APE 적용 이후 품질등급</h3>
+                        <div class="donut-chart">
+                            <svg class="donut-svg" viewBox="0 0 200 200">
+                                ${generateDonutChart([
+                                    { label: '매우우수', value: afterExcellent, color: '#00d084' },
+                                    { label: '우수', value: afterVeryGood, color: '#4ade80' },
+                                    { label: '양호', value: afterGood, color: '#ffa726' },
+                                    { label: '나쁨', value: afterPoor, color: '#ff8a65' },
+                                    { label: '매우나쁨', value: afterVeryPoor, color: '#ff6b6b' }
+                                ].filter(item => item.value > 0), total)}
+                            </svg>
+                            <div class="donut-legend">
+                                ${[
+                                    { label: '매우우수', value: afterExcellent, color: '#00d084' },
+                                    { label: '우수', value: afterVeryGood, color: '#4ade80' },
+                                    { label: '양호', value: afterGood, color: '#ffa726' },
+                                    { label: '나쁨', value: afterPoor, color: '#ff8a65' },
+                                    { label: '매우나쁨', value: afterVeryPoor, color: '#ff6b6b' }
+                                ].filter(item => item.value > 0).map(item => `
+                                    <div class="legend-item">
+                                        <span class="legend-color" style="background-color: ${item.color};"></span>
+                                        <span class="legend-text">${item.label}: ${item.value} (${(item.value/total*100).toFixed(1)}%)</span>
+                                    </div>
+                                `).join('')}
                             </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #ffa726;"></div>
-                                <div class="legend-label">양호</div>
-                                <div class="legend-value">${(good / total * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 변화량 요약 -->
+                <div class="chart-container" style="margin-top: 24px;">
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center; font-size: 16px;">APE 적용 효과 요약</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+                        <div style="text-align: center; padding: 12px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="font-size: 18px; font-weight: bold; color: ${passRateImprovement >= 0 ? '#22c55e' : '#ef4444'};">
+                                ${passRateImprovement >= 0 ? '+' : ''}${passRateImprovement}%p
                             </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #ff8a65;"></div>
-                                <div class="legend-label">나쁨</div>
-                                <div class="legend-value">${(poor / total * 100).toFixed(1)}%</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">통과율 개선</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="font-size: 18px; font-weight: bold; color: ${excellentRateImprovement >= 0 ? '#22c55e' : '#ef4444'};">
+                                ${excellentRateImprovement >= 0 ? '+' : ''}${excellentRateImprovement}%p
                             </div>
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: #ff6b6b;"></div>
-                                <div class="legend-label">매우나쁨</div>
-                                <div class="legend-value">${(veryPoor / total * 100).toFixed(1)}%</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">우수등급 개선</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="font-size: 18px; font-weight: bold; color: ${failRateReduction >= 0 ? '#22c55e' : '#ef4444'};">
+                                ${failRateReduction >= 0 ? '-' : '+'}${Math.abs(failRateReduction)}%p
                             </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">미달율 감소</div>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        function generateApeEffectChart(data) {
+        async function generateApeEffectChart(data) {
             const apeData = data.ape_effectiveness || {};
             const tagsData = data.distributions.tags || {};
             
-            // APE 데이터 정확하게 추출
-            let avgImprovement = 0;
+            // APE 데이터 정확하게 추출 - 모든 메트릭
+            let avgGembaImprovement = 0;
+            let avgCometImprovement = 0;
+            let avgCosineImprovement = 0;
             let recordsWithApe = 0;
             
-            if (apeData.avg_comet_improvement !== undefined) {
-                avgImprovement = (apeData.avg_comet_improvement * 100);
+            if (apeData.avg_gemba_improvement !== undefined) {
+                avgGembaImprovement = apeData.avg_gemba_improvement;
             }
-            
+            if (apeData.avg_comet_improvement !== undefined) {
+                avgCometImprovement = (apeData.avg_comet_improvement * 100);
+            }
+            if (apeData.avg_cosine_improvement !== undefined) {
+                avgCosineImprovement = (apeData.avg_cosine_improvement * 100);
+            }
             if (apeData.total_ape_records !== undefined) {
                 recordsWithApe = apeData.total_ape_records;
             }
             
             const totalRecords = data.total_records;
-            const strictPass = tagsData.strict_pass || 0;
-            const softPass = tagsData.soft_pass || 0;
-            const totalPass = strictPass + softPass;
             const apeUsageRate = totalRecords > 0 ? ((recordsWithApe / totalRecords) * 100) : 0;
             
-            // 실제 개선 효과 분포 생성 (더 현실적인 분포)
+            // 실제 개선 효과를 퍼센트 기준으로 분류
             let improvementRanges;
             let successfulImprovements = 0;
+            
             if (recordsWithApe > 0) {
-                improvementRanges = [
-                    { 
-                        range: '개선없음', 
-                        count: Math.floor(recordsWithApe * 0.15), // 72개 (15%)
-                        color: '#ef4444', // Red 500
-                        description: '효과 없거나 악화'
-                    },
-                    { 
-                        range: '소폭개선', 
-                        count: Math.floor(recordsWithApe * 0.35), // 169개 (35%)
-                        color: '#f97316', // Orange 500
-                        description: '약간의 품질 향상'
-                    },
-                    { 
-                        range: '중간개선', 
-                        count: Math.floor(recordsWithApe * 0.30), // 145개 (30%)
-                        color: '#3b82f6', // Blue 500
-                        description: '뚜렷한 품질 향상' 
-                    },
-                    { 
-                        range: '큰개선', 
-                        count: Math.floor(recordsWithApe * 0.20), // 97개 (20%)
-                        color: '#22c55e', // Green 500
-                        description: '상당한 품질 향상'
-                    }
-                ];
+                // 실제 API에서 개별 레코드의 개선도를 받아와서 분류
+                improvementRanges = await calculateRealImprovementDistribution();
                 
-                // 성공적인 개선 사례 계산 (소폭개선 이상)
-                successfulImprovements = improvementRanges.slice(1).reduce((sum, range) => sum + range.count, 0);
+                // 성공적인 개선 사례 계산 (2% 이상 개선)
+                successfulImprovements = improvementRanges.slice(3).reduce((sum, range) => sum + range.count, 0);
             } else {
                 improvementRanges = [
                     { 
@@ -3314,63 +3322,481 @@
                 ];
             }
             
-            // APE 성공률 계산
+            // APE 성공률 계산 (2% 이상 개선을 성공으로 간주)
             const successRate = recordsWithApe > 0 ? ((successfulImprovements / recordsWithApe) * 100).toFixed(1) : 0;
+            
+            // 품질등급 상승률 계산 (API에서 가져오기)
+            const meaningfulImprovementRate = apeData.meaningful_improvement_rate ? apeData.meaningful_improvement_rate.toFixed(1) : 0;
             
             return `
                 <div class="chart-grid">
                     <div class="chart-stat">
-                        <div class="chart-stat-value">${avgImprovement > 0 ? '+' : ''}${avgImprovement.toFixed(1)}%</div>
-                        <div class="chart-stat-label">평균 개선율</div>
+                        <div class="chart-stat-value" style="font-size: 18px;">+${avgGembaImprovement.toFixed(1)}</div>
+                        <div class="chart-stat-label">GEMBA 평균 개선</div>
+                    </div>
+                    <div class="chart-stat">
+                        <div class="chart-stat-value" style="font-size: 18px;">${avgCometImprovement > 0 ? '+' : ''}${avgCometImprovement.toFixed(1)}%</div>
+                        <div class="chart-stat-label">COMET 평균 개선</div>
+                    </div>
+                    <div class="chart-stat">
+                        <div class="chart-stat-value" style="font-size: 18px;">${avgCosineImprovement > 0 ? '+' : ''}${avgCosineImprovement.toFixed(1)}%</div>
+                        <div class="chart-stat-label">Cosine 평균 개선</div>
                     </div>
                     <div class="chart-stat">
                         <div class="chart-stat-value">${recordsWithApe.toLocaleString()}</div>
                         <div class="chart-stat-label">APE 적용 문장</div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value">${successRate}%</div>
-                        <div class="chart-stat-label">APE 성공률</div>
+                        <div class="chart-stat-value">${meaningfulImprovementRate}%</div>
+                        <div class="chart-stat-label">품질등급 상승률</div>
                     </div>
                 </div>
                 
-                <div class="chart-container">
-                    <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center;">APE 개선 효과 분포</h3>
-                    ${recordsWithApe > 0 ? `
-                    <div class="simple-chart">
-                        ${improvementRanges.map(range => {
-                            // 완전한 비례 스케일링 - 최소 높이 없음
-                            const maxCount = Math.max(...improvementRanges.map(r => r.count));
-                            const height = maxCount > 0 ? (range.count / maxCount * 100) : 0;
-                            // 0인 경우에만 1px로 표시 (완전히 안보이지 않게)
-                            const displayHeight = range.count === 0 ? 1 : height;
-                            // 퍼센트 계산
-                            const percentage = recordsWithApe > 0 ? ((range.count / recordsWithApe) * 100).toFixed(1) : '0.0';
-                            
-                            // 디버깅용 로그
-                            console.log(`APE Range ${range.range}: count=${range.count}, maxCount=${maxCount}, height=${height}%, displayHeight=${displayHeight}%`);
-                            
-                            return `
-                                <div class="chart-bar">
-                                    <div class="bar" style="height: ${displayHeight}%; background: ${range.color};">
-                                        ${range.count > 0 ? `<div class="bar-value">${range.count.toLocaleString()}</div>` : ''}
-                                    </div>
-                                    <div class="bar-label" style="text-align: center;">
-                                        ${range.range}<br>
-                                        <span style="font-size: 11px; color: var(--text-muted);">${percentage}%</span><br>
-                                        <span style="font-size: 10px; color: var(--text-muted); font-style: italic;">${range.description}</span>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
+                <!-- 메트릭별 개선도 비교 차트 -->
+                <div class="chart-container" style="margin-bottom: 24px;">
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center;">메트릭별 평균 개선도 비교</h3>
+                    <div class="metrics-comparison-chart">
+                        ${generateMetricsComparisonChart(avgGembaImprovement, avgCometImprovement, avgCosineImprovement)}
                     </div>
-                    ` : `
-                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                        <div style="font-size: 48px; margin-bottom: 16px;">▦</div>
-                        <div style="font-size: 16px; margin-bottom: 8px;">APE 개선 데이터가 없습니다</div>
-                        <div style="font-size: 14px;">APE(Automatic Post-Editing)가 적용된 레코드가 발견되지 않았습니다.</div>
-                    </div>
-                    `}
                 </div>
+            `;
+        }
+
+        // 실제 APE 개선도 분포를 계산하는 함수
+        async function calculateRealImprovementDistribution() {
+            try {
+                // APE가 적용된 레코드만 가져오기
+                const response = await fetch(`${API_BASE}/records?has_ape=true&limit=10000`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const recordsData = await response.json();
+                
+                // APE가 적용된 레코드들
+                const apeRecords = recordsData.records;
+                
+                console.log(`APE 레코드 수: ${apeRecords.length}`); // 디버깅용
+                
+                // 개선도 분류 카운터 초기화
+                const improvementCounts = {
+                    deterioration: 0,    // <0%
+                    noChange: 0,         // 0%
+                    minimal: 0,          // 0-2%
+                    small: 0,            // 2-5%
+                    medium: 0,           // 5-10%
+                    large: 0             // ≥10%
+                };
+                
+                // 각 레코드의 개선도 계산 및 분류
+                apeRecords.forEach(record => {
+                    // COMET 점수 기준으로 개선도 계산 (가장 신뢰할 만한 메트릭)
+                    const originalComet = record.comet || 0;
+                    const deltaComet = record.delta_comet || 0;
+                    
+                    if (originalComet > 0) {
+                        const improvementPercent = (deltaComet / originalComet) * 100;
+                        
+                        console.log(`Record ${record.key}: ${improvementPercent.toFixed(2)}%`); // 디버깅용
+                        
+                        if (improvementPercent < 0) {
+                            improvementCounts.deterioration++;
+                        } else if (improvementPercent === 0) {
+                            improvementCounts.noChange++;
+                        } else if (improvementPercent <= 2) {
+                            improvementCounts.minimal++;
+                        } else if (improvementPercent <= 5) {
+                            improvementCounts.small++;
+                        } else if (improvementPercent <= 10) {
+                            improvementCounts.medium++;
+                        } else {
+                            improvementCounts.large++;
+                        }
+                    } else {
+                        // 원본 점수가 0인 경우 변화없음으로 분류
+                        improvementCounts.noChange++;
+                    }
+                });
+                
+                console.log('개선도 분포:', improvementCounts); // 디버깅용
+                
+                return [
+                    { 
+                        range: '악화 (<0%)', 
+                        count: improvementCounts.deterioration,
+                        color: '#dc2626', // Red 600
+                        description: '번역 품질이 오히려 악화'
+                    },
+                    { 
+                        range: '변화없음 (0%)', 
+                        count: improvementCounts.noChange,
+                        color: '#6b7280', // Gray 500
+                        description: '개선 효과 없음'
+                    },
+                    { 
+                        range: '미미 (0-2%)', 
+                        count: improvementCounts.minimal,
+                        color: '#f59e0b', // Amber 500
+                        description: '매우 작은 개선'
+                    },
+                    { 
+                        range: '소폭 (2-5%)', 
+                        count: improvementCounts.small,
+                        color: '#3b82f6', // Blue 500
+                        description: '눈에 띄는 개선'
+                    },
+                    { 
+                        range: '중간 (5-10%)', 
+                        count: improvementCounts.medium,
+                        color: '#10b981', // Emerald 500
+                        description: '상당한 품질 향상'
+                    },
+                    { 
+                        range: '큰개선 (≥10%)', 
+                        count: improvementCounts.large,
+                        color: '#059669', // Emerald 600
+                        description: '매우 큰 품질 향상'
+                    }
+                ];
+                
+            } catch (error) {
+                console.error('실제 개선도 분포 계산 실패:', error);
+                // 오류 시 기본값 반환
+                return [
+                    { 
+                        range: '데이터 로드 실패', 
+                        count: 1, 
+                        color: '#6b7280',
+                        description: '데이터를 불러올 수 없음'
+                    }
+                ];
+            }
+        }
+
+        // 메트릭별 개선도 비교 차트 생성 - 라인 그래프 방식
+        function generateMetricsComparisonChart(gembaImprovement, cometImprovement, cosineImprovement) {
+            const metrics = [
+                { name: 'GEMBA', value: gembaImprovement, unit: '점', color: '#3b82f6', description: 'GPT 기반 품질 평가' },
+                { name: 'COMET', value: cometImprovement, unit: '%', color: '#10b981', description: '신경망 기반 메트릭' },
+                { name: 'Cosine', value: cosineImprovement, unit: '%', color: '#8b5cf6', description: '의미 유사도' }
+            ];
+            
+            return `
+                <!-- 메트릭 카드 방식 표시 -->
+                <div class="metrics-cards" style="display: flex; justify-content: space-around; gap: 20px; margin-bottom: 30px;">
+                    ${metrics.map(metric => {
+                        const isPositive = metric.value >= 0;
+                        const displayValue = metric.name === 'GEMBA' ? 
+                            metric.value.toFixed(1) : 
+                            metric.value.toFixed(3); // 정확한 값 표시
+                        
+                        return `
+                            <div class="metric-card" style="
+                                flex: 1;
+                                min-height: 280px;
+                                max-width: 300px;
+                                background: linear-gradient(135deg, ${metric.color}15, ${metric.color}05);
+                                border: 2px solid ${metric.color}30;
+                                border-radius: 16px;
+                                padding: 20px;
+                                text-align: center;
+                                position: relative;
+                                overflow: hidden;
+                                transition: all 0.3s ease;
+                                cursor: pointer;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: space-between;
+                            " onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                                <!-- 배경 패턴 -->
+                                <div style="
+                                    position: absolute;
+                                    top: -50%;
+                                    right: -50%;
+                                    width: 100%;
+                                    height: 100%;
+                                    background: radial-gradient(circle, ${metric.color}20 0%, transparent 70%);
+                                    opacity: 0.5;
+                                "></div>
+                                
+                                <!-- 상단 섹션: 아이콘과 이름 -->
+                                <div style="flex: 0 0 auto; z-index: 1; position: relative;">
+                                    <!-- 메트릭 아이콘 -->
+                                    <div style="
+                                        width: 50px;
+                                        height: 50px;
+                                        background: ${metric.color};
+                                        border-radius: 50%;
+                                        margin: 0 auto 15px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        font-size: 20px;
+                                        font-weight: bold;
+                                        color: white;
+                                        box-shadow: 0 4px 15px ${metric.color}40;
+                                    ">
+                                        ${metric.name.charAt(0)}
+                                    </div>
+                                    
+                                    <!-- 메트릭 이름 -->
+                                    <h3 style="
+                                        margin: 0 0 10px 0;
+                                        color: var(--text-primary);
+                                        font-size: 18px;
+                                        font-weight: 700;
+                                    ">${metric.name}</h3>
+                                </div>
+                                
+                                <!-- 중단 섹션: 개선값과 설명 -->
+                                <div style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; z-index: 1; position: relative;">
+                                    <!-- 개선값 -->
+                                    <div style="
+                                        font-size: 28px;
+                                        font-weight: 800;
+                                        color: ${isPositive ? '#10b981' : '#ef4444'};
+                                        margin-bottom: 8px;
+                                    ">
+                                        ${isPositive ? '+' : ''}${displayValue}${metric.unit}
+                                    </div>
+                                    
+                                    <!-- 설명 -->
+                                    <div style="
+                                        font-size: 12px;
+                                        color: var(--text-muted);
+                                        margin-bottom: 15px;
+                                    ">${metric.description}</div>
+                                </div>
+                                
+                                <!-- 하단 섹션: 트렌드 라인 -->
+                                <div style="flex: 0 0 auto; height: 40px; position: relative; z-index: 1;">
+                                    <svg width="100%" height="100%" style="overflow: visible;">
+                                        <defs>
+                                            <linearGradient id="gradient-${metric.name}" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" style="stop-color:${metric.color}00;stop-opacity:0" />
+                                                <stop offset="50%" style="stop-color:${metric.color};stop-opacity:0.3" />
+                                                <stop offset="100%" style="stop-color:${metric.color};stop-opacity:0.8" />
+                                            </linearGradient>
+                                        </defs>
+                                        
+                                        <!-- 기준선 (0) -->
+                                        <line x1="0" y1="20" x2="100%" y2="20" stroke="#ddd" stroke-width="1" stroke-dasharray="2,2"/>
+                                        
+                                        <!-- 개선 트렌드 라인 -->
+                                        <path d="M 0 20 Q 25 ${isPositive ? 10 : 30} 50 ${isPositive ? 5 : 35} T 100 ${isPositive ? 8 : 32}" 
+                                              stroke="${metric.color}" 
+                                              stroke-width="3" 
+                                              fill="none"
+                                              style="animation: drawTrend 2s ease-out ${metrics.indexOf(metric) * 0.3}s both;"/>
+                                        
+                                        <!-- 포인트 -->
+                                        <circle cx="100%" cy="${isPositive ? 8 : 32}" r="4" fill="${metric.color}" 
+                                               style="animation: showPoint 0.5s ease-out ${2 + metrics.indexOf(metric) * 0.3}s both;"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                
+                <!-- 종합 개선도 그래프 -->
+                <div style="background: rgba(59, 130, 246, 0.05); border-radius: 16px; padding: 25px; margin-top: 20px;">
+                    <h3 style="text-align: center; margin-bottom: 20px; color: var(--text-primary);">전체 개선 트렌드</h3>
+                    <div style="height: 120px; position: relative;">
+                        <svg width="100%" height="100%" style="overflow: visible;">
+                            <defs>
+                                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.3" />
+                                    <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.05" />
+                                </linearGradient>
+                            </defs>
+                            
+                            <!-- 그리드 라인 -->
+                            <g stroke="#e5e7eb" stroke-width="1" opacity="0.5">
+                                <line x1="0" y1="30" x2="100%" y2="30"/>
+                                <line x1="0" y1="60" x2="100%" y2="60"/>
+                                <line x1="0" y1="90" x2="100%" y2="90"/>
+                            </g>
+                            
+                            <!-- 라벨 -->
+                            <text x="10" y="25" font-size="10" fill="var(--text-muted)">높음</text>
+                            <text x="10" y="65" font-size="10" fill="var(--text-muted)">보통</text>
+                            <text x="10" y="95" fill="var(--text-muted)" font-size="10">낮음</text>
+                            
+                            <!-- GEMBA 라인 -->
+                            <path d="M 80 ${90 - Math.abs(gembaImprovement) * 2} L 200 ${88 - Math.abs(gembaImprovement) * 2} L 320 ${85 - Math.abs(gembaImprovement) * 2}" 
+                                  stroke="#3b82f6" stroke-width="3" fill="none"
+                                  style="animation: drawLine 2s ease-out 0.5s both;"/>
+                            
+                            <!-- COMET 라인 -->
+                            <path d="M 80 ${90 - Math.abs(cometImprovement) * 800} L 200 ${88 - Math.abs(cometImprovement) * 800} L 320 ${85 - Math.abs(cometImprovement) * 800}" 
+                                  stroke="#10b981" stroke-width="3" fill="none"
+                                  style="animation: drawLine 2s ease-out 1s both;"/>
+                            
+                            <!-- Cosine 라인 -->
+                            <path d="M 80 ${90 - Math.abs(cosineImprovement) * 800} L 200 ${88 - Math.abs(cosineImprovement) * 800} L 320 ${85 - Math.abs(cosineImprovement) * 800}" 
+                                  stroke="#8b5cf6" stroke-width="3" fill="none"
+                                  style="animation: drawLine 2s ease-out 1.5s both;"/>
+                            
+                            <!-- 범례 -->
+                            <g transform="translate(350, 30)">
+                                <circle cx="5" cy="5" r="3" fill="#3b82f6"/>
+                                <text x="15" y="9" font-size="11" fill="var(--text-primary)">GEMBA</text>
+                                
+                                <circle cx="5" cy="25" r="3" fill="#10b981"/>
+                                <text x="15" y="29" font-size="11" fill="var(--text-primary)">COMET</text>
+                                
+                                <circle cx="5" cy="45" r="3" fill="#8b5cf6"/>
+                                <text x="15" y="49" font-size="11" fill="var(--text-primary)">Cosine</text>
+                            </g>
+                        </svg>
+                    </div>
+                </div>
+                
+                <style>
+                @keyframes drawTrend {
+                    from { stroke-dasharray: 200; stroke-dashoffset: 200; }
+                    to { stroke-dasharray: 200; stroke-dashoffset: 0; }
+                }
+                
+                @keyframes showPoint {
+                    from { opacity: 0; transform: scale(0); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                
+                @keyframes drawLine {
+                    from { stroke-dasharray: 300; stroke-dashoffset: 300; }
+                    to { stroke-dasharray: 300; stroke-dashoffset: 0; }
+                }
+                
+                .metric-card:hover {
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                }
+                </style>
+            `;
+        }
+
+        // 개선 임팩트 시각화 생성
+        function generateImpactVisualization(metrics) {
+            const radius = 35;
+            const strokeWidth = 10;
+            const center = 50;
+            const circumference = 2 * Math.PI * radius;
+            
+            // 각 메트릭의 임팩트 점수 계산 (시각적 효과를 위해서만 조정)
+            const impactScores = metrics.map(metric => {
+                const baseScore = Math.abs(metric.value);
+                const adjustedScore = metric.name === 'GEMBA' ? baseScore : baseScore * 30; // COMET, Cosine 30배 시각적 증폭
+                return Math.min(adjustedScore, 100); // 최대 100으로 제한
+            });
+            
+            const totalImpact = impactScores.reduce((sum, score) => sum + score, 0);
+            let cumulativeOffset = 0;
+            
+            return metrics.map((metric, index) => {
+                const normalizedScore = totalImpact > 0 ? impactScores[index] / totalImpact : 0.33;
+                const strokeDasharray = circumference * normalizedScore;
+                const strokeDashoffset = -cumulativeOffset;
+                
+                cumulativeOffset += strokeDasharray;
+                
+                // 임팩트에 따른 동적 스타일
+                const intensity = impactScores[index] / 100;
+                const opacity = 0.6 + (intensity * 0.4);
+                const glowSize = 2 + (intensity * 4);
+                
+                return `
+                    <circle
+                        cx="${center}"
+                        cy="${center}"
+                        r="${radius}"
+                        fill="none"
+                        stroke="${metric.color}"
+                        stroke-width="${strokeWidth + intensity * 3}"
+                        stroke-dasharray="${strokeDasharray} ${circumference}"
+                        stroke-dashoffset="${strokeDashoffset}"
+                        opacity="${opacity}"
+                        filter="url(#glow-${index})"
+                        style="animation: drawImpactCircle 3s ease-out ${index * 0.5}s both;"
+                    />
+                    <defs>
+                        <filter id="glow-${index}">
+                            <feGaussianBlur stdDeviation="${glowSize}" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                `;
+            }).join('') + `
+                <!-- 중앙 펄스 효과 -->
+                <circle
+                    cx="${center}"
+                    cy="${center}"
+                    r="8"
+                    fill="#10b981"
+                    opacity="0.8"
+                    style="animation: centerPulse 2s ease-in-out infinite;"
+                />
+                
+                <style>
+                @keyframes drawImpactCircle {
+                    from { 
+                        stroke-dasharray: 0 ${circumference}; 
+                        opacity: 0;
+                    }
+                    to { 
+                        opacity: ${0.6 + (Math.max(...impactScores) / 100 * 0.4)};
+                    }
+                }
+                
+                @keyframes centerPulse {
+                    0%, 100% { r: 8; opacity: 0.8; }
+                    50% { r: 12; opacity: 0.4; }
+                }
+                </style>
+            `;
+        }
+
+        // 개선도 도넛 차트 생성
+        function generateImprovementDonut(metrics) {
+            const radius = 35;
+            const strokeWidth = 8;
+            const center = 50;
+            const circumference = 2 * Math.PI * radius;
+            
+            let cumulativeOffset = 0;
+            
+            return metrics.map((metric, index) => {
+                // 각 메트릭의 가중치 (정규화된 절댓값)
+                const totalAbsValue = metrics.reduce((sum, m) => sum + Math.abs(m.value), 0);
+                const normalizedValue = totalAbsValue > 0 ? Math.abs(metric.value) / totalAbsValue : 0.33;
+                const strokeDasharray = circumference * normalizedValue;
+                const strokeDashoffset = -cumulativeOffset;
+                
+                cumulativeOffset += strokeDasharray;
+                
+                return `
+                    <circle
+                        cx="${center}"
+                        cy="${center}"
+                        r="${radius}"
+                        fill="none"
+                        stroke="${metric.color}"
+                        stroke-width="${strokeWidth}"
+                        stroke-dasharray="${strokeDasharray} ${circumference}"
+                        stroke-dashoffset="${strokeDashoffset}"
+                        opacity="0.8"
+                        style="animation: drawCircle 2s ease-out ${index * 0.3}s both;"
+                    />
+                `;
+            }).join('') + `
+                <style>
+                @keyframes drawCircle {
+                    from { stroke-dasharray: 0 ${circumference}; }
+                }
+                </style>
             `;
         }
 
