@@ -81,10 +81,17 @@ def main() -> None:
     all_keys = list(ko.keys())
 
     if cfg.LIMIT:
-        # Set seed only if SEED is not None
+        # Set all random seeds for reproducibility
         if cfg.SEED is not None:
             random.seed(cfg.SEED)
+            np.random.seed(cfg.SEED)
+            torch.manual_seed(cfg.SEED)
+            torch.cuda.manual_seed_all(cfg.SEED)
+            print(f"🎲 Random seed set to {cfg.SEED} for reproducible sampling")
         keys = random.sample(all_keys, min(cfg.LIMIT, len(all_keys)))
+        print(f"📊 Selected {len(keys)} samples from {len(all_keys)} total keys")
+        # Print first few keys for verification
+        print(f"🔍 First 5 selected keys: {keys[:5]}")
     else:
         keys = all_keys
 

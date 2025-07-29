@@ -231,17 +231,35 @@ async def main():
         *(process(i) for i in targets_idx), total=len(targets_idx), desc="APE edits"
     )
 
-    src_txt = [items[i]["src"] for i in targets_idx]
-    ape_txt = [items[i]["ape"] for i in targets_idx]
+    # APE가 있는 항목들만 필터링해서 cosine, comet 계산
+    ape_indices = [i for i in targets_idx if "ape" in items[i]]
+    src_txt = [items[i]["src"] for i in ape_indices]
+    ape_txt = [items[i]["ape"] for i in ape_indices]
     ape_cos = cosine_batch(src_txt, ape_txt)
     ape_com = comet_batch(src_txt, ape_txt)
-    for i, c, m in zip(targets_idx, ape_cos, ape_com):
+    for i, c, m in zip(ape_indices, ape_cos, ape_com):
         items[i]["ape_cos"]   = float(c)
         items[i]["ape_comet"] = float(m)
         items[i]["delta_cos"] = float(c - items[i].get("cos", 0.0))
         items[i]["delta_comet"] = float(m - items[i].get("comet", 0.0))
 
-    batches = [targets_idx[i : i + cfg.GEMBA_BATCH] for i in range(0, len(targets_idx), cfg.GEMBA_BATCH)]
+    # APE 개선 후 GEMBA 점수 계산
+    from gemba_batch import gemba_batch
+    logger.info("APE 개선 후 GEMBA 점수 계산 중...")
+    
+    # APE된 텍스트에 대해 GEMBA 평가 수행 (이미 위에서 정의된 src_txt, ape_txt 사용)
+    ape_gemba_results = await gemba_batch(src_txt, ape_txt)
+    for i, gemba_result in zip(ape_indices, ape_gemba_results):
+        original_gemba = items[i].get("gemba", 0.0)
+        # gemba_batch returns tuples (overall, adequacy, fluency, evidence)
+        if isinstance(gemba_result, tuple):
+            ape_gemba = float(gemba_result[0])  # overall score is first element
+        else:
+            ape_gemba = gemba_result.get("overall", 0.0)
+        items[i]["ape_gemba"] = float(ape_gemba)
+        items[i]["delta_gemba"] = float(ape_gemba - original_gemba)
+
+    batches = [ape_indices[i : i + cfg.GEMBA_BATCH] for i in range(0, len(ape_indices), cfg.GEMBA_BATCH)]
     for batch in tqdm(batches, desc="Back‑translate"):
         ape_en = [items[i]["ape"] for i in batch]
         mt_en  = [items[i]["mt"]  for i in batch]
@@ -251,16 +269,16 @@ async def main():
             items[idx]["ape_bt"] = bt1
             items[idx]["mt_bt"]  = bt2
 
-    src_ko      = [items[i]["src"]    for i in targets_idx]
-    ape_bt_list = [items[i]["ape_bt"] for i in targets_idx]
-    mt_bt_list  = [items[i]["mt_bt"]  for i in targets_idx]
+    src_ko      = [items[i]["src"]    for i in ape_indices]
+    ape_bt_list = [items[i]["ape_bt"] for i in ape_indices]
+    mt_bt_list  = [items[i]["mt_bt"]  for i in ape_indices]
 
     ape_bt_cos = cosine_batch(src_ko, ape_bt_list)
     mt_bt_cos  = cosine_batch(src_ko, mt_bt_list)
     ape_bt_com = comet_batch(src_ko, ape_bt_list)
     mt_bt_com  = comet_batch(src_ko, mt_bt_list)
 
-    for i, c1, c2, d1, d2 in zip(targets_idx, ape_bt_cos, mt_bt_cos, ape_bt_com, mt_bt_com):
+    for i, c1, c2, d1, d2 in zip(ape_indices, ape_bt_cos, mt_bt_cos, ape_bt_com, mt_bt_com):
         r = items[i]
         r["ape_bt_cos"]    = float(c1)
         r["mt_bt_cos"]     = float(c2)
@@ -274,7 +292,7 @@ async def main():
         od = OrderedDict()
         for k in (
             "key","src","mt","ape","validation","ape_cos","delta_cos","ape_comet","delta_comet",
-            "ape_bt_cos","mt_bt_cos","delta_bt_cos","ape_bt_comet","mt_bt_comet","delta_bt_comet"
+            "ape_gemba","delta_gemba","ape_bt_cos","mt_bt_cos","delta_bt_cos","ape_bt_comet","mt_bt_comet","delta_bt_comet"
         ):
             if k in r:
                 od[k] = r[k]

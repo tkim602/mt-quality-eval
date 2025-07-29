@@ -10,12 +10,13 @@ OUT_DIR.mkdir(exist_ok=True)
 KO_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\ko_checker_dedup.json"
 EN_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\en-US_checker.json"
 
-LIMIT = 50  # Small test run with conservative thresholds
-SEED = None  
+LIMIT = 3000 
+import time
+SEED = int(time.time()) % 10000  
 
 LABSE_MODEL = "sentence-transformers/LaBSE"
 COMET_CKPT = "Unbabel/wmt22-cometkiwi-da"
-GEMBA_MODEL = "gpt-3.5-turbo-16k"
+GEMBA_MODEL = "gpt-4o-mini"  
 APE_MODEL = "gpt-4o-mini"
 BT_MODEL = "gpt-4o-mini"  
 
@@ -27,8 +28,8 @@ TERMBASE_PATH = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\term_base
 
 ENCODE_BATCH_SIZE = 128  
 COMET_BATCH_SIZE = 64    
-GEMBA_BATCH = 4        
-APE_CONCURRENCY = 8     
+GEMBA_BATCH = 2        # Further reduced to prevent no_parse errors
+APE_CONCURRENCY = 4     # Increased concurrency as requested
 
 DEVICE = "cpu"
 
@@ -64,7 +65,7 @@ COMET_THR = {
     "very_long": 0.750,
 }
 
-GEMBA_PASS = 65
+GEMBA_PASS = 75  
 BUSINESS_RULES = {
     "critical_strings": {
         "cos_boost": 0.05,
