@@ -23,7 +23,7 @@ load_dotenv()
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def _sys_prompt(n: int, validation_summary: str) -> str:
-    return f"""You are an expert Korean→English translation quality assessor with deep understanding of both languages and technical terminology.
+    return f"""You are an expert Korean→English translation quality assessor with deep understanding of both languages, technical terminology, and slangs, etc.
 
 ### Assessment Criteria (0–100, step 5)
 **ADEQUACY** – Source fidelity & completeness
