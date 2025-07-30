@@ -8,8 +8,8 @@ import statistics
 from pathlib import Path
 from enum import Enum
 
-DELTA_GEMBA_FILE = Path("../out/v13/ape_evidence.json")
-ORIGINAL_FILE = Path("../out/v13/ape_evidence.json")
+DELTA_GEMBA_FILE = Path("../out/v2/ape_evidence.json")
+ORIGINAL_FILE = Path("../out/v2/ape_evidence.json")
 
 DATA_FILE = DELTA_GEMBA_FILE if DELTA_GEMBA_FILE.exists() else ORIGINAL_FILE
 
