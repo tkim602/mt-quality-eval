@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 import os
@@ -28,7 +27,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-class SimplePipelineRunner:
+class DomainAwarePipelineRunner:
     def __init__(self, base_dir: Path):
         self.base_dir = base_dir
         self.python_exe = sys.executable
@@ -130,10 +129,15 @@ class SimplePipelineRunner:
             logger.error(f"Error running {script_name}: {e}")
             return False
     
-    async def run_complete_pipeline(self) -> bool:
+    async def run_complete_pipeline(self, use_domain_aware_ape: bool = True) -> bool:
         try:
             run_dir = self.create_run_directory()
             logger.info(f"Starting complete pipeline in: {run_dir}")
+            
+            if use_domain_aware_ape:
+                logger.info("🎯 Using DOMAIN-AWARE APE mode")
+            else:
+                logger.info("🔧 Using standard APE mode")
             
             logger.info("Stage 1: Running filter...")
             if not self.run_script("filter.py", timeout=600):
@@ -146,7 +150,8 @@ class SimplePipelineRunner:
                 return False
             
             logger.info("Stage 3: Running APE processing...")
-            if not await self.run_async_script("ape.py", timeout=3600):
+            ape_script = "ape_domain_aware.py" if use_domain_aware_ape else "ape.py"
+            if not await self.run_async_script(ape_script, timeout=3600):
                 logger.error("APE stage failed")
                 return False
             
@@ -160,37 +165,47 @@ class SimplePipelineRunner:
             logger.error(f"Pipeline failed: {e}")
             return False
     
-    def run_single_stage(self, stage: str) -> bool:
+    def run_single_stage(self, stage: str, use_domain_aware_ape: bool = True) -> bool:
+        ape_script = "ape_domain_aware.py" if use_domain_aware_ape else "ape.py"
+        
         stage_map = {
             'filter': lambda: self.run_script("filter.py", timeout=600),
             'gemba': lambda: asyncio.run(self.run_async_script("gemba_batch.py", timeout=3600)),
-            'ape': lambda: asyncio.run(self.run_async_script("ape.py", timeout=3600))
+            'ape': lambda: asyncio.run(self.run_async_script(ape_script, timeout=3600))
         }
         
         if stage not in stage_map:
             logger.error(f"Unknown stage: {stage}. Available: {list(stage_map.keys())}")
             return False
         
-        logger.info(f"Running single stage: {stage}")
+        if stage == 'ape':
+            mode_info = "domain-aware" if use_domain_aware_ape else "standard"
+            logger.info(f"Running single stage: {stage} ({mode_info})")
+        else:
+            logger.info(f"Running single stage: {stage}")
+            
         return stage_map[stage]()
 
 async def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Simple MT Pipeline Runner')
+    parser = argparse.ArgumentParser(description='Domain-Aware MT Pipeline Runner')
     parser.add_argument('--stage', choices=['filter', 'gemba', 'ape'], 
                        help='Run only a specific stage')
     parser.add_argument('--base-dir', type=Path, default=Path.cwd(),
                        help='Base directory for pipeline')
+    parser.add_argument('--standard-ape', action='store_true',
+                       help='Use standard APE instead of domain-aware APE')
     
     args = parser.parse_args()
     
-    pipeline = SimplePipelineRunner(base_dir=args.base_dir)
+    pipeline = DomainAwarePipelineRunner(base_dir=args.base_dir)
+    use_domain_aware = not args.standard_ape
     
     if args.stage:
-        success = pipeline.run_single_stage(args.stage)
+        success = pipeline.run_single_stage(args.stage, use_domain_aware_ape=use_domain_aware)
     else:
-        success = await pipeline.run_complete_pipeline()
+        success = await pipeline.run_complete_pipeline(use_domain_aware_ape=use_domain_aware)
     
     if not success:
         logger.error("Pipeline execution failed")

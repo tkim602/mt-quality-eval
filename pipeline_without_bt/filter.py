@@ -15,31 +15,27 @@ from validation import run_all_validations
 
 
 def get_cache_key(texts: list) -> str:
-    """Generate a cache key based on text content"""
     content = ''.join(texts)
     return hashlib.md5(content.encode('utf-8')).hexdigest()
 
-def load_labse_cache(cache_key: str) -> tuple:
-    """Load LaBSE embeddings from cache if available"""
+def load_cos_cache(cache_key: str) -> tuple:
     cache_dir = Path(cfg.OUT_DIR) / "cache"
-    cache_file = cache_dir / f"labse_{cache_key}.npz"
+    cache_file = cache_dir / f"koe5_{cache_key}.npz"
     
     if cache_file.exists():
         data = np.load(cache_file)
         return data['e_src'], data['e_mt'], True
     return None, None, False
 
-def save_labse_cache(cache_key: str, e_src: np.ndarray, e_mt: np.ndarray):
-    """Save LaBSE embeddings to cache"""
+def save_cos_cache(cache_key: str, e_src: np.ndarray, e_mt: np.ndarray):
     cache_dir = Path(cfg.OUT_DIR) / "cache"
     cache_dir.mkdir(exist_ok=True)
-    cache_file = cache_dir / f"labse_{cache_key}.npz"
+    cache_file = cache_dir / f"koe5_{cache_key}.npz"
     
     np.savez_compressed(cache_file, e_src=e_src, e_mt=e_mt)
-    print(f"Saved LaBSE cache: {cache_file}")
+    print(f"Saved KoE5 cache: {cache_file}")
 
 def load_comet_cache(cache_key: str) -> tuple:
-    """Load COMET scores from cache if available"""
     cache_dir = Path(cfg.OUT_DIR) / "cache"
     cache_file = cache_dir / f"comet_{cache_key}.npy"
     
@@ -49,7 +45,6 @@ def load_comet_cache(cache_key: str) -> tuple:
     return None, False
 
 def save_comet_cache(cache_key: str, scores: np.ndarray):
-    """Save COMET scores to cache"""
     cache_dir = Path(cfg.OUT_DIR) / "cache"
     cache_dir.mkdir(exist_ok=True)
     cache_file = cache_dir / f"comet_{cache_key}.npy"
@@ -71,9 +66,46 @@ def bucket(sentence: str) -> str:
         return "very_long"            
 
 
+def detect_domain_from_filename(filename: str) -> str:
+    """
+    Detect domain from input filename pattern.
+    Examples:
+    - ko_checker.json -> sparrow
+    - en_conversation.json -> conversation 
+    """
+    filename = filename.lower()
+    
+    domain_patterns = {
+        'checker': 'sparrow',
+        'sparrow': 'sparrow',
+        'conversation': 'conversation',
+        'academic': 'academic', 
+        'news': 'news_article',
+        'fiction': 'fiction',
+        'poetry': 'poetry',
+        'sns': 'sns'
+    }
+    
+    for pattern, domain in domain_patterns.items():
+        if pattern in filename:
+            return domain
+    
+    return 'sparrow'  # default
+
 def main() -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
+    
+    # Detect domain from input filenames
+    ko_domain = detect_domain_from_filename(cfg.KO_JSON)
+    en_domain = detect_domain_from_filename(cfg.EN_JSON)
+    
+    # Use the domain that's not 'sparrow' if they differ, otherwise use either
+    detected_domain = ko_domain if ko_domain != 'sparrow' else en_domain
+    print(f"🎯 Detected domain: {detected_domain} (from {cfg.KO_JSON}, {cfg.EN_JSON})")
+    
+    # Store domain in environment for subsequent stages
+    os.environ['PIPELINE_DOMAIN'] = detected_domain
     
     ko = json.load(open(cfg.KO_JSON, encoding="utf-8"))
     en = json.load(open(cfg.EN_JSON, encoding="utf-8"))
@@ -81,7 +113,6 @@ def main() -> None:
     all_keys = list(ko.keys())
 
     if cfg.LIMIT:
-        # Set all random seeds for reproducibility
         if cfg.SEED is not None:
             random.seed(cfg.SEED)
             np.random.seed(cfg.SEED)
@@ -90,7 +121,6 @@ def main() -> None:
             print(f"🎲 Random seed set to {cfg.SEED} for reproducible sampling")
         keys = random.sample(all_keys, min(cfg.LIMIT, len(all_keys)))
         print(f"📊 Selected {len(keys)} samples from {len(all_keys)} total keys")
-        # Print first few keys for verification
         print(f"🔍 First 5 selected keys: {keys[:5]}")
     else:
         keys = all_keys
@@ -98,34 +128,29 @@ def main() -> None:
     src = [ko[k] for k in keys]
     mt = [en.get(k, "") for k in keys]
 
-    # Generate cache key for this specific dataset
     cache_key = get_cache_key(src + mt)
     print(f"Cache key: {cache_key}")
 
-    # Check if we should force fresh computation (for optimization)
     force_fresh = os.getenv('FORCE_FRESH', 'false').lower() == 'true'
     if force_fresh:
         print("FORCE_FRESH mode: Computing fresh embeddings and scores...")
 
-    # Try to load LaBSE embeddings from cache
-    e_src, e_mt, cache_hit = load_labse_cache(cache_key)
+    e_src, e_mt, cache_hit = load_cos_cache(cache_key)
     
     if cache_hit and not force_fresh:
-        print("OK: Loaded LaBSE embeddings from cache")
+        print("OK: Loaded koe5 embeddings from cache")
         cos = (e_src * e_mt).sum(1)
     else:
-        print("Computing LaBSE embeddings...")
-        labse = SentenceTransformer(cfg.LABSE_MODEL).to(device)
+        print("Computing koe5 embeddings...")
+        koe5 = SentenceTransformer(cfg.COS_MODEL).to(device)
         
-        e_src = labse.encode(src, batch_size=128, normalize_embeddings=True, show_progress_bar=True)
-        e_mt  = labse.encode(mt , batch_size=128, normalize_embeddings=True, show_progress_bar=True)
+        e_src = koe5.encode(src, batch_size=128, normalize_embeddings=True, show_progress_bar=True)
+        e_mt  = koe5.encode(mt , batch_size=128, normalize_embeddings=True, show_progress_bar=True)
         cos   = (e_src * e_mt).sum(1)
         
-        # Save to cache if enabled and not in force fresh mode
         if getattr(cfg, 'ENABLE_CACHING', True) and not force_fresh:
-            save_labse_cache(cache_key, e_src, e_mt)
+            save_cos_cache(cache_key, e_src, e_mt)
     
-    # Try to load COMET scores from cache
     com, comet_cache_hit = load_comet_cache(cache_key)
     
     if comet_cache_hit and not force_fresh:
@@ -141,7 +166,6 @@ def main() -> None:
             scores.extend(comet.predict(batch_data, batch_size=BATCH)["scores"])
         com = np.array(scores, dtype=np.float32)
         
-        # Save to cache if enabled and not in force fresh mode
         if getattr(cfg, 'ENABLE_CACHING', True) and not force_fresh:
             save_comet_cache(cache_key, com)
 
@@ -177,6 +201,7 @@ def main() -> None:
                 "confidence": float(confidence),
                 "string_type": cfg.get_string_type(k),
                 "validation": validation_results,
+                "domain": detected_domain,  # Add domain info to each record
             }
         )
 

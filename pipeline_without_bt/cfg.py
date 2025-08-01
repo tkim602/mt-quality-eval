@@ -10,11 +10,15 @@ OUT_DIR.mkdir(exist_ok=True)
 KO_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\ko_checker_dedup.json"
 EN_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\en-US_checker.json"
 
+# KO_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\ko-KR.json"
+# EN_JSON = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\ja-JP.json"
+
 LIMIT = 3000 
 import time
-SEED = int(time.time()) % 10000  
+# SEED = int(time.time()) % 10000  
+SEED = 8084
 
-LABSE_MODEL = "sentence-transformers/LaBSE"
+COS_MODEL = "nlpai-lab/KURE-v1"
 COMET_CKPT = "Unbabel/wmt22-cometkiwi-da"
 GEMBA_MODEL = "gpt-4o-mini"  
 APE_MODEL = "gpt-4o-mini"
@@ -28,8 +32,8 @@ TERMBASE_PATH = r"c:\Users\tkim602_global\Desktop\mt_eval\data\samples\term_base
 
 ENCODE_BATCH_SIZE = 128  
 COMET_BATCH_SIZE = 64    
-GEMBA_BATCH = 2        # Further reduced to prevent no_parse errors
-APE_CONCURRENCY = 4     # Increased concurrency as requested
+GEMBA_BATCH = 2        
+APE_CONCURRENCY = 4 
 
 DEVICE = "cpu"
 

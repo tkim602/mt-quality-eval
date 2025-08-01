@@ -86,7 +86,6 @@ idx,overall,adequacy,fluency,evidence
 
 
 def _messages(batch: List[dict]) -> List[dict]:
-    # Generate a summary of validation results for the prompt
     validation_reports = []
     for i, r in enumerate(batch):
         val = r.get("validation", {})
@@ -104,7 +103,6 @@ def _messages(batch: List[dict]) -> List[dict]:
     
     validation_summary = "### Validation Summary\n" + "".join(validation_reports)
 
-    # Add few-shot examples for better consistency
     examples = """
 ### Examples for Reference (한국어 증거 제공 예시)
 
@@ -190,26 +188,25 @@ def _parse(text: str, n: int):
     if result is None:
         logger.warning(f"Both JSON and line parsing failed for text: {text[:200]}...")
     else:
-        # Check if all scores are 0
         zero_count = sum(1 for score in result if score[0] == 0.0)
         if zero_count > 0:
             logger.warning(f"Found {zero_count}/{n} zero scores in parsing result")
             logger.debug(f"Raw text: {text}")
     return result
 
-async def _ask(msgs: List[dict], retry: int = 10):  # Increased retry count
+async def _ask(msgs: List[dict], retry: int = 10):
     for attempt in range(retry):
         try:
             resp = await client.chat.completions.create(
                 model=cfg.GEMBA_MODEL,
                 messages=msgs,
-                temperature=0.0,  # More deterministic for consistent parsing
-                max_tokens=2000,  # Increased for better completion
-                top_p=0.9,       # More focused responses
+                temperature=0.0, 
+                max_tokens=2000, 
+                top_p=0.9,      
             )
             return resp.choices[0].message.content
         except (RateLimitError, APIError) as e:
-            wait = min(2 ** attempt + random.random(), 60)  # Cap wait time at 60s
+            wait = min(2 ** attempt + random.random(), 60)  
             logger.warning("%s — retrying in %.1f s (attempt %d/%d)", e.__class__.__name__, wait, attempt + 1, retry)
             await asyncio.sleep(wait)
         except Exception as e:
@@ -227,34 +224,21 @@ async def _score(batch: List[dict]):
     if result is None:
         logger.error(f"Failed to parse GEMBA response for batch of {len(batch)} items")
         logger.debug(f"Full raw text: {raw_text}")
-        # Return default scores with no_parse reason
         return [(0.0, 0.0, 0.0, "no_parse")] * len(batch)
     return result
 
 async def gemba_batch(src_texts: List[str], target_texts: List[str]) -> List[dict]:
-    """
-    소스 텍스트와 타겟 텍스트 리스트에 대해 GEMBA 점수를 계산합니다.
-    
-    Args:
-        src_texts: 소스 텍스트 리스트
-        target_texts: 타겟 텍스트 리스트
-        
-    Returns:
-        GEMBA 점수 딕셔너리 리스트 (overall, adequacy, fluency 포함)
-    """
+
     if len(src_texts) != len(target_texts):
         raise ValueError("Source and target text lists must have the same length")
     
-    # 배치 데이터 준비
     batch_data = []
     for i, (src, tgt) in enumerate(zip(src_texts, target_texts)):
         batch_data.append({
             "key": f"batch_item_{i}",
             "src": src,
-            "mt": tgt  # GEMBA에서는 번역문을 'mt' 키로 사용
+            "mt": tgt 
         })
-    
-    # GEMBA 점수 계산
     results = []
     batch_size = cfg.GEMBA_BATCH
     
@@ -274,13 +258,11 @@ def _decide(cos: float, comet: float, gemba: float, bucket: str):
     keys = ("cosine", "comet", "gemba")
     passed = [k for k, ok in zip(keys, checks) if ok]
     failed = [k for k in keys if k not in passed]
-    # cos == 1은 {0}인 경우 edge case
     tag = "strict_pass" if (len(passed) == 3 or cos == 1.0) else "soft_pass" if len(passed) == 2 else "fail"
     return tag, passed, failed
 
 
 def _ordered(rec: dict, tag: str, passed: List[str], failed: List[str]) -> dict:
-    # Preserve the validation key in the final output
     validation_data = rec.get("validation", {})
     ordered_rec = {
         "key": rec["key"],
@@ -295,18 +277,17 @@ def _ordered(rec: dict, tag: str, passed: List[str], failed: List[str]) -> dict:
         "tag": tag,
         "flag": {"passed": passed, "failed": failed, "gemba_reason": rec.pop("_ev", "")},
         "validation": validation_data,
+        "domain": rec.get("domain", "sparrow"),  # Preserve domain info
     }
     return ordered_rec
 
 async def main():
-    # Get run directory from environment variable or use timestamp
     run_dir = os.getenv('RUN_DIR')
     if run_dir:
         run_path = Path(run_dir)
         input_filename = cfg.FILTER_OUTPUT_FILENAME
         output_filename = cfg.GEMBA_OUTPUT_FILENAME
     else:
-        # Fallback to timestamp-based naming
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         run_path = cfg.OUT_DIR
         input_filename = f"filtered_{timestamp}.json"
@@ -315,15 +296,13 @@ async def main():
     raw_path: Path = run_path / input_filename
     out_path: Path = run_path / output_filename
 
-    # Check if input file exists
     if not raw_path.exists():
         logger.error(f"Input file not found: {raw_path}")
         return
 
     raw: List[dict] = orjson.loads(raw_path.read_bytes())
 
-    # Create semaphore for concurrency control
-    semaphore = asyncio.Semaphore(4)  # Use concurrency of 4 as requested
+    semaphore = asyncio.Semaphore(4)  
     
     async def process_batch(batch_start: int):
         async with semaphore:
@@ -336,10 +315,8 @@ async def main():
                 rec["gemba_fluency"] = flu
                 rec["_ev"] = ev
 
-    # Create tasks for all batches
     batch_starts = list(range(0, len(raw), cfg.GEMBA_BATCH))
     
-    # Process batches concurrently with progress tracking
     from tqdm.asyncio import tqdm as tqdm_asyncio
     await tqdm_asyncio.gather(
         *(process_batch(i) for i in batch_starts),
