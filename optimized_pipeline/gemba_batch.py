@@ -23,39 +23,64 @@ load_dotenv()
 client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def _sys_prompt(n: int, validation_summary: str) -> str:
-    return f"""You are a senior KO→EN rater for the quality of machine translation.
-    Your task is to assess the quality of the translation based on the provided source, machine translation (MT), and validation checks.
+    return f"""You are an expert Korean→English translation quality assessor with deep understanding of both languages and technical terminology.
 
-### Score (0–100, step 5)
-• adequacy – fidelity & completeness to the source
-• fluency – grammar, naturalness, English conventions
-• overall = min(adequacy, fluency)
+### Assessment Criteria (0–100, step 5)
+**ADEQUACY** – Source fidelity & completeness
+- Does the translation convey the exact meaning?
+- Are all key concepts preserved?
+- Is technical terminology correctly translated?
 
-### Deductions (subtract from 100 / floor 0)
-**ACCURACY**
--20 wrong meaning / full mistranslation
--10 key term or placeholder omitted
--5 nuance / secondary info missing
+**FLUENCY** – Target language quality
+- Is the English natural and grammatically correct?
+- Does it follow English conventions?
+- Is it readable for native speakers?
 
-**FLUENCY**
--15 major grammar / word-order error
--5 awkward phrasing, article misuse, passive voice abuse
--5 casing / punctuation (typo always 0)
+**OVERALL** = min(adequacy, fluency)
+
+### Scoring Penalties (subtract from 100, floor at 0)
+**CRITICAL ERRORS (-15 to -25)**
+- Complete mistranslation or opposite meaning
+- Missing critical information or key terms
+- Severe grammar errors that impede understanding
+
+**MAJOR ERRORS (-10 to -15)**
+- Significant meaning shifts or omissions
+- Important terminology inconsistencies
+- Major grammatical issues (word order, tense, etc.)
+
+**MINOR ERRORS (-3 to -8)**
+- Nuance loss or awkward phrasing
+- Minor terminology issues
+- Article errors, preposition mistakes
+- Punctuation or formatting problems
+
+### Korean→English Specific Considerations
+- **Honorifics**: Appropriate handling of Korean politeness levels
+- **Technical Terms**: Consistent use of established terminology
+- **Cultural Context**: Proper localization for English speakers
+- **Sentence Structure**: Natural English flow vs. Korean structure
 
 ### Validation Context
-This section provides automated checks. Use it to inform your scoring.
 {validation_summary}
 
-### Evidence Rule
-overall ≥ 90 → evidence must return "perfect"
-else → evidence = issue description for post-editing.
-**Evidence** should identify the errors correctly for APE.
+### Evidence Guidelines (IMPORTANT: Provide evidence in Korean)
+- Score ≥90: "완벽함" 또는 "우수함"과 같은 간단한 한국어 피드백
+- Score 70-89: 주요 개선점에 대한 간단한 한국어 설명
+- Score <70: 상세한 오류 분석을 한국어로 제공 (포스트 에디팅용)
 
-### Output
-Return a JSON array of length {n}:
-[{{"idx":int, "overall":int, "adequacy":int, "fluency":int, "evidence":str}}, …]
+### Evidence Format Requirements
+- Write ALL evidence in Korean (한국어로 증거 작성)
+- When mentioning specific problematic English terms, put them in quotes
+- Example: "Critical"이라는 단어가 불분명합니다
+- Example: 문법 오류가 있습니다: "was occurred" 대신 "occurred"를 사용해야 합니다
+- Example: 용어 일관성 문제: "vulnerability" 번역이 일관되지 않습니다
 
-If valid JSON cannot be produced, fall back to one plain-text line per item:
+### Output Format
+JSON array of exactly {n} items:
+[{{"idx":int, "overall":int, "adequacy":int, "fluency":int, "evidence":str}}, ...]
+
+Fallback format if JSON fails:
 idx,overall,adequacy,fluency,evidence
 """
 
@@ -79,13 +104,39 @@ def _messages(batch: List[dict]) -> List[dict]:
     
     validation_summary = "### Validation Summary\n" + "".join(validation_reports)
 
+    # Add few-shot examples for better consistency
+    examples = """
+### Examples for Reference (한국어 증거 제공 예시)
+
+Example 1:
+Korean: "사용자 인증이 실패했습니다."
+English: "User authentication failed."
+Assessment: overall=90, adequacy=95, fluency=85, evidence="완벽한 의미 전달과 자연스러운 영어 표현"
+
+Example 2:
+Korean: "데이터베이스 연결 오류가 발생했습니다."
+English: "Database connection error was occurred."
+Assessment: overall=70, adequacy=85, fluency=70, evidence="의미는 명확하지만 문법 오류: "was occurred" 대신 "occurred" 또는 "has occurred"를 사용해야 합니다"
+
+Example 3:
+Korean: "시스템이 정상적으로 종료되었습니다."
+English: "The system was shutdown normally."
+Assessment: overall=75, adequacy=80, fluency=75, evidence="소소한 문제들: "shutdown"은 동사형인 "shut down"이어야 하고, "normally" 대신 "successfully"가 더 자연스럽습니다"
+
+Example 4:
+Korean: "중요 변수를 public에 선언했습니다."
+English: "critical variable in public field."
+Assessment: overall=60, adequacy=65, fluency=55, evidence="심각한 문제들: "critical variable in public field"는 불완전한 문장이고 맥락이 부족합니다. "Declared important variables as public"과 같이 완전한 문장으로 표현해야 합니다"
+"""
+
     payload = [
         {"idx": i + 1, "source": r["src"], "translation": r["mt"]}
         for i, r in enumerate(batch)
     ]
+    
     return [
         {"role": "system", "content": _sys_prompt(len(batch), validation_summary)},
-        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+        {"role": "user", "content": examples + "\n\n### Items to Evaluate\n" + json.dumps(payload, ensure_ascii=False)},
     ]
 
 _LINE_SPLIT = re.compile(r"[,:|\t\-]|")
@@ -94,8 +145,10 @@ def _parse_json(text: str, n: int):
     try:
         arr = json.loads(text)
     except json.JSONDecodeError:
+        logger.warning(f"JSON parsing failed for text: {text[:200]}...")
         return None
     if not isinstance(arr, list):
+        logger.warning(f"Parsed JSON is not a list: {type(arr)}")
         return None
     scores = [(0.0, 0.0, 0.0, "no_parse")] * n
     for item in arr:
@@ -133,28 +186,84 @@ def _parse_lines(text: str, n: int):
 
 
 def _parse(text: str, n: int):
-    return _parse_json(text, n) or _parse_lines(text, n)
+    result = _parse_json(text, n) or _parse_lines(text, n)
+    if result is None:
+        logger.warning(f"Both JSON and line parsing failed for text: {text[:200]}...")
+    else:
+        # Check if all scores are 0
+        zero_count = sum(1 for score in result if score[0] == 0.0)
+        if zero_count > 0:
+            logger.warning(f"Found {zero_count}/{n} zero scores in parsing result")
+            logger.debug(f"Raw text: {text}")
+    return result
 
-async def _ask(msgs: List[dict], retry: int = 8):
+async def _ask(msgs: List[dict], retry: int = 10):  # Increased retry count
     for attempt in range(retry):
         try:
             resp = await client.chat.completions.create(
                 model=cfg.GEMBA_MODEL,
                 messages=msgs,
-                temperature=0,
-                max_tokens=1000,
+                temperature=0.0,  # More deterministic for consistent parsing
+                max_tokens=2000,  # Increased for better completion
+                top_p=0.9,       # More focused responses
             )
             return resp.choices[0].message.content
         except (RateLimitError, APIError) as e:
             wait = min(2 ** attempt + random.random(), 60)  # Cap wait time at 60s
-            logger.warning("%s — retrying in %.1f s", e.__class__.__name__, wait)
+            logger.warning("%s — retrying in %.1f s (attempt %d/%d)", e.__class__.__name__, wait, attempt + 1, retry)
+            await asyncio.sleep(wait)
+        except Exception as e:
+            logger.error(f"Unexpected error in GEMBA API call: {e}")
+            wait = min(2 ** attempt + random.random(), 30)
+            logger.warning(f"Retrying in %.1f s due to unexpected error", wait)
             await asyncio.sleep(wait)
     raise RuntimeError("OpenAI call failed after retries")
 
 
 async def _score(batch: List[dict]):
     raw_text = await _ask(_messages(batch))
-    return _parse(raw_text, len(batch))
+    logger.debug(f"GEMBA raw response for batch of {len(batch)}: {raw_text[:500]}...")
+    result = _parse(raw_text, len(batch))
+    if result is None:
+        logger.error(f"Failed to parse GEMBA response for batch of {len(batch)} items")
+        logger.debug(f"Full raw text: {raw_text}")
+        # Return default scores with no_parse reason
+        return [(0.0, 0.0, 0.0, "no_parse")] * len(batch)
+    return result
+
+async def gemba_batch(src_texts: List[str], target_texts: List[str]) -> List[dict]:
+    """
+    소스 텍스트와 타겟 텍스트 리스트에 대해 GEMBA 점수를 계산합니다.
+    
+    Args:
+        src_texts: 소스 텍스트 리스트
+        target_texts: 타겟 텍스트 리스트
+        
+    Returns:
+        GEMBA 점수 딕셔너리 리스트 (overall, adequacy, fluency 포함)
+    """
+    if len(src_texts) != len(target_texts):
+        raise ValueError("Source and target text lists must have the same length")
+    
+    # 배치 데이터 준비
+    batch_data = []
+    for i, (src, tgt) in enumerate(zip(src_texts, target_texts)):
+        batch_data.append({
+            "key": f"batch_item_{i}",
+            "src": src,
+            "mt": tgt  # GEMBA에서는 번역문을 'mt' 키로 사용
+        })
+    
+    # GEMBA 점수 계산
+    results = []
+    batch_size = cfg.GEMBA_BATCH
+    
+    for i in range(0, len(batch_data), batch_size):
+        batch = batch_data[i:i + batch_size]
+        scores = await _score(batch)
+        results.extend(scores)
+    
+    return results
 
 def _decide(cos: float, comet: float, gemba: float, bucket: str):
     checks = [
@@ -213,14 +322,29 @@ async def main():
 
     raw: List[dict] = orjson.loads(raw_path.read_bytes())
 
-    for i in range(0, len(raw), cfg.GEMBA_BATCH):
-        batch = raw[i : i + cfg.GEMBA_BATCH]
-        logger.info("Scoring items %d–%d …", i + 1, i + len(batch))
-        for rec, (ov, adq, flu, ev) in zip(batch, await _score(batch)):
-            rec["gemba"] = ov
-            rec["gemba_adequacy"] = adq
-            rec["gemba_fluency"] = flu
-            rec["_ev"] = ev
+    # Create semaphore for concurrency control
+    semaphore = asyncio.Semaphore(4)  # Use concurrency of 4 as requested
+    
+    async def process_batch(batch_start: int):
+        async with semaphore:
+            batch = raw[batch_start : batch_start + cfg.GEMBA_BATCH]
+            logger.info("Scoring items %d–%d …", batch_start + 1, batch_start + len(batch))
+            scores = await _score(batch)
+            for rec, (ov, adq, flu, ev) in zip(batch, scores):
+                rec["gemba"] = ov
+                rec["gemba_adequacy"] = adq
+                rec["gemba_fluency"] = flu
+                rec["_ev"] = ev
+
+    # Create tasks for all batches
+    batch_starts = list(range(0, len(raw), cfg.GEMBA_BATCH))
+    
+    # Process batches concurrently with progress tracking
+    from tqdm.asyncio import tqdm as tqdm_asyncio
+    await tqdm_asyncio.gather(
+        *(process_batch(i) for i in batch_starts),
+        desc="GEMBA batches"
+    )
 
     final = []
     for rec in raw:

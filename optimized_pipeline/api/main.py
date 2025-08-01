@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-MT Quality Evaluation API
-Serves ape_evidence.json data through REST endpoints
-"""
-
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,11 +8,9 @@ import statistics
 from pathlib import Path
 from enum import Enum
 
-# Load data - delta_gemba가 포함된 파일 우선 사용
-DELTA_GEMBA_FILE = Path("../out/v16/ape_evidence.json")
-ORIGINAL_FILE = Path("../out/v16/ape_evidence.json")
+DELTA_GEMBA_FILE = Path("../out/v13/ape_evidence.json")
+ORIGINAL_FILE = Path("../out/v13/ape_evidence.json")
 
-# delta_gemba 파일이 있으면 그것을 사용, 없으면 원본 파일 사용
 DATA_FILE = DELTA_GEMBA_FILE if DELTA_GEMBA_FILE.exists() else ORIGINAL_FILE
 
 class BucketType(str, Enum):
@@ -33,32 +25,187 @@ class TagType(str, Enum):
     soft_pass = "soft_pass"
     fail = "fail"
 
-# Global data storage
 evaluation_data: List[Dict[Any, Any]] = []
+
+def get_quality_grade_by_scores(gemba: float, comet: float, cos: float) -> str:
+    """GEMBA, COMET, Cosine 점수를 모두 고려한 품질등급 반환"""
+    # HTML의 getQualityClassByScores 로직과 동일
+    if gemba >= 85 and comet >= 0.80 and cos >= 0.85:
+        return "excellent"  # 매우우수
+    elif gemba >= 75 and comet >= 0.75 and cos >= 0.75:
+        return "very_good"  # 우수
+    elif gemba >= 65 and comet >= 0.70 and cos >= 0.70:
+        return "good"       # 양호
+    elif gemba >= 45 and comet >= 0.50 and cos >= 0.50:
+        return "poor"       # 나쁨
+    else:
+        return "very_poor"  # 매우나쁨
+
+def calculate_meaningful_improvement_rate() -> float:
+    """품질등급이 상승한 케이스의 비율을 계산 - 3개 메트릭 종합 기준"""
+    if not evaluation_data:
+        return 0.0
+    
+    # APE가 적용된 레코드들만 필터링 (delta 값이 하나라도 있는 경우)
+    ape_records = [r for r in evaluation_data if "ape" in r and 
+                   ("delta_gemba" in r or "delta_comet" in r or "delta_cos" in r)]
+    
+    if not ape_records:
+        return 0.0
+    
+    improved_count = 0
+    debug_info = []
+    
+    for record in ape_records:
+        # 원본 점수들
+        original_gemba = record.get("gemba", 0)
+        original_comet = record.get("comet", 0)
+        original_cos = record.get("cos", 0)
+        
+        # Delta 값들 (기본값 0)
+        delta_gemba = record.get("delta_gemba", 0)
+        delta_comet = record.get("delta_comet", 0)
+        delta_cos = record.get("delta_cos", 0)
+        
+        # 개선 후 점수들
+        improved_gemba = original_gemba + delta_gemba
+        improved_comet = original_comet + delta_comet
+        improved_cos = original_cos + delta_cos
+        
+        # 원본 품질등급과 개선 후 품질등급 계산
+        original_grade = get_quality_grade_by_scores(original_gemba, original_comet, original_cos)
+        improved_grade = get_quality_grade_by_scores(improved_gemba, improved_comet, improved_cos)
+        
+        # 품질등급 순서 (숫자가 클수록 높은 등급)
+        grade_order = {
+            "very_poor": 1,
+            "poor": 2,
+            "good": 3,
+            "very_good": 4,
+            "excellent": 5
+        }
+        
+        # 품질등급이 올라간 경우만 카운트
+        grade_improved = grade_order.get(improved_grade, 0) > grade_order.get(original_grade, 0)
+        if grade_improved:
+            improved_count += 1
+        
+        # 디버깅 정보 수집 (모든 케이스 저장)
+        debug_info.append({
+            "key": record.get("key", "unknown"),
+            "original_scores": f"G:{original_gemba:.0f}/C:{original_comet:.3f}/S:{original_cos:.3f}",
+            "delta_scores": f"G:{delta_gemba:.0f}/C:{delta_comet:.3f}/S:{delta_cos:.3f}",
+            "improved_scores": f"G:{improved_gemba:.0f}/C:{improved_comet:.3f}/S:{improved_cos:.3f}",
+            "original_grade": original_grade,
+            "improved_grade": improved_grade,
+            "grade_improved": grade_improved
+        })
+    
+    # 디버깅 정보 출력
+    print(f"\n=== 품질등급 상승률 계산 디버깅 (3개 메트릭 종합) ===")
+    print(f"총 APE 레코드 수: {len(ape_records)}")
+    print(f"품질등급 상승 케이스: {improved_count}")
+    print(f"상승률: {(improved_count / len(ape_records)) * 100:.1f}%")
+    
+    # 등급별 분포 계산
+    grade_distribution = {}
+    improvement_by_grade = {}
+    
+    for info in debug_info:
+        original = info['original_grade']
+        improved = info['improved_grade']
+        
+        # 원본 등급별 분포
+        grade_distribution[original] = grade_distribution.get(original, 0) + 1
+        
+        # 원본 등급별 개선 케이스
+        if info['grade_improved']:
+            improvement_by_grade[original] = improvement_by_grade.get(original, 0) + 1
+    
+    print(f"\n등급별 분포 및 개선률:")
+    for grade in ["very_poor", "poor", "good", "very_good", "excellent"]:
+        total = grade_distribution.get(grade, 0)
+        improved = improvement_by_grade.get(grade, 0)
+        if total > 0:
+            rate = (improved / total) * 100
+            print(f"  {grade}: {total}개 중 {improved}개 개선 ({rate:.1f}%)")
+    
+    print(f"\n처음 30개 레코드 상세:")
+    for i, info in enumerate(debug_info[:30]):
+        print(f"  {info['key']}: {info['original_scores']} → {info['improved_scores']}")
+        print(f"    등급: {info['original_grade']} → {info['improved_grade']} {'✓' if info['grade_improved'] else '✗'}")
+    
+    if len(debug_info) > 30:
+        print(f"  ... (총 {len(debug_info)}개 중 30개만 표시)")
+    
+    print("="*50)
+    
+    return (improved_count / len(ape_records)) * 100 if ape_records else 0.0
+
+def get_quality_distribution_before_after() -> Dict[str, Any]:
+    """APE 이전과 이후의 품질등급 분포를 계산"""
+    if not evaluation_data:
+        return {"before": {}, "after": {}, "total_records": 0}
+    
+    before_distribution = {"very_poor": 0, "poor": 0, "good": 0, "very_good": 0, "excellent": 0}
+    after_distribution = {"very_poor": 0, "poor": 0, "good": 0, "very_good": 0, "excellent": 0}
+    
+    # 모든 레코드에 대해 APE 이전/이후 품질등급 계산
+    for record in evaluation_data:
+        # 원본 점수들
+        original_gemba = record.get("gemba", 0)
+        original_comet = record.get("comet", 0)
+        original_cos = record.get("cos", 0)
+        
+        # APE 이전 품질등급
+        before_grade = get_quality_grade_by_scores(original_gemba, original_comet, original_cos)
+        before_distribution[before_grade] += 1
+        
+        # APE가 적용된 경우 개선 후 점수 계산
+        if "ape" in record and ("delta_gemba" in record or "delta_comet" in record or "delta_cos" in record):
+            delta_gemba = record.get("delta_gemba", 0)
+            delta_comet = record.get("delta_comet", 0)
+            delta_cos = record.get("delta_cos", 0)
+            
+            improved_gemba = original_gemba + delta_gemba
+            improved_comet = original_comet + delta_comet
+            improved_cos = original_cos + delta_cos
+            
+            after_grade = get_quality_grade_by_scores(improved_gemba, improved_comet, improved_cos)
+        else:
+            # APE가 적용되지 않은 경우 원본과 동일
+            after_grade = before_grade
+            
+        after_distribution[after_grade] += 1
+    
+    total_records = len(evaluation_data)
+    
+    return {
+        "before": before_distribution,
+        "after": after_distribution,
+        "total_records": total_records,
+        "ape_applied_count": len([r for r in evaluation_data if "ape" in r])
+    }
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     global evaluation_data
     try:
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
         
-        # 새로운 형식(metadata + records)인지 확인
         if isinstance(data, dict) and 'records' in data:
             evaluation_data = data['records']
-            print(f"✅ Loaded {len(evaluation_data)} evaluation records (with delta_gemba)")
+            print(f"Loaded {len(evaluation_data)} evaluation records (with delta_gemba)")
             if 'metadata' in data and data['metadata'].get('delta_gemba_added'):
-                print("🎯 Delta GEMBA 데이터 포함됨")
+                print("Delta GEMBA 데이터 포함됨")
         else:
-            # 기존 형식 (레코드 배열)
             evaluation_data = data
-            print(f"✅ Loaded {len(evaluation_data)} evaluation records (original format)")
+            print(f"Loaded {len(evaluation_data)} evaluation records (original format)")
             
     except FileNotFoundError:
-        print(f"❌ Data file not found: {DATA_FILE}")
+        print(f"Data file not found: {DATA_FILE}")
         evaluation_data = []
-    
     yield
 
 app = FastAPI(
@@ -101,7 +248,7 @@ async def get_records(
     max_gemba: Optional[float] = Query(None, ge=0, le=100),
     min_comet: Optional[float] = Query(None, ge=0, le=1),
     has_ape: Optional[bool] = None,
-    limit: Optional[int] = Query(100, ge=1, le=1000),
+    limit: Optional[int] = Query(100, ge=1, le=10000),
     offset: Optional[int] = Query(0, ge=0)
 ):
     """Get evaluation records with optional filtering"""
@@ -214,8 +361,10 @@ async def get_analytics():
             "total_ape_records": len(ape_records),
             "avg_comet_improvement": statistics.mean(ape_improvements["delta_comet"]) if ape_improvements["delta_comet"] else 0,
             "avg_cosine_improvement": statistics.mean(ape_improvements["delta_cos"]) if ape_improvements["delta_cos"] else 0,
-            "avg_gemba_improvement": statistics.mean(ape_improvements["delta_gemba"]) if ape_improvements["delta_gemba"] else 0
-        }
+            "avg_gemba_improvement": statistics.mean(ape_improvements["delta_gemba"]) if ape_improvements["delta_gemba"] else 0,
+            "meaningful_improvement_rate": calculate_meaningful_improvement_rate()
+        },
+        "quality_distribution": get_quality_distribution_before_after()
     }
 
 @app.get("/buckets/{bucket}")

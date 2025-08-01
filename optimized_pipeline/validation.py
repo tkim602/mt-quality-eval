@@ -10,7 +10,6 @@ from typing import Dict, List, Any, Tuple
 import textstat
 
 def check_term_consistency(src: str, mt: str, termbase: List[Dict[str, str]]) -> Dict[str, Any]:
-    """Check if terminology is consistently translated"""
     
     if not termbase:
         return {"score": 1.0, "mismatches": []}

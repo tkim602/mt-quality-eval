@@ -8,13 +8,27 @@ import asyncio
 import logging
 import time
 import os
+import random
+import numpy as np
+import torch
 from datetime import datetime
 from pathlib import Path
 import subprocess
 import sys
 from typing import Optional
 import json
+import cfg
 
+
+# Set global random seeds for reproducibility
+if hasattr(cfg, 'SEED') and cfg.SEED is not None:
+    random.seed(cfg.SEED)
+    np.random.seed(cfg.SEED)
+    torch.manual_seed(cfg.SEED)
+    torch.cuda.manual_seed_all(cfg.SEED)
+    # For additional reproducibility in some environments
+    os.environ['PYTHONHASHSEED'] = str(cfg.SEED)
+    print(f"🎲 Global random seeds set to {cfg.SEED} for pipeline reproducibility")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -211,7 +225,7 @@ class PipelineRunner:
         logger.info(f"Output will be saved to: {run_dir}")
         
         if not skip_filter:
-            if not self.run_script("filter.py", timeout=3600):  
+            if not self.run_script("filter.py", timeout=7200):  
                 logger.error("Filter step failed")
                 return False
         
