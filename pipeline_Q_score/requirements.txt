@@ -1,0 +1,14 @@
+torch
+sentence-transformers
+numpy
+orjson
+python-dotenv
+openai
+comet-ml
+unbabel-comet
+tqdm
+textstat
+scikit-learn
+pandas
+dataclasses
+asyncio
