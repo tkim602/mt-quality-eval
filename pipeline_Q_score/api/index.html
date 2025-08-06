@@ -1718,7 +1718,7 @@
                         <span class="icon icon-warning"></span> 품질 미달
                     </div>
                     <div class="nav-item" data-view="ape-improved">
-                        <span class="icon icon-improve"></span> APE 개선사례
+                        <span class="icon icon-improve"></span> 품질 향상
                     </div>
                 </div>
 
@@ -1726,10 +1726,10 @@
                     <div class="search-box">
                         <select id="searchType" style="width: 100%; padding: 8px 12px; background: var(--accent-bg); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); font-size: 12px; margin-bottom: 8px;">
                             <option value="all">전체 필드 검색</option>
-                            <option value="key">Key 검색</option>
-                            <option value="src">원문 검색</option>
-                            <option value="mt">기계번역 검색</option>
-                            <option value="ape">APE 검색</option>
+                            <option value="key">Key</option>
+                            <option value="src">원문</option>
+                            <option value="mt">기계번역</option>
+                            <option value="ape">수정/개선</option>
                         </select>
                         <input type="text" id="searchInput" placeholder="검색어를 입력하세요...">
                     </div>
@@ -1837,7 +1837,7 @@
 
             <main class="main-content">
                 <div class="content-header">
-                    <div class="content-title" id="contentTitle">전체 번역품질 현황</div>
+                    <div class="content-title" id="contentTitle">전체 현황</div>
                     <div class="view-controls">
                         <button class="btn" onclick="refreshData()">
                             <span>↻</span> 새로고침
@@ -1857,7 +1857,7 @@
 
                 <div id="loadMoreSection" class="load-more-section" style="display: none;">
                     <div class="record-count-info">
-                        현재 <span id="currentCount">0</span>개 / 전체 <span id="totalCount">0</span>개 표시중
+                        현재 <span id="currentCount">0</span>개 / 전체 <span id="totalCount">0</span>개
                     </div>
                     <button class="btn primary" id="loadMoreBtn" onclick="loadMoreRecords()">
                         <span class="icon icon-more"></span> 더보기
@@ -2239,10 +2239,10 @@
 
         function updateContentTitle() {
             const titles = {
-                'all': '전체 번역품질 현황',
-                'high-quality': '고품질 번역 (매우우수 + 우수)',
-                'failed': '품질 미달 번역 분석 (나쁨 + 매우나쁨)',
-                'ape-improved': 'APE 개선 효과 분석'
+                'all': '전체 데이터',
+                'high-quality': '고품질 번역',
+                'failed': '품질 미달',
+                'ape-improved': '개선 효과'
             };
             
             document.getElementById('contentTitle').textContent = titles[currentFilters.view] || '번역품질 분석';
@@ -2482,7 +2482,7 @@
                     loadMoreBtn.style.display = 'block';
                     const remaining = allData.length - displayLimit;
                     const nextLoad = Math.min(20, remaining);
-                    loadMoreBtn.innerHTML = `<span class="icon icon-more"></span> 더보기 (${nextLoad}개 추가)`;
+                    loadMoreBtn.innerHTML = `<span class="icon icon-more"></span> 더보기`;
                 } else {
                     loadMoreBtn.style.display = 'none';
                 }
@@ -2626,7 +2626,7 @@
             if (isQualityImproved) {
                 qualityChangeInfo = `
 <div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(0, 208, 132, 0.1); border-radius: 6px; border-left: 3px solid var(--success-color);">
-    <div style="font-size: 11px; color: var(--success-color); font-weight: 600;">품질 등급 개선</div>
+    <div style="font-size: 11px; color: var(--success-color); font-weight: 600;">적용 시</div>
     <div style="font-size: 12px; color: var(--text-primary);">
         <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
         <span style="margin: 0 8px; color: var(--success-color);">→</span>
@@ -2685,7 +2685,7 @@
 <div class="ape-improvement">
     <div class="ape-header">
         <span class="ape-icon icon icon-improve"></span>
-        <span class="ape-title">APE 개선 결과</span>
+        <span class="ape-title">수정 제안</span>
     </div>
     ${qualityChangeInfo}
     <div class="text-content text-diff">${textDiff}</div>
@@ -3282,27 +3282,99 @@
                 </div>
                 
                 <div class="chart-container">
-                    <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center;">텍스트 길이별 레코드 분포</h3>
-                    <div class="simple-chart">
-                        ${buckets.map(bucket => {
-                            // 완전한 비례 스케일링 - 최소 높이 없음
-                            const height = maxCount > 0 ? (bucket.count / maxCount * 100) : 0;
-                            // 0인 경우에만 1px로 표시 (완전히 안보이지 않게)
-                            const displayHeight = bucket.count === 0 ? 1 : height;
+                    <h3 style="margin-bottom: 15px; color: var(--text-primary); text-align: center; font-weight: 600;">텍스트 길이별 레코드 분포</h3>
+                    <div class="compact-bar-chart" style="
+                        display: flex; 
+                        align-items: flex-end; 
+                        justify-content: space-around; 
+                        height: 200px; 
+                        padding: 15px 20px 10px 20px; 
+                        background: var(--card-bg);
+                        border-radius: 12px; 
+                        border: 1px solid var(--border-color);
+                        position: relative;
+                        box-shadow: var(--shadow-medium);
+                        overflow: hidden;
+                    ">
+                        <!-- 배경 그리드 -->
+                        <div style="
+                            position: absolute;
+                            top: 15px;
+                            left: 20px;
+                            right: 20px;
+                            bottom: 40px;
+                            background-image: 
+                                linear-gradient(to right, var(--border-color) 1px, transparent 1px),
+                                linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+                            background-size: 25px 25px;
+                            opacity: 0.2;
+                            pointer-events: none;
+                        "></div>
+                        
+                        ${buckets.map((bucket, index) => {
+                            // 컴팩트한 높이 계산 - 최소 20px, 최대 120px
+                            const minHeight = 20;
+                            const maxHeight = 120;
+                            const percentage = maxCount > 0 ? (bucket.count / maxCount) : 0;
+                            const calculatedHeight = bucket.count === 0 ? 10 : Math.max(minHeight, percentage * maxHeight);
                             const color = getColorByBucket(bucket.originalName);
                             
-                            // 디버깅용 로그
-                            console.log(`Bucket ${bucket.name}: count=${bucket.count}, maxCount=${maxCount}, height=${height}%, displayHeight=${displayHeight}%`);
-                            
                             return `
-                                <div class="chart-bar">
-                                    <div class="bar" style="height: ${displayHeight}%; background: ${color}">
-                                        ${bucket.count > 0 ? `<div class="bar-value">${bucket.count.toLocaleString()}</div>` : ''}
+                                <div style="
+                                    display: flex; 
+                                    flex-direction: column; 
+                                    align-items: center; 
+                                    justify-content: flex-end;
+                                    height: 100%;
+                                    flex: 1; 
+                                    max-width: 70px;
+                                    z-index: 1;
+                                ">
+                                    <!-- 바차트 (하단에서 위로) -->
+                                    <div style="
+                                        width: 45px;
+                                        height: ${calculatedHeight}px;
+                                        background: ${color};
+                                        border-radius: 6px 6px 2px 2px;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: var(--text-primary);
+                                        font-weight: 700;
+                                        font-size: ${bucket.count > 999 ? '9px' : '11px'};
+                                        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                                        position: relative;
+                                        transition: all 0.3s ease;
+                                        cursor: pointer;
+                                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                                        animation: growBar 0.8s ease-out ${index * 0.1}s both;
+                                        margin-bottom: 5px;
+                                    " onmouseover="this.style.transform='scale(1.1) translateY(-2px)'; this.style.filter='brightness(1.2)';" onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.filter='brightness(1)';">
+                                        ${bucket.count > 0 ? bucket.count.toLocaleString() : '0'}
                                     </div>
-                                    <div class="bar-label" style="text-align: center;">${bucket.name}<br><span style="font-size: 11px; color: var(--text-muted);">${bucket.percentage}%</span></div>
+                                    
+                                    <!-- 라벨 (컨테이너 최하단) -->
+                                    <div style="
+                                        text-align: center;
+                                        font-weight: 500;
+                                        color: var(--text-primary);
+                                        font-size: 10px;
+                                        line-height: 1.1;
+                                        margin-bottom: 0;
+                                    ">
+                                        ${bucket.name}
+                                        <br>
+                                        <span style="
+                                            font-size: 9px; 
+                                            color: var(--text-muted);
+                                            font-weight: 400;
+                                        ">${bucket.percentage}%</span>
+                                    </div>
                                 </div>
                             `;
                         }).join('')}
+                    </div>
+                </div>
                     </div>
                 </div>
             `;
@@ -3310,13 +3382,13 @@
 
         function getColorByBucket(bucketName) {
             const colors = {
-                'very_short': '#ef4444', // Red 500
-                'short': '#f97316',      // Orange 500
-                'medium': '#3b82f6',     // Blue 500
-                'long': '#22c55e',       // Green 500
-                'very_long': '#8b5cf6'   // Purple 500
+                'very_short': 'var(--danger-color)',   // 빨강 - 매우 짧음
+                'short': 'var(--warning-color)',       // 주황 - 짧음  
+                'medium': 'var(--info-color)',         // 파랑 - 보통
+                'long': 'var(--success-color)',        // 초록 - 긺
+                'very_long': '#8b5cf6'                 // 보라 - 매우 긺
             };
-            return colors[bucketName] || '#6b7280'; // Gray 500
+            return colors[bucketName] || 'var(--neutral-color)'; // 기본값: 회색
         }
 
         async function generatePassRateChart(data) {
@@ -3444,31 +3516,6 @@
                                     <span style="color: var(--text-primary); font-weight: 500; font-size: 14px;">${item.label}</span>
                                 </div>
                             `).join('')}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 변화량 요약 -->
-                <div class="chart-container" style="margin-top: 24px;">
-                    <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center; font-size: 16px;">APE 적용 효과 요약</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
-                        <div style="text-align: center; padding: 12px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);">
-                            <div style="font-size: 18px; font-weight: bold; color: ${passRateImprovement >= 0 ? '#22c55e' : '#ef4444'};">
-                                ${passRateImprovement >= 0 ? '+' : ''}${passRateImprovement}%p
-                            </div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">통과율 개선</div>
-                        </div>
-                        <div style="text-align: center; padding: 12px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);">
-                            <div style="font-size: 18px; font-weight: bold; color: ${excellentRateImprovement >= 0 ? '#22c55e' : '#ef4444'};">
-                                ${excellentRateImprovement >= 0 ? '+' : ''}${excellentRateImprovement}%p
-                            </div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">우수등급 개선</div>
-                        </div>
-                        <div style="text-align: center; padding: 12px; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border);">
-                            <div style="font-size: 18px; font-weight: bold; color: ${failRateReduction >= 0 ? '#22c55e' : '#ef4444'};">
-                                ${failRateReduction >= 0 ? '-' : '+'}${Math.abs(failRateReduction)}%p
-                            </div>
-                            <div style="font-size: 12px; color: var(--text-secondary);">미달율 감소</div>
                         </div>
                     </div>
                 </div>
@@ -3673,389 +3720,135 @@
             }
         }
 
-        // 메트릭별 개선도 비교 차트 생성 - 라인 그래프 방식
+        // 메트릭별 개선도 비교 차트 생성 - 컴팩트 다크 테마
         function generateMetricsComparisonChart(gembaImprovement, cometImprovement, cosineImprovement) {
             const metrics = [
-                { name: 'GEMBA', value: gembaImprovement, unit: '점', color: '#3b82f6', description: 'GPT 기반 품질 평가' },
-                { name: 'COMET', value: cometImprovement, unit: '%', color: '#10b981', description: '신경망 기반 메트릭' },
-                { name: 'Cosine', value: cosineImprovement, unit: '%', color: '#8b5cf6', description: '의미 유사도' }
+                { name: 'GEMBA', value: gembaImprovement, unit: '점', color: 'var(--info-color)', description: 'GPT 기반 품질 평가' },
+                { name: 'COMET', value: cometImprovement, unit: '%', color: 'var(--success-color)', description: '신경망 기반 메트릭' },
+                { name: 'Cosine', value: cosineImprovement, unit: '%', color: 'var(--warning-color)', description: '의미 유사도' }
             ];
             
+            // 최대값 계산 (절댓값 기준)
+            const maxValue = Math.max(...metrics.map(m => Math.abs(m.value)), 1);
+            
             return `
-                <!-- 메트릭 카드 방식 표시 -->
-                <div class="metrics-cards" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-bottom: 30px; padding: 0 16px;">
-                    ${metrics.map(metric => {
+                <!-- 하단 정렬 바차트 -->
+                <div style="
+                    display: flex; 
+                    align-items: flex-end; 
+                    justify-content: space-around; 
+                    height: 180px; 
+                    padding: 15px 20px 10px 20px; 
+                    background: var(--card-bg);
+                    border-radius: 12px; 
+                    border: 1px solid var(--border-color);
+                    position: relative;
+                    box-shadow: var(--shadow-medium);
+                    margin: 0 8px;
+                    overflow: hidden;
+                ">
+                    <!-- 배경 그리드 라인 -->
+                    <div style="
+                        position: absolute;
+                        top: 15px;
+                        left: 20px;
+                        right: 20px;
+                        bottom: 35px;
+                        background-image: 
+                            linear-gradient(to right, var(--border-color) 1px, transparent 1px),
+                            linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+                        background-size: 20px 20px;
+                        opacity: 0.3;
+                        pointer-events: none;
+                    "></div>
+                    
+                    ${metrics.map((metric, index) => {
                         const isPositive = metric.value >= 0;
-                        const displayValue = metric.name === 'GEMBA' ? 
-                            metric.value.toFixed(1) : 
-                            metric.value.toFixed(3); // 정확한 값 표시
+                        const barHeight = Math.max(25, (Math.abs(metric.value) / maxValue) * 100);
+                        const displayValue = metric.name === 'GEMBA' ? metric.value.toFixed(1) : metric.value.toFixed(1);
                         
                         return `
-                            <div class="metric-card" style="
-                                min-height: 320px;
-                                background: linear-gradient(135deg, ${metric.color}15, ${metric.color}05);
-                                border: 2px solid ${metric.color}30;
-                                border-radius: 20px;
-                                padding: 32px 24px;
-                                text-align: center;
-                                position: relative;
-                                overflow: hidden;
-                                transition: all 0.3s ease;
-                                cursor: pointer;
-                                display: flex;
-                                flex-direction: column;
-                                justify-content: space-between;
-                            " onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                                <!-- 배경 패턴 -->
+                            <div style="
+                                display: flex; 
+                                flex-direction: column; 
+                                align-items: center; 
+                                justify-content: flex-end;
+                                height: 100%;
+                                flex: 1; 
+                                max-width: 80px;
+                                z-index: 1;
+                            ">
+                                <!-- 개선값 표시 (바 위에) -->
                                 <div style="
-                                    position: absolute;
-                                    top: -50%;
-                                    right: -50%;
-                                    width: 100%;
-                                    height: 100%;
-                                    background: radial-gradient(circle, ${metric.color}20 0%, transparent 70%);
-                                    opacity: 0.5;
-                                "></div>
+                                    margin-bottom: 8px;
+                                    font-size: 14px;
+                                    font-weight: 700;
+                                    color: ${isPositive ? 'var(--success-color)' : 'var(--danger-color)'};
+                                    text-align: center;
+                                    min-height: 20px;
+                                ">
+                                    ${isPositive ? '+' : ''}${displayValue}${metric.unit}
+                                </div>
                                 
-                                <!-- 상단 섹션: 아이콘과 이름 -->
-                                <div style="flex: 0 0 auto; z-index: 1; position: relative;">
-                                    <!-- 메트릭 아이콘 -->
+                                <!-- 바차트 (하단에서 위로) -->
+                                <div style="
+                                    width: 40px;
+                                    height: ${barHeight}px;
+                                    background: ${metric.color};
+                                    border-radius: 6px 6px 2px 2px;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: var(--text-primary);
+                                    font-weight: 700;
+                                    font-size: 10px;
+                                    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+                                    position: relative;
+                                    transition: all 0.3s ease;
+                                    cursor: pointer;
+                                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                                    animation: growBar 0.8s ease-out ${index * 0.2}s both;
+                                    margin-bottom: 5px;
+                                " onmouseover="this.style.transform='scale(1.1) translateY(-2px)'; this.style.filter='brightness(1.2)';" onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.filter='brightness(1)';">
+                                    ${metric.name.charAt(0)}
+                                </div>
+                                
+                                <!-- 메트릭 이름과 설명 (컨테이너 최하단) -->
+                                <div style="
+                                    text-align: center;
+                                    margin-bottom: 0;
+                                ">
                                     <div style="
-                                        width: 60px;
-                                        height: 60px;
-                                        background: ${metric.color};
-                                        border-radius: 50%;
-                                        margin: 0 auto 20px;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        font-size: 24px;
-                                        font-weight: bold;
-                                        color: white;
-                                        box-shadow: 0 6px 20px ${metric.color}40;
-                                    ">
-                                        ${metric.name.charAt(0)}
-                                    </div>
-                                    
-                                    <!-- 메트릭 이름 -->
-                                    <h3 style="
-                                        margin: 0 0 15px 0;
+                                        font-weight: 600;
                                         color: var(--text-primary);
-                                        font-size: 20px;
-                                        font-weight: 700;
-                                    ">${metric.name}</h3>
-                                </div>
-                                
-                                <!-- 중단 섹션: 개선값과 설명 -->
-                                <div style="flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; z-index: 1; position: relative;">
-                                    <!-- 개선값 -->
+                                        font-size: 11px;
+                                        margin-bottom: 2px;
+                                    ">${metric.name}</div>
                                     <div style="
-                                        font-size: 28px;
-                                        font-weight: 800;
-                                        color: ${isPositive ? '#10b981' : '#ef4444'};
-                                        margin-bottom: 8px;
-                                    ">
-                                        ${isPositive ? '+' : ''}${displayValue}${metric.unit}
-                                    </div>
-                                    
-                                    <!-- 설명 -->
-                                    <div style="
-                                        font-size: 12px;
+                                        font-size: 9px;
                                         color: var(--text-muted);
-                                        margin-bottom: 15px;
+                                        line-height: 1.1;
+                                        max-width: 70px;
                                     ">${metric.description}</div>
-                                </div>
-                                
-                                <!-- 하단 섹션: 트렌드 라인 -->
-                                <div style="flex: 0 0 auto; height: 40px; position: relative; z-index: 1;">
-                                    <svg width="100%" height="100%" style="overflow: visible;">
-                                        <defs>
-                                            <linearGradient id="gradient-${metric.name}" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                <stop offset="0%" style="stop-color:${metric.color}00;stop-opacity:0" />
-                                                <stop offset="50%" style="stop-color:${metric.color};stop-opacity:0.3" />
-                                                <stop offset="100%" style="stop-color:${metric.color};stop-opacity:0.8" />
-                                            </linearGradient>
-                                        </defs>
-                                        
-                                        <!-- 기준선 (0) -->
-                                        <line x1="0" y1="20" x2="100%" y2="20" stroke="#ddd" stroke-width="1" stroke-dasharray="2,2"/>
-                                        
-                                        <!-- 개선 트렌드 라인 -->
-                                        <path d="M 0 20 Q 25 ${isPositive ? 10 : 30} 50 ${isPositive ? 5 : 35} T 100 ${isPositive ? 8 : 32}" 
-                                              stroke="${metric.color}" 
-                                              stroke-width="3" 
-                                              fill="none"
-                                              style="animation: drawTrend 2s ease-out ${metrics.indexOf(metric) * 0.3}s both;"/>
-                                        
-                                        <!-- 포인트 -->
-                                        <circle cx="100%" cy="${isPositive ? 8 : 32}" r="4" fill="${metric.color}" 
-                                               style="animation: showPoint 0.5s ease-out ${2 + metrics.indexOf(metric) * 0.3}s both;"/>
-                                    </svg>
                                 </div>
                             </div>
                         `;
                     }).join('')}
                 </div>
                 
-                <!-- 종합 개선도 그래프 -->
-                <div style="background: rgba(59, 130, 246, 0.05); border-radius: 16px; padding: 25px; margin-top: 20px;">
-                    <h3 style="text-align: center; margin-bottom: 20px; color: var(--text-primary);">전체 개선 트렌드</h3>
-                    <div style="height: 120px; position: relative;">
-                        <svg width="100%" height="100%" style="overflow: visible;">
-                            <defs>
-                                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.3" />
-                                    <stop offset="100%" style="stop-color:#10b981;stop-opacity:0.05" />
-                                </linearGradient>
-                            </defs>
-                            
-                            <!-- 그리드 라인 -->
-                            <g stroke="#e5e7eb" stroke-width="1" opacity="0.5">
-                                <line x1="0" y1="30" x2="100%" y2="30"/>
-                                <line x1="0" y1="60" x2="100%" y2="60"/>
-                                <line x1="0" y1="90" x2="100%" y2="90"/>
-                            </g>
-                            
-                            <!-- 라벨 -->
-                            <text x="10" y="25" font-size="10" fill="var(--text-muted)">높음</text>
-                            <text x="10" y="65" font-size="10" fill="var(--text-muted)">보통</text>
-                            <text x="10" y="95" fill="var(--text-muted)" font-size="10">낮음</text>
-                            
-                            <!-- GEMBA 라인 -->
-                            <path d="M 80 ${90 - Math.abs(gembaImprovement) * 2} L 200 ${88 - Math.abs(gembaImprovement) * 2} L 320 ${85 - Math.abs(gembaImprovement) * 2}" 
-                                  stroke="#3b82f6" stroke-width="3" fill="none"
-                                  style="animation: drawLine 2s ease-out 0.5s both;"/>
-                            
-                            <!-- COMET 라인 -->
-                            <path d="M 80 ${90 - Math.abs(cometImprovement) * 800} L 200 ${88 - Math.abs(cometImprovement) * 800} L 320 ${85 - Math.abs(cometImprovement) * 800}" 
-                                  stroke="#10b981" stroke-width="3" fill="none"
-                                  style="animation: drawLine 2s ease-out 1s both;"/>
-                            
-                            <!-- Cosine 라인 -->
-                            <path d="M 80 ${90 - Math.abs(cosineImprovement) * 800} L 200 ${88 - Math.abs(cosineImprovement) * 800} L 320 ${85 - Math.abs(cosineImprovement) * 800}" 
-                                  stroke="#8b5cf6" stroke-width="3" fill="none"
-                                  style="animation: drawLine 2s ease-out 1.5s both;"/>
-                            
-                            <!-- 범례 -->
-                            <g transform="translate(350, 30)">
-                                <circle cx="5" cy="5" r="3" fill="#3b82f6"/>
-                                <text x="15" y="9" font-size="11" fill="var(--text-primary)">GEMBA</text>
-                                
-                                <circle cx="5" cy="25" r="3" fill="#10b981"/>
-                                <text x="15" y="29" font-size="11" fill="var(--text-primary)">COMET</text>
-                                
-                                <circle cx="5" cy="45" r="3" fill="#8b5cf6"/>
-                                <text x="15" y="49" font-size="11" fill="var(--text-primary)">Cosine</text>
-                            </g>
-                        </svg>
-                    </div>
-                </div>
-                
+                <!-- 애니메이션 스타일 -->
                 <style>
-                @keyframes drawTrend {
-                    from { stroke-dasharray: 200; stroke-dashoffset: 200; }
-                    to { stroke-dasharray: 200; stroke-dashoffset: 0; }
-                }
-                
-                @keyframes showPoint {
-                    from { opacity: 0; transform: scale(0); }
-                    to { opacity: 1; transform: scale(1); }
-                }
-                
-                @keyframes drawLine {
-                    from { stroke-dasharray: 300; stroke-dashoffset: 300; }
-                    to { stroke-dasharray: 300; stroke-dashoffset: 0; }
-                }
-                
-                .metric-card:hover {
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-                }
-                
-                /* 반응형 미디어 쿼리 */
-                @media (max-width: 1024px) {
-                    .metrics-cards {
-                        grid-template-columns: repeat(2, 1fr) !important;
-                        gap: 20px !important;
+                    @keyframes growBar {
+                        0% {
+                            height: 10px;
+                            opacity: 0.5;
+                        }
+                        100% {
+                            opacity: 1;
+                        }
                     }
-                }
-                
-                @media (max-width: 768px) {
-                    .metrics-cards {
-                        grid-template-columns: 1fr !important;
-                        gap: 16px !important;
-                        padding: 0 8px !important;
-                    }
-                }
                 </style>
             `;
-        }
-
-        // 개선 임팩트 시각화 생성
-        function generateImpactVisualization(metrics) {
-            const radius = 35;
-            const strokeWidth = 10;
-            const center = 50;
-            const circumference = 2 * Math.PI * radius;
-            
-            // 각 메트릭의 임팩트 점수 계산 (시각적 효과를 위해서만 조정)
-            const impactScores = metrics.map(metric => {
-                const baseScore = Math.abs(metric.value);
-                const adjustedScore = metric.name === 'GEMBA' ? baseScore : baseScore * 30; // COMET, Cosine 30배 시각적 증폭
-                return Math.min(adjustedScore, 100); // 최대 100으로 제한
-            });
-            
-            const totalImpact = impactScores.reduce((sum, score) => sum + score, 0);
-            let cumulativeOffset = 0;
-            
-            return metrics.map((metric, index) => {
-                const normalizedScore = totalImpact > 0 ? impactScores[index] / totalImpact : 0.33;
-                const strokeDasharray = circumference * normalizedScore;
-                const strokeDashoffset = -cumulativeOffset;
-                
-                cumulativeOffset += strokeDasharray;
-                
-                // 임팩트에 따른 동적 스타일
-                const intensity = impactScores[index] / 100;
-                const opacity = 0.6 + (intensity * 0.4);
-                const glowSize = 2 + (intensity * 4);
-                
-                return `
-                    <circle
-                        cx="${center}"
-                        cy="${center}"
-                        r="${radius}"
-                        fill="none"
-                        stroke="${metric.color}"
-                        stroke-width="${strokeWidth + intensity * 3}"
-                        stroke-dasharray="${strokeDasharray} ${circumference}"
-                        stroke-dashoffset="${strokeDashoffset}"
-                        opacity="${opacity}"
-                        filter="url(#glow-${index})"
-                        style="animation: drawImpactCircle 3s ease-out ${index * 0.5}s both;"
-                    />
-                    <defs>
-                        <filter id="glow-${index}">
-                            <feGaussianBlur stdDeviation="${glowSize}" result="coloredBlur"/>
-                            <feMerge>
-                                <feMergeNode in="coloredBlur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
-                    </defs>
-                `;
-            }).join('') + `
-                <!-- 중앙 펄스 효과 -->
-                <circle
-                    cx="${center}"
-                    cy="${center}"
-                    r="8"
-                    fill="#10b981"
-                    opacity="0.8"
-                    style="animation: centerPulse 2s ease-in-out infinite;"
-                />
-                
-                <style>
-                @keyframes drawImpactCircle {
-                    from { 
-                        stroke-dasharray: 0 ${circumference}; 
-                        opacity: 0;
-                    }
-                    to { 
-                        opacity: ${0.6 + (Math.max(...impactScores) / 100 * 0.4)};
-                    }
-                }
-                
-                @keyframes centerPulse {
-                    0%, 100% { r: 8; opacity: 0.8; }
-                    50% { r: 12; opacity: 0.4; }
-                }
-                </style>
-            `;
-        }
-
-        // 개선도 도넛 차트 생성
-        function generateImprovementDonut(metrics) {
-            const radius = 35;
-            const strokeWidth = 8;
-            const center = 50;
-            const circumference = 2 * Math.PI * radius;
-            
-            let cumulativeOffset = 0;
-            
-            return metrics.map((metric, index) => {
-                // 각 메트릭의 가중치 (정규화된 절댓값)
-                const totalAbsValue = metrics.reduce((sum, m) => sum + Math.abs(m.value), 0);
-                const normalizedValue = totalAbsValue > 0 ? Math.abs(metric.value) / totalAbsValue : 0.33;
-                const strokeDasharray = circumference * normalizedValue;
-                const strokeDashoffset = -cumulativeOffset;
-                
-                cumulativeOffset += strokeDasharray;
-                
-                return `
-                    <circle
-                        cx="${center}"
-                        cy="${center}"
-                        r="${radius}"
-                        fill="none"
-                        stroke="${metric.color}"
-                        stroke-width="${strokeWidth}"
-                        stroke-dasharray="${strokeDasharray} ${circumference}"
-                        stroke-dashoffset="${strokeDashoffset}"
-                        opacity="0.8"
-                        style="animation: drawCircle 2s ease-out ${index * 0.3}s both;"
-                    />
-                `;
-            }).join('') + `
-                <style>
-                @keyframes drawCircle {
-                    from { stroke-dasharray: 0 ${circumference}; }
-                }
-                </style>
-            `;
-        }
-
-        function generateDonutChart(data, total) {
-            // 빈 데이터 처리
-            if (!data || data.length === 0 || total === 0) {
-                return `<circle cx="100" cy="100" r="70" fill="none" stroke="#6b7280" stroke-width="3" opacity="0.3"/>
-                       <text x="100" y="100" text-anchor="middle" dy=".3em" fill="#6b7280" font-size="12">데이터 없음</text>`;
-            }
-            
-            let cumulativeAngle = 0;
-            const radius = 70;
-            const innerRadius = 45;
-            const centerX = 100;
-            const centerY = 100;
-            
-            return data.filter(item => item.value > 0).map(item => {
-                const angle = (item.value / total) * 360;
-                const startAngle = cumulativeAngle;
-                const endAngle = cumulativeAngle + angle;
-                
-                const x1 = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180);
-                const y1 = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180);
-                const x2 = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180);
-                const y2 = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180);
-                
-                const x3 = centerX + innerRadius * Math.cos((endAngle - 90) * Math.PI / 180);
-                const y3 = centerY + innerRadius * Math.sin((endAngle - 90) * Math.PI / 180);
-                const x4 = centerX + innerRadius * Math.cos((startAngle - 90) * Math.PI / 180);
-                const y4 = centerY + innerRadius * Math.sin((startAngle - 90) * Math.PI / 180);
-                
-                const largeArcFlag = angle > 180 ? 1 : 0;
-                
-                const pathData = [
-                    `M ${x1} ${y1}`,
-                    `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-                    `L ${x3} ${y3}`,
-                    `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${x4} ${y4}`,
-                    'Z'
-                ].join(' ');
-                
-                cumulativeAngle += angle;
-                
-                return `<path d="${pathData}" fill="${item.color}" stroke="var(--primary-bg)" stroke-width="2"/>`;
-            }).join('');
         }
 
         // 툴팁 기능이 있는 도넛차트 생성 - 깔끔한 2D 모던 디자인 (간격 있음)
