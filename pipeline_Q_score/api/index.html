@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>번역품질 검사기 | MT Quality Analytics</title>
+    <title>번역품질 검사기 | MT Quality Estimator</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -451,6 +451,91 @@
             font-size: 20px;
             font-weight: 600;
             color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .content-title-info {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: var(--info-color);
+            border-radius: 50%;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: help;
+            transition: all 0.2s ease;
+        }
+
+        .content-title-info:hover {
+            background: var(--success-color);
+            transform: scale(1.1);
+        }
+
+        .content-title-tooltip {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.5;
+            color: var(--text-primary);
+            white-space: normal;
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+
+        .content-title-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: var(--card-bg);
+        }
+
+        .content-title-info:hover .content-title-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 툴팁 반응형 조정 */
+        @media (max-width: 768px) {
+            .content-title-tooltip {
+                width: 320px;
+                max-width: 85vw;
+                font-size: 12px;
+                padding: 14px;
+                left: 0;
+                transform: translateX(-20px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .content-title-tooltip {
+                width: 280px;
+                max-width: 80vw;
+                font-size: 11px;
+                padding: 12px;
+                left: -50px;
+                transform: none;
+            }
         }
 
         .view-controls {
@@ -1573,6 +1658,28 @@
         }
 
         @media (max-width: 768px) {
+            .main-header {
+                padding: 12px 16px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 16px;
+                align-items: center;
+            }
+            
+            .logo-section {
+                text-align: center;
+            }
+            
+            .logo {
+                font-size: 20px;
+            }
+            
+            .subtitle {
+                font-size: 12px;
+            }
+            
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
@@ -1582,14 +1689,17 @@
             }
             
             .header-stats {
-                gap: 12px;
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: center;
+                width: 100%;
             }
             
             .stat-item {
-                width: 100px; /* 모바일에서도 Q-SCORE 개선도에 맞춰 조정 */
-                height: 80px; /* 모바일 고정 높이 증가 */
+                width: 90px;
+                height: 70px;
                 flex-shrink: 0;
-                padding: 12px 16px;
+                padding: 8px 12px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -1597,15 +1707,17 @@
             }
             
             .stat-value {
-                font-size: 20px;
+                font-size: 18px;
             }
             
             .stat-label {
-                font-size: 10px;
+                font-size: 9px;
+                line-height: 1.1;
             }
             
             .stat-subtext {
-                font-size: 8px;
+                font-size: 7px;
+                line-height: 1.1;
             }
 
             .stats-modal-content {
@@ -1633,6 +1745,46 @@
 
         /* 매우 작은 화면 (480px 이하) */
         @media (max-width: 480px) {
+            .main-header {
+                padding: 10px 12px;
+            }
+            
+            .header-content {
+                gap: 12px;
+            }
+            
+            .logo {
+                font-size: 18px;
+            }
+            
+            .subtitle {
+                font-size: 11px;
+            }
+            
+            .header-stats {
+                gap: 6px;
+            }
+            
+            .stat-item {
+                width: 75px;
+                height: 60px;
+                padding: 6px 8px;
+            }
+            
+            .stat-value {
+                font-size: 16px;
+            }
+            
+            .stat-label {
+                font-size: 8px;
+                line-height: 1.0;
+            }
+            
+            .stat-subtext {
+                font-size: 6px;
+                line-height: 1.0;
+            }
+            
             .chart-grid {
                 grid-template-columns: 1fr; /* 매우 작은 화면에서는 1열로 */
                 gap: 8px;
@@ -1650,6 +1802,201 @@
             .chart-stat-label {
                 font-size: 12px;
             }
+        }
+
+        /* 매우 작은 화면 (320px 이하) */
+        @media (max-width: 320px) {
+            .main-header {
+                padding: 8px 10px;
+            }
+            
+            .header-content {
+                gap: 10px;
+            }
+            
+            .logo {
+                font-size: 16px;
+            }
+            
+            .subtitle {
+                font-size: 10px;
+            }
+            
+            .header-stats {
+                gap: 4px;
+                overflow-x: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            
+            .header-stats::-webkit-scrollbar {
+                display: none;
+            }
+            
+            .stat-item {
+                width: 65px;
+                height: 50px;
+                padding: 4px 6px;
+                flex-shrink: 0;
+            }
+            
+            .stat-value {
+                font-size: 14px;
+            }
+            
+            .stat-label {
+                font-size: 7px;
+                line-height: 0.9;
+            }
+            
+            .stat-subtext {
+                display: none; /* 아주 작은 화면에서는 숨김 */
+            }
+        }
+
+        /* 역번역 원문 개선 버튼 스타일 */
+        .back-translation-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .back-translation-btn:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .back-translation-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 원문 개선 제안 모달 */
+        .source-improvement-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .source-improvement-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .source-improvement-modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 0;
+            max-width: 700px;
+            width: 90%;
+            max-height: 85%;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        .source-improvement-header {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .source-improvement-title {
+            font-size: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .source-improvement-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .source-improvement-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .source-improvement-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        .improvement-section {
+            margin-bottom: 20px;
+        }
+
+        .improvement-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .improvement-content {
+            background: var(--accent-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        .original-text {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--danger-color);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .improved-text {
+            background: rgba(0, 208, 132, 0.1);
+            border-left: 3px solid var(--success-color);
+            padding: 12px;
+            border-radius: 6px;
         }
 
         .loading {
@@ -1681,7 +2028,7 @@
         <div class="header-content">
             <div class="logo-section">
                 <div class="logo" onclick="location.reload()" style="cursor: pointer;">번역품질 검사기</div>
-                <div class="subtitle">MT Quality Analytics</div>
+                <div class="subtitle">MT Quality Estimator</div>
             </div>
             <div class="header-stats" id="headerStats">
                 <div class="stat-item" onclick="showStatsChart('records')">
@@ -1946,6 +2293,54 @@
                     </div>
                     <div class="score-section-content" id="evaluationMethod">
                         <!-- 평가 방법 설명이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 원문 개선 제안 모달 -->
+    <div class="source-improvement-modal" id="sourceImprovementModal">
+        <div class="source-improvement-modal-content">
+            <div class="source-improvement-header">
+                <div class="source-improvement-title">
+                    <span>🔄</span> 원문 개선 제안
+                </div>
+                <button class="source-improvement-close" onclick="closeSourceImprovementModal()">×</button>
+            </div>
+            <div class="source-improvement-body">
+                <div class="improvement-section">
+                    <div class="improvement-section-title">
+                        <span class="icon icon-warning"></span> 현재 원문
+                    </div>
+                    <div class="improvement-content">
+                        <div class="original-text" id="originalSourceText">
+                            <!-- 원본 원문이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="improvement-section">
+                    <div class="improvement-section-title">
+                        <span class="icon icon-improve"></span> 개선 제안
+                    </div>
+                    <div class="improvement-content">
+                        <div class="improved-text" id="improvedSourceText">
+                            <div class="loading">
+                                <div class="spinner"></div>역번역 분석을 통한 원문 개선안을 생성하는 중...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="improvement-section">
+                    <div class="improvement-section-title">
+                        <span class="icon icon-info"></span> 개선 근거
+                    </div>
+                    <div class="improvement-content" id="improvementReason">
+                        <div class="loading">
+                            <div class="spinner"></div>개선 근거를 분석하는 중...
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2245,7 +2640,30 @@
                 'ape-improved': '개선 효과'
             };
             
-            document.getElementById('contentTitle').textContent = titles[currentFilters.view] || '번역품질 분석';
+            const descriptions = {
+                'high-quality': '매우우수(Excellent) 및 우수(Very Good) 등급의 번역으로, COMET 점수 0.8+ 또는 Q-score 0.25+ 수준입니다. 자연스럽고 정확한 고품질 번역을 의미합니다.',
+                'failed': '나쁨(Poor) 및 매우나쁨(Very Poor) 등급의 번역으로, 기본 품질 기준(COMET 0.5+, COS 0.5+, GEMBA 50+)을 충족하지 못한 번역입니다.'
+            };
+            
+            const currentView = currentFilters.view;
+            const title = titles[currentView] || '번역품질 분석';
+            const description = descriptions[currentView];
+            
+            const titleElement = document.getElementById('contentTitle');
+            
+            if (description) {
+                titleElement.innerHTML = `
+                    ${title}
+                    <div class="content-title-info">
+                        !
+                        <div class="content-title-tooltip">
+                            ${description}
+                        </div>
+                    </div>
+                `;
+            } else {
+                titleElement.textContent = title;
+            }
         }
 
         function resetPagination() {
@@ -2635,8 +3053,30 @@
 </div>
                 `;
             } else if (originalClass !== improvedClass) {
-                // 등급이 바뀌었지만 개선되지 않은 경우도 표시
-                qualityChangeInfo = `
+                // 등급이 바뀌었지만 개선되지 않은 경우 - 원문 문제 가능성
+                const isQualityDeclined = qualityOrder[improvedClass] < qualityOrder[originalClass];
+                
+                if (isQualityDeclined) {
+                    // 품질이 떨어진 경우 - 원문 개선 제안
+                    qualityChangeInfo = `
+<div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border-left: 3px solid var(--danger-color);">
+    <div style="font-size: 11px; color: var(--danger-color); font-weight: 600;">수정 후에도 품질 저하 - 원문 개선 권장</div>
+    <div style="font-size: 12px; color: var(--text-primary); margin-bottom: 6px;">
+        <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
+        <span style="margin: 0 8px; color: var(--danger-color);">→</span>
+        <span class="quality-badge-mini ${improvedClass}">${improvedLabel}</span>
+    </div>
+    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+        번역문 수정에도 불구하고 품질이 개선되지 않았습니다. 원문 자체에 번역하기 어려운 요소가 있을 수 있습니다.
+    </div>
+    <button class="back-translation-btn" onclick="suggestSourceImprovement('${record.key}', '${encodeURIComponent(record.src)}', '${encodeURIComponent(record.ape)}')">
+        <span style="margin-right: 4px;">🔄</span>원문 개선 제안 받기
+    </button>
+</div>
+                    `;
+                } else {
+                    // 기타 등급 변화
+                    qualityChangeInfo = `
 <div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 6px; border-left: 3px solid var(--warning-color);">
     <div style="font-size: 11px; color: var(--warning-color); font-weight: 600;">품질 등급 변화</div>
     <div style="font-size: 12px; color: var(--text-primary);">
@@ -2645,39 +3085,70 @@
         <span class="quality-badge-mini ${improvedClass}">${improvedLabel}</span>
     </div>
 </div>
-                `;
+                    `;
+                }
             } else {
-                // 등급은 동일하지만 점수가 실제로 개선되었는지 확인
-                const gembaImproved = (record.delta_gemba || 0) > 0;
-                const cometImproved = (record.delta_comet || 0) > 0;
-                const cosImproved = (record.delta_cos || 0) > 0;
+                // 등급은 동일하지만 Q-score가 실제로 개선되었는지 확인
+                const originalQScoreValue = originalQScore || 0;
+                const improvedQScoreValue = apeQScore || originalQScoreValue;
+                const qScoreDelta = improvedQScoreValue - originalQScoreValue;
                 
-                // 최소 2개 이상의 메트릭이 개선되었거나, GEMBA가 5점 이상 개선된 경우만 "점수 개선"으로 표시
-                const significantImprovement = 
-                    (gembaImproved && (record.delta_gemba || 0) >= 5) || // GEMBA 5점 이상 개선
-                    ([gembaImproved, cometImproved, cosImproved].filter(Boolean).length >= 2); // 2개 이상 메트릭 개선
+                // Q-score 기준으로 의미있는 개선 판단 (0.05 이상 개선 시 표시)
+                const significantQScoreImprovement = qScoreDelta >= 0.05;
                 
-                if (significantImprovement) {
-                    // 개선된 메트릭들 표시
-                    let improvementDetails = [];
-                    if (gembaImproved) improvementDetails.push(`GEMBA +${(record.delta_gemba || 0).toFixed(0)}`);
-                    if (cometImproved) improvementDetails.push(`COMET +${(record.delta_comet || 0).toFixed(3)}`);
-                    if (cosImproved) improvementDetails.push(`COS +${(record.delta_cos || 0).toFixed(3)}`);
-                    
+                if (significantQScoreImprovement) {
                     qualityChangeInfo = `
 <div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; border-left: 3px solid var(--info-color);">
-    <div style="font-size: 11px; color: var(--info-color); font-weight: 600;">의미있는 점수 개선 (등급 유지)</div>
+    <div style="font-size: 11px; color: var(--info-color); font-weight: 600;">의미있는 품질 개선 (등급 유지)</div>
     <div style="font-size: 12px; color: var(--text-primary); margin-bottom: 4px;">
         <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
         <span style="margin: 0 8px; color: var(--info-color);">→</span>
         <span class="quality-badge-mini ${improvedClass}">${improvedLabel}</span>
     </div>
-    <div style="font-size: 10px; color: var(--text-muted);">개선: ${improvementDetails.join(', ')}</div>
+    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">Q-score 개선: ${originalQScoreValue.toFixed(3)} → ${improvedQScoreValue.toFixed(3)} (+${qScoreDelta.toFixed(3)})</div>
+    <button class="alternative-edit-btn" onclick="getAlternativeEdit('${record.key}', '${encodeURIComponent(record.src)}', '${encodeURIComponent(record.mt)}', '${record.tag}')" style="
+        background: linear-gradient(135deg, var(--info-color), #3b82f6);
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 9px;
+        cursor: pointer;
+        transition: all 0.2s;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <span style="margin-right: 2px;">+</span>다른 수정 제안
+    </button>
 </div>
                     `;
                 } else {
-                    // 미미한 개선이거나 개선이 없는 경우는 표시하지 않음
-                    qualityChangeInfo = '';
+                    // Q-score 개선이 미미하거나 없는 경우
+                    // 등급 유지인 경우에도 "+" 버튼 제공
+                    if (originalClass === improvedClass) {
+                        qualityChangeInfo = `
+<div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(156, 163, 175, 0.1); border-radius: 6px; border-left: 3px solid var(--text-muted);">
+    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">등급 유지</div>
+    <div style="font-size: 12px; color: var(--text-primary); margin-bottom: 6px;">
+        <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
+        <span style="margin: 0 8px; color: var(--text-muted);">→</span>
+        <span class="quality-badge-mini ${improvedClass}">${improvedLabel}</span>
+    </div>
+    <button class="alternative-edit-btn" onclick="getAlternativeEdit('${record.key}', '${encodeURIComponent(record.src)}', '${encodeURIComponent(record.mt)}', '${record.tag}')" style="
+        background: linear-gradient(135deg, #6b7280, #4b5563);
+        color: white;
+        border: none;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 9px;
+        cursor: pointer;
+        transition: all 0.2s;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <span style="margin-right: 2px;">+</span>다른 수정 제안
+    </button>
+</div>
+                        `;
+                    } else {
+                        qualityChangeInfo = '';
+                    }
                 }
             }
             
@@ -4042,6 +4513,264 @@
                 timeout = setTimeout(later, wait);
             };
         }
+
+        // 역번역 기반 원문 개선 제안 함수들
+        async function suggestSourceImprovement(recordKey, originalSource, apeTranslation) {
+            const modal = document.getElementById('sourceImprovementModal');
+            const originalText = document.getElementById('originalSourceText');
+            const improvedText = document.getElementById('improvedSourceText');
+            const reasonText = document.getElementById('improvementReason');
+            
+            // 모달 표시 및 원문 설정
+            originalText.textContent = decodeURIComponent(originalSource);
+            modal.classList.add('show');
+            
+            try {
+                // GPT API를 통한 원문 개선 제안
+                const backTranslationResult = await performBackTranslation(recordKey, originalSource, apeTranslation);
+                
+                // 개선 제안 표시
+                improvedText.innerHTML = `
+                    <strong>개선된 원문:</strong><br>
+                    ${backTranslationResult.improvedSource}
+                `;
+                
+                reasonText.innerHTML = `
+                    <strong>개선 근거:</strong><br>
+                    ${backTranslationResult.reason.replace(/\n/g, '<br>')}
+                `;
+                
+            } catch (error) {
+                console.error('원문 개선 제안 실패:', error);
+                improvedText.innerHTML = `
+                    <div style="color: var(--danger-color);">
+                        ❌ 원문 개선 제안을 생성하는 중 오류가 발생했습니다.<br>
+                        ${error.message}
+                    </div>
+                `;
+                reasonText.innerHTML = `
+                    <div style="color: var(--text-muted);">
+                        원문 개선 분석을 완료할 수 없습니다. 잠시 후 다시 시도해주세요.
+                    </div>
+                `;
+            }
+        }
+
+        async function performBackTranslation(key, originalSource, apeTranslation) {
+            try {
+                // Python FastAPI 엔드포인트 호출
+                const response = await fetch(`${API_BASE}/source-improvement/${key}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                return {
+                    improvedSource: data.improvement_suggestion.improved_text || "개선된 텍스트를 생성할 수 없습니다.",
+                    reason: data.improvement_suggestion.analysis || "분석 정보를 가져올 수 없습니다."
+                };
+                
+            } catch (error) {
+                console.error('원문 개선 제안 실패:', error);
+                throw error; // 에러를 다시 던져서 상위에서 처리
+            }
+        }
+
+        // 다른 수정 제안을 받는 함수
+        async function getAlternativeEdit(key, originalSource, mtText, tag) {
+            try {
+                // 로딩 표시
+                const loadingHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: var(--card-bg);
+                        border: 1px solid var(--border-color);
+                        border-radius: 8px;
+                        padding: 16px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                        z-index: 1000;
+                        max-width: 400px;
+                    " id="alternative-loading">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            다른 수정 제안을 생성하는 중...
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', loadingHTML);
+
+                // API 호출
+                const response = await fetch(`${API_BASE}/alternative-edit/${key}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // 로딩 제거
+                const loadingEl = document.getElementById('alternative-loading');
+                if (loadingEl) loadingEl.remove();
+
+                // 다른 수정 제안 표시
+                showAlternativeEdit(data);
+
+            } catch (error) {
+                console.error('다른 수정 제안 실패:', error);
+                
+                // 로딩 제거
+                const loadingEl = document.getElementById('alternative-loading');
+                if (loadingEl) loadingEl.remove();
+                
+                // 에러 메시지 표시
+                const errorHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: var(--danger-color);
+                        color: white;
+                        border-radius: 8px;
+                        padding: 16px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                        z-index: 1000;
+                        max-width: 400px;
+                    " id="alternative-error">
+                        ❌ 다른 수정 제안을 생성할 수 없습니다.<br>
+                        ${error.message}
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', errorHTML);
+                
+                // 3초 후 자동 제거
+                setTimeout(() => {
+                    const errorEl = document.getElementById('alternative-error');
+                    if (errorEl) errorEl.remove();
+                }, 3000);
+            }
+        }
+
+        // 다른 수정 제안 결과 표시
+        function showAlternativeEdit(data) {
+            const modalHTML = `
+                <div style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: var(--card-bg);
+                    border: 1px solid var(--border-color);
+                    border-radius: 12px;
+                    padding: 0;
+                    max-width: 600px;
+                    width: 90%;
+                    max-height: 70vh;
+                    overflow: hidden;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+                    z-index: 1001;
+                    animation: modalSlideIn 0.3s ease-out;
+                " id="alternative-edit-modal">
+                    <div style="
+                        background: linear-gradient(135deg, #10b981, #34d399);
+                        color: white;
+                        padding: 20px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    ">
+                        <div style="font-size: 18px; font-weight: 700;">
+                            ✨ 다른 수정 제안
+                        </div>
+                        <button onclick="closeAlternativeModal()" style="
+                            background: rgba(255, 255, 255, 0.2);
+                            border: none;
+                            color: white;
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 50%;
+                            cursor: pointer;
+                            font-size: 16px;
+                        ">×</button>
+                    </div>
+                    <div style="padding: 20px; overflow-y: auto; max-height: 50vh;">
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">기존 기계번역</div>
+                            <div style="
+                                background: rgba(239, 68, 68, 0.1);
+                                border-left: 3px solid var(--danger-color);
+                                padding: 12px;
+                                border-radius: 6px;
+                                font-size: 14px;
+                            ">${data.original_mt}</div>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">새로운 수정 제안 (높은 창의성)</div>
+                            <div style="
+                                background: rgba(0, 208, 132, 0.1);
+                                border-left: 3px solid var(--success-color);
+                                padding: 12px;
+                                border-radius: 6px;
+                                font-size: 14px;
+                                font-weight: 500;
+                            ">${data.alternative_edit}</div>
+                        </div>
+                        
+                        <div style="font-size: 11px; color: var(--text-muted); text-align: center; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                            💡 이 제안은 더 높은 창의성(temperature)으로 생성되었습니다
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.6);
+                    z-index: 1000;
+                " id="alternative-modal-backdrop" onclick="closeAlternativeModal()"></div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        // 다른 수정 제안 모달 닫기
+        function closeAlternativeModal() {
+            const modal = document.getElementById('alternative-edit-modal');
+            const backdrop = document.getElementById('alternative-modal-backdrop');
+            if (modal) modal.remove();
+            if (backdrop) backdrop.remove();
+        }
+
+        function closeSourceImprovementModal() {
+            const modal = document.getElementById('sourceImprovementModal');
+            modal.classList.remove('show');
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('sourceImprovementModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeSourceImprovementModal();
+                }
+            });
+        });
     </script>
 </body>
 </html>

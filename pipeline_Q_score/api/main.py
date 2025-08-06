@@ -7,6 +7,10 @@ import json
 import statistics
 from pathlib import Path
 from enum import Enum
+import os
+import asyncio
+from dotenv import load_dotenv
+from openai import AsyncOpenAI
 
 DELTA_GEMBA_FILE = Path(r"C:\Users\tkim602_global\Desktop\mt_eval\pipeline_Q_score\out\v4\ape_evidence.json")
 ORIGINAL_FILE = Path(r"C:\Users\tkim602_global\Desktop\mt_eval\pipeline_Q_score\out\v4\ape_evidence.json")
@@ -41,6 +45,10 @@ FAIL_GATE_CONDITIONS = {
 }
 
 global_stats = None
+
+# GPT 클라이언트 초기화
+load_dotenv()
+openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def compute_global_stats(data: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
     """Compute global statistics for Z-score normalization"""
@@ -107,32 +115,26 @@ def get_quality_grade_by_scores(gemba: float, comet: float, cos: float, q_score:
     is_no_parse = (gemba_reason == "no_parse")
     actual_gemba = gemba if not is_no_parse else 0.0
     
-    # Check fail gate conditions first
     if check_fail_gate(cos, comet, actual_gemba, is_no_parse):
         return "poor"  
     
-    # Calculate Q-score if not provided
     if q_score is None:
         q_score = calculate_weighted_q_score(gemba, comet, cos, gemba_reason)
-    
-    # Q-score based quality grading (PRIMARY METHOD)
     if q_score >= 0.6:
-        return "excellent"   # 매우우수
+        return "excellent"  
     elif q_score >= 0.25:
-        return "very_good"   # 우수
+        return "very_good"  
     elif q_score >= -0.1:
-        return "good"        # 양호
+        return "good"       
     elif q_score >= -0.6:
-        return "poor"        # 나쁨
+        return "poor"      
     else:
-        return "very_poor"   # 매우나쁨
+        return "very_poor"   
 
 def calculate_meaningful_improvement_rate() -> float:
-    """품질등급이 상승한 케이스의 비율을 계산 - 3개 메트릭 종합 기준"""
     if not evaluation_data:
         return 0.0
     
-    # APE가 적용된 레코드들만 필터링 (delta 값이 하나라도 있는 경우)
     ape_records = [r for r in evaluation_data if "ape" in r and 
                    ("delta_gemba" in r or "delta_comet" in r or "delta_cos" in r)]
     
@@ -143,27 +145,22 @@ def calculate_meaningful_improvement_rate() -> float:
     debug_info = []
     
     for record in ape_records:
-        # 원본 점수들
         original_gemba = record.get("gemba", 0)
         original_comet = record.get("comet", 0)
         original_cos = record.get("cos", 0)
         
-        # Delta 값들 (기본값 0)
         delta_gemba = record.get("delta_gemba", 0)
         delta_comet = record.get("delta_comet", 0)
         delta_cos = record.get("delta_cos", 0)
         
-        # 개선 후 점수들
         improved_gemba = original_gemba + delta_gemba
         improved_comet = original_comet + delta_comet
         improved_cos = original_cos + delta_cos
         
-        # 원본 품질등급과 개선 후 품질등급 계산
         original_q_score = record.get("q_score", None)
         original_tag = record.get("tag", None)
         original_gemba_reason = record.get("flag", {}).get("gemba_reason")
         
-        # If no Q-score available, calculate it on the fly
         if original_q_score is None:
             original_q_score = calculate_weighted_q_score(original_gemba, original_comet, original_cos, original_gemba_reason)
         
@@ -171,10 +168,8 @@ def calculate_meaningful_improvement_rate() -> float:
                                                    q_score=original_q_score, tag=original_tag, 
                                                    gemba_reason=original_gemba_reason)
         
-        # Calculate improved Q-score if APE was applied
         improved_q_score = record.get("ape_q_score", None)
         
-        # If no APE Q-score available, calculate it on the fly
         if improved_q_score is None:
             improved_q_score = calculate_weighted_q_score(improved_gemba, improved_comet, improved_cos, original_gemba_reason)
         
@@ -182,7 +177,6 @@ def calculate_meaningful_improvement_rate() -> float:
                                                    q_score=improved_q_score, 
                                                    gemba_reason=original_gemba_reason)
         
-        # 품질등급 순서 (숫자가 클수록 높은 등급)
         grade_order = {
             "very_poor": 1,
             "poor": 2,
@@ -191,12 +185,10 @@ def calculate_meaningful_improvement_rate() -> float:
             "excellent": 5
         }
         
-        # 품질등급이 올라간 경우만 카운트
         grade_improved = grade_order.get(improved_grade, 0) > grade_order.get(original_grade, 0)
         if grade_improved:
             improved_count += 1
         
-        # 디버깅 정보 수집 (모든 케이스 저장)
         debug_info.append({
             "key": record.get("key", "unknown"),
             "original_scores": f"G:{original_gemba:.0f}/C:{original_comet:.3f}/S:{original_cos:.3f}",
@@ -207,13 +199,11 @@ def calculate_meaningful_improvement_rate() -> float:
             "grade_improved": grade_improved
         })
     
-    # 디버깅 정보 출력
-    print(f"\n=== 품질등급 상승률 계산 디버깅 (3개 메트릭 종합) ===")
-    print(f"총 APE 레코드 수: {len(ape_records)}")
-    print(f"품질등급 상승 케이스: {improved_count}")
-    print(f"상승률: {(improved_count / len(ape_records)) * 100:.1f}%")
+    # print(f"\n=== 품질등급 상승률 계산 디버깅 (3개 메트릭 종합) ===")
+    # print(f"총 APE 레코드 수: {len(ape_records)}")
+    # print(f"품질등급 상승 케이스: {improved_count}")
+    # print(f"상승률: {(improved_count / len(ape_records)) * 100:.1f}%")
     
-    # 등급별 분포 계산
     grade_distribution = {}
     improvement_by_grade = {}
     
@@ -221,10 +211,8 @@ def calculate_meaningful_improvement_rate() -> float:
         original = info['original_grade']
         improved = info['improved_grade']
         
-        # 원본 등급별 분포
         grade_distribution[original] = grade_distribution.get(original, 0) + 1
         
-        # 원본 등급별 개선 케이스
         if info['grade_improved']:
             improvement_by_grade[original] = improvement_by_grade.get(original, 0) + 1
     
@@ -256,19 +244,15 @@ def get_quality_distribution_before_after() -> Dict[str, Any]:
     before_distribution = {"very_poor": 0, "poor": 0, "good": 0, "very_good": 0, "excellent": 0}
     after_distribution = {"very_poor": 0, "poor": 0, "good": 0, "very_good": 0, "excellent": 0}
     
-    # 모든 레코드에 대해 APE 이전/이후 품질등급 계산
     for record in evaluation_data:
-        # 원본 점수들
         original_gemba = record.get("gemba", 0)
         original_comet = record.get("comet", 0)
         original_cos = record.get("cos", 0)
         
-        # APE 이전 품질등급
         original_q_score = record.get("q_score", None)
         original_tag = record.get("tag", None)
         original_gemba_reason = record.get("flag", {}).get("gemba_reason")
         
-        # If no Q-score available, calculate it on the fly
         if original_q_score is None:
             original_q_score = calculate_weighted_q_score(original_gemba, original_comet, original_cos, original_gemba_reason)
         
@@ -277,7 +261,6 @@ def get_quality_distribution_before_after() -> Dict[str, Any]:
                                                  gemba_reason=original_gemba_reason)
         before_distribution[before_grade] += 1
         
-        # APE가 적용된 경우 개선 후 점수 계산
         if "ape" in record and ("delta_gemba" in record or "delta_comet" in record or "delta_cos" in record):
             delta_gemba = record.get("delta_gemba", 0)
             delta_comet = record.get("delta_comet", 0)
@@ -287,10 +270,8 @@ def get_quality_distribution_before_after() -> Dict[str, Any]:
             improved_comet = original_comet + delta_comet
             improved_cos = original_cos + delta_cos
             
-            # Calculate improved Q-score if APE was applied
             improved_q_score = record.get("ape_q_score", None)
             
-            # If no APE Q-score available, calculate it on the fly
             if improved_q_score is None:
                 improved_q_score = calculate_weighted_q_score(improved_gemba, improved_comet, improved_cos, original_gemba_reason)
             
@@ -298,7 +279,6 @@ def get_quality_distribution_before_after() -> Dict[str, Any]:
                                                     q_score=improved_q_score,
                                                     gemba_reason=original_gemba_reason)
         else:
-            # APE가 적용되지 않은 경우 원본과 동일
             after_grade = before_grade
             
         after_distribution[after_grade] += 1
@@ -381,7 +361,6 @@ async def get_records(
     limit: Optional[int] = Query(100, ge=1, le=10000),
     offset: Optional[int] = Query(0, ge=0)
 ):
-    """Get evaluation records with optional filtering"""
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
@@ -420,7 +399,6 @@ async def get_records(
 
 @app.get("/records/{key}")
 async def get_record_by_key(key: str):
-    """Get a specific record by its key"""
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
@@ -437,33 +415,27 @@ async def get_analytics():
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
-    # Basic statistics
     gemba_scores = [r.get("gemba", 0) for r in evaluation_data if "gemba" in r]
     comet_scores = [r.get("comet", 0) for r in evaluation_data if "comet" in r]
     cos_scores = [r.get("cos", 0) for r in evaluation_data if "cos" in r]
     
-    # Tag distribution
     tag_dist = {}
     for record in evaluation_data:
         tag = record.get("tag", "unknown")
         tag_dist[tag] = tag_dist.get(tag, 0) + 1
     
-    # Bucket distribution
     bucket_dist = {}
     for record in evaluation_data:
         bucket = record.get("bucket", "unknown")
         bucket_dist[bucket] = bucket_dist.get(bucket, 0) + 1
     
-    # APE effectiveness
     ape_records = [r for r in evaluation_data if "ape" in r]
     
-    # Calculate Q-score improvements (delta_q_score = ape_q_score - q_score)
     delta_q_scores = []
     for r in ape_records:
         original_q_score = r.get("q_score", None)
         ape_q_score = r.get("ape_q_score", None)
         
-        # If either Q-score is missing, calculate them on the fly
         if original_q_score is None:
             original_gemba = r.get("gemba", 0)
             original_comet = r.get("comet", 0)
@@ -555,7 +527,6 @@ async def get_records_by_bucket(bucket: BucketType):
 
 @app.get("/tags/{tag}")
 async def get_records_by_tag(tag: TagType):
-    """Get all records for a specific quality tag"""
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
@@ -575,7 +546,6 @@ async def search_records(
     q: str = Query(..., min_length=2, description="Search query for source or translation text"),
     limit: int = Query(50, ge=1, le=200)
 ):
-    """Search records by text content in source or translation"""
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
@@ -598,6 +568,199 @@ async def search_records(
         "total_matches": len(matches),
         "records": matches
     }
+
+@app.post("/source-improvement/{key}")
+async def suggest_source_improvement(key: str):
+    if not evaluation_data:
+        raise HTTPException(status_code=503, detail="Data not loaded")
+    
+    record = None
+    for r in evaluation_data:
+        if r.get("key") == key:
+            record = r
+            break
+    
+    if not record:
+        raise HTTPException(status_code=404, detail=f"Record with key '{key}' not found")
+    
+    source_text = record.get("src", "")
+    if not source_text:
+        raise HTTPException(status_code=400, detail="Source text not found")
+    
+    try:
+        improvement_suggestion = await get_source_improvement_from_gpt(source_text)
+        
+        return {
+            "key": key,
+            "original_source": source_text,
+            "improvement_suggestion": improvement_suggestion,
+            "success": True
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get improvement suggestion: {str(e)}")
+
+@app.post("/alternative-edit/{key}")
+async def get_alternative_edit(key: str):
+    if not evaluation_data:
+        raise HTTPException(status_code=503, detail="Data not loaded")
+    
+    record = None
+    for r in evaluation_data:
+        if r.get("key") == key:
+            record = r
+            break
+    
+    if not record:
+        raise HTTPException(status_code=404, detail=f"Record with key '{key}' not found")
+    
+    source_text = record.get("src", "")
+    mt_text = record.get("mt", "")
+    tag = record.get("tag", "fail")
+    evidence = record.get("flag", {}).get("gemba_reason", "n/a")
+    
+    if not source_text or not mt_text:
+        raise HTTPException(status_code=400, detail="Source or MT text not found")
+    
+    try:
+        alternative_edit = await get_alternative_ape_edit(source_text, mt_text, tag, evidence)
+        
+        return {
+            "key": key,
+            "original_mt": mt_text,
+            "alternative_edit": alternative_edit,
+            "tag": tag,
+            "evidence": evidence,
+            "success": True
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get alternative edit: {str(e)}")
+
+async def get_source_improvement_from_gpt(source_text: str) -> Dict[str, Any]:
+    
+    prompt = f"""당신은 번역 품질 향상을 위한 한국어 원문 개선 전문가입니다.
+
+다음 한국어 원문을 분석하여 영어 번역 품질이 더 높아지도록 개선해주세요.
+
+원문: {source_text}
+
+개선 기준:
+1. 문장 구조를 명확하고 모호하지 않게 만들기
+2. 모호한 표현을 구체적인 표현으로 바꾸기  
+3. 번역하기 어려운 한국어 특유의 표현을 보편적으로 이해하기 쉬운 형태로 바꾸기
+4. 전문 용어와 고유명사는 그대로 유지
+5. 원래 맥락과 의미 100% 유지
+
+응답 형식:
+개선된 원문: [개선된 한국어 문장]
+
+개선 근거: [변경 사항에 대한 간단한 설명 (2문장 이내)]"""
+
+    try:
+        response = await openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user", 
+                    "content": prompt
+                }
+            ],
+            temperature=0.2,
+            max_tokens=800
+        )
+        
+        gpt_response = response.choices[0].message.content.strip()
+        
+        improved_text = extract_improved_text(gpt_response)
+        improvement_reason = extract_improvement_reason(gpt_response)
+        
+        return {
+            "improved_text": improved_text,
+            "analysis": improvement_reason,  
+            "original_text": source_text
+        }
+        
+    except Exception as e:
+        raise Exception(f"GPT API call failed: {str(e)}")
+
+async def get_alternative_ape_edit(source_text: str, mt_text: str, tag: str, evidence: str) -> str:
+
+    prompt = (
+        "You are a bilingual technical editor specializing in cybersecurity documentation.\n"
+        "TASK: Post-edit the machine-translated (MT) English sentence so it accurately conveys "
+        "the Korean source in clear, concise, professional English.\n"
+        f"EVIDENCE of the main issue(s): {evidence}\n"
+        "Omit unnecessary articles (a/an/the) and pronouns.\n"
+        "Do not add, remove, or reorder CVE IDs, file paths, option names, or numeric values.\n"
+        "Placeholders such as {{0}}, {{name}}, {{path}} must appear exactly as in the MT.\n"
+        "Replace a term only if it is demonstrably wrong and the Korean source justifies the change.\n"
+        "Start with the given machine translation (mt) as the baseline.\n"
+        "Make only the edits needed to fix errors in meaning, terminology, grammar, punctuation, or style.\n"
+        "Respond in English only. Do not output Korean or any other language.\n"
+        "Return ONLY the improved English sentence.\n\n"
+        f"SRC (ko): {source_text}\nMT  (en): {mt_text}"
+    )
+    temperature = 0.8
+
+    try:
+        response = await openai_client.chat.completions.create(
+            model="gpt-4o-2024-11-20",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+            max_tokens=500
+        )
+        
+        return response.choices[0].message.content.strip()
+        
+    except Exception as e:
+        raise Exception(f"새로운 수정 제안 생성 실패: {str(e)}")
+
+def extract_improved_text(gpt_response: str) -> str:
+    lines = gpt_response.split('\n')
+    for line in lines:
+        line = line.strip()
+        if line.startswith('개선된 원문:'):
+            return line.replace('개선된 원문:', '').strip()
+        elif '개선된 원문:' in line:
+            return line.split('개선된 원문:')[1].strip()
+        elif line.startswith('Revised Source:'):
+            return line.replace('Revised Source:', '').strip()
+        elif 'Revised Source:' in line:
+            return line.split('Revised Source:')[1].strip()
+    
+    first_line = lines[0].strip() if lines else ""
+    if first_line and not first_line.startswith(('분석', '개선', '이유', '근거', 'Reason', 'Analysis', 'Revised')):
+        return first_line
+    
+    return "개선된 텍스트를 추출할 수 없습니다."
+
+def extract_improvement_reason(gpt_response: str) -> str:
+    """GPT 응답에서 개선 근거 부분만 추출"""
+    lines = gpt_response.split('\n')
+    reason_started = False
+    reason_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        if line.startswith('개선 근거:'):
+            reason_started = True
+            reason_content = line.replace('개선 근거:', '').strip()
+            if reason_content:
+                reason_lines.append(reason_content)
+        elif reason_started and line:
+            reason_lines.append(line)
+    
+    return ' '.join(reason_lines) if reason_lines else "개선 근거를 찾을 수 없습니다."
+
+def extract_improvements(gpt_response: str) -> List[str]:
+    improvements = []
+    lines = gpt_response.split('\n')
+    for line in lines:
+        line = line.strip()
+        if line.startswith('- ') or line.startswith('1.') or line.startswith('2.') or line.startswith('3.') or line.startswith('4.'):
+            improvements.append(line)
+    return improvements
 
 if __name__ == "__main__":
     import uvicorn
