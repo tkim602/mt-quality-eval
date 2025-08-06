@@ -1335,7 +1335,7 @@
 
         .chart-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5개 카드를 동일한 크기로 */
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -1346,7 +1346,7 @@
             border-radius: 12px;
             padding: 20px;
             text-align: center;
-            min-height: 100px; /* 최소 높이 설정으로 카드 높이 통일 */
+            min-height: 100px; 
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -1375,13 +1375,13 @@
             line-height: 1.4;
         }
 
-        /* 간단한 바 차트 스타일 */
+
         .simple-chart {
             display: flex;
             align-items: flex-end;
             justify-content: space-around;
             height: 320px;
-            padding: 24px 20px 40px 20px; /* 하단 패딩 증가 (라벨 공간) */
+            padding: 24px 20px 40px 20px; 
             border: 1px solid var(--border-color);
             border-radius: 8px;
             background: var(--card-bg);
@@ -1394,7 +1394,7 @@
             flex-direction: column;
             align-self: flex-end;
             align-items: center;
-            max-width: 120px; /* 너비 증가 */
+            max-width: 120px; 
             flex: 1;
             position: relative;
         }
@@ -1411,7 +1411,7 @@
             margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             border: 1px solid rgba(255,255,255,0.2);
-            min-height: 0; /* 최소 높이 제거 */
+            min-height: 0; 
         }
 
         .bar:hover {
@@ -1486,6 +1486,90 @@
             font-size: 12px;
             color: var(--text-muted);
             margin-left: auto;
+        }
+
+        /* 새로운 품질 차트 카드 스타일 */
+        .quality-comparison-container {
+            margin: 24px 0;
+        }
+
+        .quality-chart-card {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+
+        .quality-chart-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+        }
+
+        .quality-legend-simplified {
+            transition: all 0.3s ease;
+        }
+
+        .legend-item-compact {
+            transition: all 0.25s ease;
+            cursor: default;
+        }
+
+        .legend-item-compact:hover {
+            transform: translateY(-1px);
+        }
+
+        .donut-tooltip {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, system-ui, sans-serif;
+            white-space: nowrap;
+            max-width: 280px;
+            line-height: 1.4;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 1024px) {
+            .quality-comparison-container > div:first-child {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .legend-inline {
+                gap: 20px !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quality-chart-card {
+                padding: 16px;
+            }
+            
+            .quality-legend-simplified {
+                padding: 16px;
+            }
+            
+            .legend-inline {
+                gap: 16px !important;
+                justify-content: center !important;
+            }
+            
+            .legend-item-compact {
+                flex-shrink: 0;
+            }
+            
+            .donut-tooltip {
+                font-size: 12px !important;
+                padding: 10px 12px !important;
+                max-width: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .legend-inline {
+                flex-direction: column;
+                align-items: center;
+                gap: 12px !important;
+            }
+            
+            .legend-item-compact {
+                justify-content: center;
+            }
         }
 
         @media (max-width: 768px) {
@@ -3132,6 +3216,11 @@
                 }
                 
                 modalContent.innerHTML = chartHTML;
+                
+                // 도넛차트 툴팁 이벤트 바인딩 (SVG innerHTML 삽입 후)
+                if (chartType === 'pass-rate') {
+                    initDonutTooltips(modalContent);
+                }
             } catch (error) {
                 console.error('차트 데이터 로드 실패:', error);
                 modalContent.innerHTML = `
@@ -3269,85 +3358,92 @@
                 <div class="chart-grid">
                     <div class="chart-stat">
                         <div class="chart-stat-value">${afterPassRate}%</div>
-                        <div class="chart-stat-label">현재 통과율</div>
+                        <div class="chart-stat-label">통과율</div>
                         <div class="chart-stat-change" style="color: ${passRateImprovement >= 0 ? '#22c55e' : '#ef4444'};">
                             ${passRateImprovement >= 0 ? '+' : ''}${passRateImprovement}%p
                         </div>
                     </div>
                     <div class="chart-stat">
                         <div class="chart-stat-value">${afterExcellentRate}%</div>
-                        <div class="chart-stat-label">현재 우수등급율</div>
+                        <div class="chart-stat-label">우수등급율</div>
                         <div class="chart-stat-change" style="color: ${excellentRateImprovement >= 0 ? '#22c55e' : '#ef4444'};">
                             ${excellentRateImprovement >= 0 ? '+' : ''}${excellentRateImprovement}%p
                         </div>
                     </div>
                     <div class="chart-stat">
                         <div class="chart-stat-value" style="color: #ef4444;">${afterFailRate}%</div>
-                        <div class="chart-stat-label">현재 품질미달율</div>
+                        <div class="chart-stat-label">품질미달율</div>
                         <div class="chart-stat-change" style="color: ${failRateReduction >= 0 ? '#22c55e' : '#ef4444'};">
                             ${failRateReduction >= 0 ? '-' : '+'}${Math.abs(failRateReduction)}%p
                         </div>
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 24px;">
-                    <!-- APE 이전 품질등급표 -->
-                    <div class="chart-container">
-                        <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center; font-size: 16px;">APE 적용 이전 품질등급</h3>
-                        <div class="donut-chart">
-                            <svg class="donut-svg" viewBox="0 0 200 200">
-                                ${generateDonutChart([
-                                    { label: '매우우수', value: beforeExcellent, color: '#00d084' },
-                                    { label: '우수', value: beforeVeryGood, color: '#4ade80' },
-                                    { label: '양호', value: beforeGood, color: '#ffa726' },
-                                    { label: '나쁨', value: beforePoor, color: '#ff8a65' },
-                                    { label: '매우나쁨', value: beforeVeryPoor, color: '#ff6b6b' }
-                                ].filter(item => item.value > 0), total)}
-                            </svg>
-                            <div class="donut-legend">
-                                ${[
-                                    { label: '매우우수', value: beforeExcellent, color: '#00d084' },
-                                    { label: '우수', value: beforeVeryGood, color: '#4ade80' },
-                                    { label: '양호', value: beforeGood, color: '#ffa726' },
-                                    { label: '나쁨', value: beforePoor, color: '#ff8a65' },
-                                    { label: '매우나쁨', value: beforeVeryPoor, color: '#ff6b6b' }
-                                ].filter(item => item.value > 0).map(item => `
-                                    <div class="legend-item">
-                                        <span class="legend-color" style="background-color: ${item.color};"></span>
-                                        <span class="legend-text">${item.label}: ${item.value} (${(item.value/total*100).toFixed(1)}%)</span>
-                                    </div>
-                                `).join('')}
+                <!-- 품질등급 비교 차트 -->
+                <div class="quality-comparison-container" style="margin-top: 24px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px;">
+                        <!-- APE 이전 품질등급표 카드 -->
+                        <div class="quality-chart-card" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div class="card-header" style="text-align: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                                <h3 style="margin: 0; color: var(--text-primary); font-size: 18px; font-weight: 600;">수정 이전 품질등급</h3>
+                                <p style="margin: 8px 0 0 0; color: var(--text-secondary); font-size: 14px;">총 ${total}건</p>
+                            </div>
+                            <div class="donut-chart-wrapper" style="display: flex; justify-content: center; position: relative;">
+                                <svg class="donut-svg" viewBox="0 0 200 200" style="width: 200px; height: 200px;">
+                                    ${generateDonutChartWithTooltip([
+                                        { label: '매우우수', value: beforeExcellent, color: '#059669' },
+                                        { label: '우수', value: beforeVeryGood, color: '#10b981' },
+                                        { label: '양호', value: beforeGood, color: '#f59e0b' },
+                                        { label: '나쁨', value: beforePoor, color: '#f97316' },
+                                        { label: '매우나쁨', value: beforeVeryPoor, color: '#dc2626' }
+                                    ].filter(item => item.value > 0), total, 'before')}
+                                </svg>
+                                <div id="donut-tooltip-before" class="donut-tooltip" style="position: absolute; background: rgba(0,0,0,0.88); color: white; padding: 12px 16px; border-radius: 8px; font-size: 13px; pointer-events: none; opacity: 0; transform: translateY(-8px); transition: all 0.25s ease; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.25); max-width: 250px;"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- APE 이후 품질등급표 카드 -->
+                        <div class="quality-chart-card" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <div class="card-header" style="text-align: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                                <h3 style="margin: 0; color: var(--text-primary); font-size: 18px; font-weight: 600;">수정 이후 품질등급</h3>
+                                <p style="margin: 8px 0 0 0; color: var(--text-secondary); font-size: 14px;">총 ${total}건</p>
+                            </div>
+                            <div class="donut-chart-wrapper" style="display: flex; justify-content: center; position: relative;">
+                                <svg class="donut-svg" viewBox="0 0 200 200" style="width: 200px; height: 200px;">
+                                    ${generateDonutChartWithTooltip([
+                                        { label: '매우우수', value: afterExcellent, color: '#059669' },
+                                        { label: '우수', value: afterVeryGood, color: '#10b981' },
+                                        { label: '양호', value: afterGood, color: '#f59e0b' },
+                                        { label: '나쁨', value: afterPoor, color: '#f97316' },
+                                        { label: '매우나쁨', value: afterVeryPoor, color: '#dc2626' }
+                                    ].filter(item => item.value > 0), total, 'after', [
+                                        { label: '매우우수', beforeValue: beforeExcellent, afterValue: afterExcellent },
+                                        { label: '우수', beforeValue: beforeVeryGood, afterValue: afterVeryGood },
+                                        { label: '양호', beforeValue: beforeGood, afterValue: afterGood },
+                                        { label: '나쁨', beforeValue: beforePoor, afterValue: afterPoor },
+                                        { label: '매우나쁨', beforeValue: beforeVeryPoor, afterValue: afterVeryPoor }
+                                    ])}
+                                </svg>
+                                <div id="donut-tooltip-after" class="donut-tooltip" style="position: absolute; background: rgba(0,0,0,0.88); color: white; padding: 12px 16px; border-radius: 8px; font-size: 13px; pointer-events: none; opacity: 0; transform: translateY(-8px); transition: all 0.25s ease; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.25); max-width: 250px;"></div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- APE 이후 품질등급표 -->
-                    <div class="chart-container">
-                        <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center; font-size: 16px;">APE 적용 이후 품질등급</h3>
-                        <div class="donut-chart">
-                            <svg class="donut-svg" viewBox="0 0 200 200">
-                                ${generateDonutChart([
-                                    { label: '매우우수', value: afterExcellent, color: '#00d084' },
-                                    { label: '우수', value: afterVeryGood, color: '#4ade80' },
-                                    { label: '양호', value: afterGood, color: '#ffa726' },
-                                    { label: '나쁨', value: afterPoor, color: '#ff8a65' },
-                                    { label: '매우나쁨', value: afterVeryPoor, color: '#ff6b6b' }
-                                ].filter(item => item.value > 0), total)}
-                            </svg>
-                            <div class="donut-legend">
-                                ${[
-                                    { label: '매우우수', value: afterExcellent, color: '#00d084' },
-                                    { label: '우수', value: afterVeryGood, color: '#4ade80' },
-                                    { label: '양호', value: afterGood, color: '#ffa726' },
-                                    { label: '나쁨', value: afterPoor, color: '#ff8a65' },
-                                    { label: '매우나쁨', value: afterVeryPoor, color: '#ff6b6b' }
-                                ].filter(item => item.value > 0).map(item => `
-                                    <div class="legend-item">
-                                        <span class="legend-color" style="background-color: ${item.color};"></span>
-                                        <span class="legend-text">${item.label}: ${item.value} (${(item.value/total*100).toFixed(1)}%)</span>
-                                    </div>
-                                `).join('')}
-                            </div>
+                    <!-- 간소화된 범례 -->
+                    <div class="quality-legend-simplified" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;">
+                        <div class="legend-inline" style="display: flex; justify-content: center; align-items: center; gap: 32px; flex-wrap: wrap;">
+                            ${[
+                                { label: '매우우수', beforeValue: beforeExcellent, afterValue: afterExcellent, color: '#059669' },
+                                { label: '우수', beforeValue: beforeVeryGood, afterValue: afterVeryGood, color: '#10b981' },
+                                { label: '양호', beforeValue: beforeGood, afterValue: afterGood, color: '#f59e0b' },
+                                { label: '나쁨', beforeValue: beforePoor, afterValue: afterPoor, color: '#f97316' },
+                                { label: '매우나쁨', beforeValue: beforeVeryPoor, afterValue: afterVeryPoor, color: '#dc2626' }
+                            ].map(item => `
+                                <div class="legend-item-compact" style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="legend-dot" style="width: 14px; height: 14px; border-radius: 50%; background-color: ${item.color}; flex-shrink: 0;"></div>
+                                    <span style="color: var(--text-primary); font-weight: 500; font-size: 14px;">${item.label}</span>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
                 </div>
@@ -3587,7 +3683,7 @@
             
             return `
                 <!-- 메트릭 카드 방식 표시 -->
-                <div class="metrics-cards" style="display: flex; justify-content: space-around; gap: 20px; margin-bottom: 30px;">
+                <div class="metrics-cards" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-bottom: 30px; padding: 0 16px;">
                     ${metrics.map(metric => {
                         const isPositive = metric.value >= 0;
                         const displayValue = metric.name === 'GEMBA' ? 
@@ -3596,13 +3692,11 @@
                         
                         return `
                             <div class="metric-card" style="
-                                flex: 1;
-                                min-height: 280px;
-                                max-width: 300px;
+                                min-height: 320px;
                                 background: linear-gradient(135deg, ${metric.color}15, ${metric.color}05);
                                 border: 2px solid ${metric.color}30;
-                                border-radius: 16px;
-                                padding: 20px;
+                                border-radius: 20px;
+                                padding: 32px 24px;
                                 text-align: center;
                                 position: relative;
                                 overflow: hidden;
@@ -3627,27 +3721,27 @@
                                 <div style="flex: 0 0 auto; z-index: 1; position: relative;">
                                     <!-- 메트릭 아이콘 -->
                                     <div style="
-                                        width: 50px;
-                                        height: 50px;
+                                        width: 60px;
+                                        height: 60px;
                                         background: ${metric.color};
                                         border-radius: 50%;
-                                        margin: 0 auto 15px;
+                                        margin: 0 auto 20px;
                                         display: flex;
                                         align-items: center;
                                         justify-content: center;
-                                        font-size: 20px;
+                                        font-size: 24px;
                                         font-weight: bold;
                                         color: white;
-                                        box-shadow: 0 4px 15px ${metric.color}40;
+                                        box-shadow: 0 6px 20px ${metric.color}40;
                                     ">
                                         ${metric.name.charAt(0)}
                                     </div>
                                     
                                     <!-- 메트릭 이름 -->
                                     <h3 style="
-                                        margin: 0 0 10px 0;
+                                        margin: 0 0 15px 0;
                                         color: var(--text-primary);
-                                        font-size: 18px;
+                                        font-size: 20px;
                                         font-weight: 700;
                                     ">${metric.name}</h3>
                                 </div>
@@ -3775,6 +3869,22 @@
                 
                 .metric-card:hover {
                     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                }
+                
+                /* 반응형 미디어 쿼리 */
+                @media (max-width: 1024px) {
+                    .metrics-cards {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                        gap: 20px !important;
+                    }
+                }
+                
+                @media (max-width: 768px) {
+                    .metrics-cards {
+                        grid-template-columns: 1fr !important;
+                        gap: 16px !important;
+                        padding: 0 8px !important;
+                    }
                 }
                 </style>
             `;
@@ -3946,6 +4056,173 @@
                 
                 return `<path d="${pathData}" fill="${item.color}" stroke="var(--primary-bg)" stroke-width="2"/>`;
             }).join('');
+        }
+
+        // 툴팁 기능이 있는 도넛차트 생성 - 깔끔한 2D 모던 디자인 (간격 있음)
+        function generateDonutChartWithTooltip(data, total, chartId, comparisonData = null) {
+            // 빈 데이터 처리
+            if (!data || data.length === 0 || total === 0) {
+                return `
+                    <circle cx="100" cy="100" r="65" fill="none" stroke="#e5e7eb" stroke-width="20" opacity="0.3"/>
+                    <text x="100" y="100" text-anchor="middle" dy=".3em" fill="var(--text-muted)" 
+                          font-size="13" font-weight="500">데이터 없음</text>`;
+            }
+            
+            let cumulativeAngle = 0;
+            const radius = 65;
+            const strokeWidth = 18; // 조금 더 얇게
+            const centerX = 100;
+            const centerY = 100;
+            const gapAngle = 2; // 세그먼트 간 간격 (도 단위)
+            
+            const segments = data.filter(item => item.value > 0).map((item, index) => {
+                const segmentAngle = (item.value / total) * 360 - gapAngle; // 간격만큼 빼기
+                const startAngle = cumulativeAngle + (index > 0 ? gapAngle : 0); // 첫 번째 제외하고 간격 추가
+                const endAngle = startAngle + segmentAngle;
+                
+                // 원호의 시작점과 끝점 계산
+                const x1 = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180);
+                const y1 = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180);
+                const x2 = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180);
+                const y2 = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180);
+                
+                const largeArcFlag = segmentAngle > 180 ? 1 : 0;
+                
+                // SVG path로 원호 생성 (stroke 기반)
+                const pathData = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
+                
+                cumulativeAngle = endAngle + gapAngle; // 다음 세그먼트를 위해 간격 추가
+                
+                // 툴팁 내용 생성
+                let tooltipContent = '';
+                
+                if (comparisonData && chartId === 'after') {
+                    // 비교 데이터가 있는 경우 (after 차트에서만)
+                    const comparison = comparisonData.find(c => c.label === item.label);
+                    if (comparison) {
+                        const change = comparison.afterValue - comparison.beforeValue;
+                        const changePercent = comparison.beforeValue > 0 ? 
+                            ((change / comparison.beforeValue) * 100) : 0;
+                        const changeIcon = change > 0 ? '↗' : change < 0 ? '↘' : '➖';
+                        const changeColor = change > 0 ? '#22c55e' : change < 0 ? '#ef4444' : '#6b7280';
+                        
+                        tooltipContent = `<div style="font-weight: 600; margin-bottom: 8px; color: ${item.color}; font-size: 15px;">${item.label}</div><div style="margin-bottom: 6px; font-size: 14px;"><span style="font-weight: 600;">${item.value}건</span> (${(item.value/total*100).toFixed(1)}%)</div><div style="border-top: 1px solid rgba(255,255,255,0.15); margin-top: 10px; padding-top: 10px;"><div style="color: #cbd5e1; font-size: 12px; margin-bottom: 4px;">변화량</div><div style="color: ${changeColor}; font-weight: 600; font-size: 14px;">${changeIcon} ${comparison.beforeValue}건 → ${comparison.afterValue}건</div><div style="color: ${changeColor}; font-size: 12px; margin-top: 2px;">${change >= 0 ? '+' : ''}${change}건 ${changePercent !== 0 ? `(${changePercent > 0 ? '+' : ''}${changePercent.toFixed(1)}%)` : ''}</div></div>`;
+                    } else {
+                        tooltipContent = `<div style="font-weight: 600; margin-bottom: 8px; color: ${item.color}; font-size: 15px;">${item.label}</div><div style="font-size: 14px;"><span style="font-weight: 600;">${item.value}건</span> (${(item.value/total*100).toFixed(1)}%)</div>`;
+                    }
+                } else {
+                    // 기본 툴팁 (before 차트)
+                    tooltipContent = `<div style="font-weight: 600; margin-bottom: 8px; color: ${item.color}; font-size: 15px;">${item.label}</div><div style="font-size: 14px;"><span style="font-weight: 600;">${item.value}건</span> (${(item.value/total*100).toFixed(1)}%)</div>`;
+                }
+                
+                return `
+                    <path 
+                        d="${pathData}" 
+                        fill="none"
+                        stroke="${item.color}" 
+                        stroke-width="${strokeWidth}"
+                        stroke-linecap="round"
+                        style="cursor: pointer; transition: all 0.3s ease; opacity: 0.9;"
+                        data-tip="${encodeURIComponent(tooltipContent)}"
+                        data-chart-id="${chartId}"
+                        data-color="${item.color}"
+                    />
+                `;
+            }).join('');
+            
+            return segments;
+        }
+        
+        // 도넛차트 툴팁 초기화 함수 - 심플한 2D 인터랙션 (간격 적용)
+        function initDonutTooltips(rootEl) {
+            rootEl.querySelectorAll('.donut-chart-wrapper').forEach(wrapper => {
+                const chartId = wrapper.querySelector('path[data-chart-id]')?.dataset.chartId;
+                if (!chartId) return;
+                
+                const tipBox = wrapper.querySelector(`#donut-tooltip-${chartId}`);
+                if (!tipBox) return;
+                
+                wrapper.querySelectorAll('path[data-tip]').forEach(path => {
+                    const color = path.dataset.color;
+                    
+                    path.addEventListener('pointerenter', e => {
+                        // 툴팁 내용 설정
+                        const tooltipContent = decodeURIComponent(path.dataset.tip);
+                        tipBox.innerHTML = tooltipContent;
+                        tipBox.style.opacity = '1';
+                        tipBox.style.transform = 'translateY(0)';
+                        tipBox.style.visibility = 'visible';
+                        
+                        // 심플한 호버 효과 - 두께만 증가 (간격 고려)
+                        path.style.strokeWidth = '22'; // 원래 18에서 22로
+                        path.style.opacity = '1';
+                        
+                        // 다른 세그먼트들 약간 흐리게
+                        wrapper.querySelectorAll('path[data-tip]').forEach(otherPath => {
+                            if (otherPath !== path) {
+                                otherPath.style.opacity = '0.4';
+                            }
+                        });
+                        
+                        // 초기 위치 설정
+                        updateTooltipPositionNew(e, wrapper, tipBox);
+                    });
+                    
+                    path.addEventListener('pointermove', e => {
+                        if (tipBox.style.opacity === '1') {
+                            updateTooltipPositionNew(e, wrapper, tipBox);
+                        }
+                    });
+                    
+                    path.addEventListener('pointerleave', () => {
+                        tipBox.style.opacity = '0';
+                        tipBox.style.transform = 'translateY(-8px)';
+                        tipBox.style.visibility = 'hidden';
+                        
+                        // 호버 효과 제거
+                        path.style.strokeWidth = '18'; // 원래 크기로
+                        path.style.opacity = '0.9';
+                        
+                        // 모든 세그먼트들 원상복구
+                        wrapper.querySelectorAll('path[data-tip]').forEach(otherPath => {
+                            otherPath.style.opacity = '0.9';
+                        });
+                    });
+                });
+            });
+        }
+        
+        // 새로운 툴팁 위치 업데이트 함수
+        function updateTooltipPositionNew(event, wrapper, tipBox) {
+            const rect = wrapper.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            // 툴팁이 차트 영역을 벗어나지 않도록 조정
+            let tooltipX = x + 12;
+            let tooltipY = y - 10;
+            
+            const tooltipRect = tipBox.getBoundingClientRect();
+            const wrapperWidth = rect.width;
+            const wrapperHeight = rect.height;
+            
+            // 오른쪽 경계 체크
+            if (tooltipX + tooltipRect.width > wrapperWidth) {
+                tooltipX = x - tooltipRect.width - 12;
+            }
+            
+            // 위쪽 경계 체크
+            if (tooltipY < 0) {
+                tooltipY = y + 20;
+            }
+            
+            // 아래쪽 경계 체크
+            if (tooltipY + tooltipRect.height > wrapperHeight) {
+                tooltipY = wrapperHeight - tooltipRect.height - 10;
+            }
+            
+            tipBox.style.left = `${tooltipX}px`;
+            tipBox.style.top = `${tooltipY}px`;
         }
 
         function closeStatsModal() {
