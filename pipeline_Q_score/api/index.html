@@ -1364,6 +1364,8 @@
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            line-height: 1.2;
+            text-align: center;
         }
 
         .chart-stat-desc {
@@ -3433,24 +3435,24 @@
             return `
                 <div class="chart-grid">
                     <div class="chart-stat">
-                        <div class="chart-stat-value" style="font-size: 18px;">+${avgGembaImprovement.toFixed(1)}</div>
-                        <div class="chart-stat-label">GEMBA 평균 개선</div>
+                        <div class="chart-stat-value" style="font-size: 24px;">+${avgGembaImprovement.toFixed(1)}</div>
+                        <div class="chart-stat-label">GEMBA<br>개선도</div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value" style="font-size: 18px;">${avgCometImprovement > 0 ? '+' : ''}${avgCometImprovement.toFixed(1)}%</div>
-                        <div class="chart-stat-label">COMET 평균 개선</div>
+                        <div class="chart-stat-value" style="font-size: 24px;">${avgCometImprovement > 0 ? '+' : ''}${avgCometImprovement.toFixed(1)}%</div>
+                        <div class="chart-stat-label">COMET<br>개선도</div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value" style="font-size: 18px;">${avgCosineImprovement > 0 ? '+' : ''}${avgCosineImprovement.toFixed(1)}%</div>
-                        <div class="chart-stat-label">Cosine 평균 개선</div>
+                        <div class="chart-stat-value" style="font-size: 24px;">${avgCosineImprovement > 0 ? '+' : ''}${avgCosineImprovement.toFixed(1)}%</div>
+                        <div class="chart-stat-label">COSINE<br>개선도</div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value">${recordsWithApe.toLocaleString()}</div>
-                        <div class="chart-stat-label">APE 적용 문장</div>
+                        <div class="chart-stat-value" style="font-size: 24px;">${recordsWithApe.toLocaleString()}</div>
+                        <div class="chart-stat-label">편집 적용<br>문장</div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value">${meaningfulImprovementRate}%</div>
-                        <div class="chart-stat-label">품질등급 상승률</div>
+                        <div class="chart-stat-value" style="font-size: 24px;">${meaningfulImprovementRate}%</div>
+                        <div class="chart-stat-label">품질등급<br>상승률</div>
                     </div>
                 </div>
                 

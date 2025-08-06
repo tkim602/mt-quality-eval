@@ -32,20 +32,19 @@ class TagType(str, Enum):
     fail = "fail"
 
 evaluation_data: List[Dict[Any, Any]] = []
-global_stats: Dict[str, Dict[str, float]] = {}
 
+# Q-score configuration
 FAIL_GATE_CONDITIONS = {
     'gemba_min': 50,
     'comet_min': 0.50,
     'cos_min': 0.50
 }
 
-def compute_global_stats_from_data(data: List[Dict[Any, Any]]) -> Dict[str, Dict[str, float]]:
-    """Compute global statistics from actual data, excluding no_parse cases"""
-    import statistics
-    
-    normal_data = [record for record in data 
-                   if record.get('flag', {}).get('gemba_reason') != 'no_parse']
+global_stats = None
+
+def compute_global_stats(data: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
+    """Compute global statistics for Z-score normalization"""
+    normal_data = [record for record in data if record.get('flag', {}).get('gemba_reason') != 'no_parse']
     
     if not normal_data:
         return {
@@ -67,8 +66,8 @@ def compute_global_stats_from_data(data: List[Dict[Any, Any]]) -> Dict[str, Dict
     
     return stats
 
-
 def check_fail_gate(cos: float, comet: float, gemba: float, is_no_parse: bool = False) -> bool:
+    """Check if record passes fail gate conditions"""
     if cos < FAIL_GATE_CONDITIONS['cos_min']:
         return True
     if comet < FAIL_GATE_CONDITIONS['comet_min']:
@@ -78,6 +77,7 @@ def check_fail_gate(cos: float, comet: float, gemba: float, is_no_parse: bool = 
     return False
 
 def calculate_weighted_q_score(gemba: float, comet: float, cos: float, gemba_reason: str = None) -> float:
+    """Calculate Q-score using weighted Z-scores"""
     global global_stats
     
     if not global_stats:
@@ -94,6 +94,7 @@ def calculate_weighted_q_score(gemba: float, comet: float, cos: float, gemba_rea
     
     if is_no_parse:
         q_score = (0.4 * z_cos) + (0.6 * z_comet)
+        q_score *= 0.95  # 5% penalty for no_parse
     else:
         z_gemba = (gemba - global_stats['gemba']['mean']) / global_stats['gemba']['std']
         q_score = (0.2 * z_cos) + (0.3 * z_comet) + (0.5 * z_gemba)
@@ -101,39 +102,37 @@ def calculate_weighted_q_score(gemba: float, comet: float, cos: float, gemba_rea
     return q_score
 
 def get_quality_grade_by_scores(gemba: float, comet: float, cos: float, q_score: float = None, tag: str = None, gemba_reason: str = None) -> str:
- 
-    if tag and tag in ["fail", "soft_pass", "strict_pass"]:
-        if tag == "fail":
-            return "poor" 
-        elif tag == "soft_pass":
-            return "good" 
-        elif tag == "strict_pass":
-            return "very_good" 
+    """Get quality grade using Q-score based logic"""
     
     is_no_parse = (gemba_reason == "no_parse")
     actual_gemba = gemba if not is_no_parse else 0.0
     
+    # Check fail gate conditions first
     if check_fail_gate(cos, comet, actual_gemba, is_no_parse):
         return "poor"  
     
+    # Calculate Q-score if not provided
     if q_score is None:
         q_score = calculate_weighted_q_score(gemba, comet, cos, gemba_reason)
     
+    # Q-score based quality grading (PRIMARY METHOD)
     if q_score >= 0.6:
-        return "excellent"   
+        return "excellent"   # 매우우수
     elif q_score >= 0.25:
-        return "very_good"    
+        return "very_good"   # 우수
     elif q_score >= -0.1:
-        return "good"          
+        return "good"        # 양호
     elif q_score >= -0.6:
-        return "poor"     
+        return "poor"        # 나쁨
     else:
-        return "poor"  
+        return "very_poor"   # 매우나쁨
 
 def calculate_meaningful_improvement_rate() -> float:
+    """품질등급이 상승한 케이스의 비율을 계산 - 3개 메트릭 종합 기준"""
     if not evaluation_data:
         return 0.0
     
+    # APE가 적용된 레코드들만 필터링 (delta 값이 하나라도 있는 경우)
     ape_records = [r for r in evaluation_data if "ape" in r and 
                    ("delta_gemba" in r or "delta_comet" in r or "delta_cos" in r)]
     
@@ -144,31 +143,46 @@ def calculate_meaningful_improvement_rate() -> float:
     debug_info = []
     
     for record in ape_records:
+        # 원본 점수들
         original_gemba = record.get("gemba", 0)
         original_comet = record.get("comet", 0)
         original_cos = record.get("cos", 0)
         
+        # Delta 값들 (기본값 0)
         delta_gemba = record.get("delta_gemba", 0)
         delta_comet = record.get("delta_comet", 0)
         delta_cos = record.get("delta_cos", 0)
         
+        # 개선 후 점수들
         improved_gemba = original_gemba + delta_gemba
         improved_comet = original_comet + delta_comet
         improved_cos = original_cos + delta_cos
         
-        original_q_score = record.get("q_score")
-        original_tag = record.get("tag")
+        # 원본 품질등급과 개선 후 품질등급 계산
+        original_q_score = record.get("q_score", None)
+        original_tag = record.get("tag", None)
         original_gemba_reason = record.get("flag", {}).get("gemba_reason")
-        original_grade = get_quality_grade_by_scores(original_gemba, original_comet, original_cos, 
+        
+        # If no Q-score available, calculate it on the fly
+        if original_q_score is None:
+            original_q_score = calculate_weighted_q_score(original_gemba, original_comet, original_cos, original_gemba_reason)
+        
+        original_grade = get_quality_grade_by_scores(original_gemba, original_comet, original_cos,
                                                    q_score=original_q_score, tag=original_tag, 
                                                    gemba_reason=original_gemba_reason)
         
-        ape_q_score = record.get("ape_q_score")
-        ape_tag = record.get("ape_tag")
+        # Calculate improved Q-score if APE was applied
+        improved_q_score = record.get("ape_q_score", None)
+        
+        # If no APE Q-score available, calculate it on the fly
+        if improved_q_score is None:
+            improved_q_score = calculate_weighted_q_score(improved_gemba, improved_comet, improved_cos, original_gemba_reason)
+        
         improved_grade = get_quality_grade_by_scores(improved_gemba, improved_comet, improved_cos,
-                                                   q_score=ape_q_score, tag=ape_tag, 
+                                                   q_score=improved_q_score, 
                                                    gemba_reason=original_gemba_reason)
         
+        # 품질등급 순서 (숫자가 클수록 높은 등급)
         grade_order = {
             "very_poor": 1,
             "poor": 2,
@@ -177,10 +191,12 @@ def calculate_meaningful_improvement_rate() -> float:
             "excellent": 5
         }
         
+        # 품질등급이 올라간 경우만 카운트
         grade_improved = grade_order.get(improved_grade, 0) > grade_order.get(original_grade, 0)
         if grade_improved:
             improved_count += 1
         
+        # 디버깅 정보 수집 (모든 케이스 저장)
         debug_info.append({
             "key": record.get("key", "unknown"),
             "original_scores": f"G:{original_gemba:.0f}/C:{original_comet:.3f}/S:{original_cos:.3f}",
@@ -191,11 +207,13 @@ def calculate_meaningful_improvement_rate() -> float:
             "grade_improved": grade_improved
         })
     
+    # 디버깅 정보 출력
     print(f"\n=== 품질등급 상승률 계산 디버깅 (3개 메트릭 종합) ===")
     print(f"총 APE 레코드 수: {len(ape_records)}")
     print(f"품질등급 상승 케이스: {improved_count}")
     print(f"상승률: {(improved_count / len(ape_records)) * 100:.1f}%")
-
+    
+    # 등급별 분포 계산
     grade_distribution = {}
     improvement_by_grade = {}
     
@@ -203,8 +221,10 @@ def calculate_meaningful_improvement_rate() -> float:
         original = info['original_grade']
         improved = info['improved_grade']
         
+        # 원본 등급별 분포
         grade_distribution[original] = grade_distribution.get(original, 0) + 1
         
+        # 원본 등급별 개선 케이스
         if info['grade_improved']:
             improvement_by_grade[original] = improvement_by_grade.get(original, 0) + 1
     
@@ -215,6 +235,14 @@ def calculate_meaningful_improvement_rate() -> float:
         if total > 0:
             rate = (improved / total) * 100
             print(f"  {grade}: {total}개 중 {improved}개 개선 ({rate:.1f}%)")
+    
+    print(f"\n처음 30개 레코드 상세:")
+    for i, info in enumerate(debug_info[:30]):
+        print(f"  {info['key']}: {info['original_scores']} → {info['improved_scores']}")
+        print(f"    등급: {info['original_grade']} → {info['improved_grade']} {'✓' if info['grade_improved'] else '✗'}")
+    
+    if len(debug_info) > 30:
+        print(f"  ... (총 {len(debug_info)}개 중 30개만 표시)")
     
     print("="*50)
     
@@ -228,19 +256,28 @@ def get_quality_distribution_before_after() -> Dict[str, Any]:
     before_distribution = {"very_poor": 0, "poor": 0, "good": 0, "very_good": 0, "excellent": 0}
     after_distribution = {"very_poor": 0, "poor": 0, "good": 0, "very_good": 0, "excellent": 0}
     
+    # 모든 레코드에 대해 APE 이전/이후 품질등급 계산
     for record in evaluation_data:
+        # 원본 점수들
         original_gemba = record.get("gemba", 0)
         original_comet = record.get("comet", 0)
         original_cos = record.get("cos", 0)
         
-        original_q_score = record.get("q_score")
-        original_tag = record.get("tag")
+        # APE 이전 품질등급
+        original_q_score = record.get("q_score", None)
+        original_tag = record.get("tag", None)
         original_gemba_reason = record.get("flag", {}).get("gemba_reason")
+        
+        # If no Q-score available, calculate it on the fly
+        if original_q_score is None:
+            original_q_score = calculate_weighted_q_score(original_gemba, original_comet, original_cos, original_gemba_reason)
+        
         before_grade = get_quality_grade_by_scores(original_gemba, original_comet, original_cos,
-                                                 q_score=original_q_score, tag=original_tag, 
+                                                 q_score=original_q_score, tag=original_tag,
                                                  gemba_reason=original_gemba_reason)
         before_distribution[before_grade] += 1
-
+        
+        # APE가 적용된 경우 개선 후 점수 계산
         if "ape" in record and ("delta_gemba" in record or "delta_comet" in record or "delta_cos" in record):
             delta_gemba = record.get("delta_gemba", 0)
             delta_comet = record.get("delta_comet", 0)
@@ -250,13 +287,18 @@ def get_quality_distribution_before_after() -> Dict[str, Any]:
             improved_comet = original_comet + delta_comet
             improved_cos = original_cos + delta_cos
             
-            ape_q_score = record.get("ape_q_score")
-            ape_tag = record.get("ape_tag")
-            # APE 후에도 동일한 gemba_reason 사용
+            # Calculate improved Q-score if APE was applied
+            improved_q_score = record.get("ape_q_score", None)
+            
+            # If no APE Q-score available, calculate it on the fly
+            if improved_q_score is None:
+                improved_q_score = calculate_weighted_q_score(improved_gemba, improved_comet, improved_cos, original_gemba_reason)
+            
             after_grade = get_quality_grade_by_scores(improved_gemba, improved_comet, improved_cos,
-                                                    q_score=ape_q_score, tag=ape_tag, 
+                                                    q_score=improved_q_score,
                                                     gemba_reason=original_gemba_reason)
         else:
+            # APE가 적용되지 않은 경우 원본과 동일
             after_grade = before_grade
             
         after_distribution[after_grade] += 1
@@ -286,14 +328,15 @@ async def lifespan(app: FastAPI):
             evaluation_data = data
             print(f"Loaded {len(evaluation_data)} evaluation records (original format)")
         
-        # Compute global statistics from actual data
-        global_stats = compute_global_stats_from_data(evaluation_data)
-        print(f"Computed global stats: {global_stats}")
+        # Initialize global stats for Q-score calculation
+        if evaluation_data:
+            global_stats = compute_global_stats(evaluation_data)
+            print(f"Computed global stats: {global_stats}")
             
     except FileNotFoundError:
         print(f"Data file not found: {DATA_FILE}")
         evaluation_data = []
-        global_stats = {}
+        global_stats = None
     yield
 
 app = FastAPI(
@@ -338,6 +381,7 @@ async def get_records(
     limit: Optional[int] = Query(100, ge=1, le=10000),
     offset: Optional[int] = Query(0, ge=0)
 ):
+    """Get evaluation records with optional filtering"""
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
@@ -376,6 +420,7 @@ async def get_records(
 
 @app.get("/records/{key}")
 async def get_record_by_key(key: str):
+    """Get a specific record by its key"""
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
@@ -388,30 +433,59 @@ async def get_record_by_key(key: str):
 
 @app.get("/analytics")
 async def get_analytics():
+    """Get summary analytics of all evaluation data"""
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
+    # Basic statistics
     gemba_scores = [r.get("gemba", 0) for r in evaluation_data if "gemba" in r]
     comet_scores = [r.get("comet", 0) for r in evaluation_data if "comet" in r]
     cos_scores = [r.get("cos", 0) for r in evaluation_data if "cos" in r]
     
+    # Tag distribution
     tag_dist = {}
     for record in evaluation_data:
         tag = record.get("tag", "unknown")
         tag_dist[tag] = tag_dist.get(tag, 0) + 1
     
+    # Bucket distribution
     bucket_dist = {}
     for record in evaluation_data:
         bucket = record.get("bucket", "unknown")
         bucket_dist[bucket] = bucket_dist.get(bucket, 0) + 1
     
+    # APE effectiveness
     ape_records = [r for r in evaluation_data if "ape" in r]
     
     # Calculate Q-score improvements (delta_q_score = ape_q_score - q_score)
     delta_q_scores = []
     for r in ape_records:
-        if "ape_q_score" in r and "q_score" in r:
-            delta_q = r["ape_q_score"] - r["q_score"]
+        original_q_score = r.get("q_score", None)
+        ape_q_score = r.get("ape_q_score", None)
+        
+        # If either Q-score is missing, calculate them on the fly
+        if original_q_score is None:
+            original_gemba = r.get("gemba", 0)
+            original_comet = r.get("comet", 0)
+            original_cos = r.get("cos", 0)
+            original_gemba_reason = r.get("flag", {}).get("gemba_reason")
+            original_q_score = calculate_weighted_q_score(original_gemba, original_comet, original_cos, original_gemba_reason)
+        
+        if ape_q_score is None:
+            original_gemba = r.get("gemba", 0)
+            original_comet = r.get("comet", 0)
+            original_cos = r.get("cos", 0)
+            delta_gemba = r.get("delta_gemba", 0)
+            delta_comet = r.get("delta_comet", 0)
+            delta_cos = r.get("delta_cos", 0)
+            improved_gemba = original_gemba + delta_gemba
+            improved_comet = original_comet + delta_comet
+            improved_cos = original_cos + delta_cos
+            original_gemba_reason = r.get("flag", {}).get("gemba_reason")
+            ape_q_score = calculate_weighted_q_score(improved_gemba, improved_comet, improved_cos, original_gemba_reason)
+        
+        if original_q_score is not None and ape_q_score is not None:
+            delta_q = ape_q_score - original_q_score
             delta_q_scores.append(delta_q)
     
     ape_improvements = {
@@ -459,6 +533,7 @@ async def get_analytics():
 
 @app.get("/buckets/{bucket}")
 async def get_records_by_bucket(bucket: BucketType):
+    """Get all records for a specific text length bucket"""
     if not evaluation_data:
         raise HTTPException(status_code=503, detail="Data not loaded")
     
@@ -467,6 +542,7 @@ async def get_records_by_bucket(bucket: BucketType):
     if not bucket_records:
         raise HTTPException(status_code=404, detail=f"No records found for bucket '{bucket}'")
     
+    # Compute bucket statistics
     gemba_scores = [r.get("gemba", 0) for r in bucket_records]
     
     return {
