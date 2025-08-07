@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 레이더 차트 테스트</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #0a0e1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .radar-chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #252d3d;
+            border-radius: 16px;
+            border: 1px solid #30374a;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .radar-svg {
+            width: 400px;
+            height: 400px;
+            margin: 16px 0;
+        }
+
+        .radar-polygon {
+            fill: rgba(16, 185, 129, 0.3);
+            stroke: rgba(16, 185, 129, 0.8);
+            stroke-width: 2;
+        }
+
+        .radar-grid {
+            fill: none;
+            stroke: #30374a;
+            stroke-width: 1;
+            stroke-dasharray: 2,2;
+        }
+
+        .radar-axis {
+            stroke: #8b949e;
+            stroke-width: 1;
+        }
+
+        .radar-label {
+            fill: #ffffff;
+            font-size: 12px;
+            font-weight: 500;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .radar-point {
+            fill: rgba(16, 185, 129, 1);
+            stroke: white;
+            stroke-width: 2;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            width: 100%;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #30374a;
+        }
+
+        .chart-stat {
+            text-align: center;
+            padding: 8px;
+            background: #2a3441;
+            border-radius: 8px;
+        }
+
+        .chart-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #00d084;
+            margin-bottom: 4px;
+        }
+
+        .chart-stat-label {
+            font-size: 10px;
+            color: #8b949e;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="radar-chart-container">
+        <div style="text-align: center; margin-bottom: 16px;">
+            <h4 style="margin: 0 0 8px 0; color: #ffffff; font-size: 16px;">APE 전후 성능 비교 레이더 차트</h4>
+            <p style="margin: 0; color: #8b949e; font-size: 12px;">Mean 기준으로 APE 적용 전/후 성능 변화 시각화</p>
+        </div>
+        
+        <div id="radar-chart-content"></div>
+        
+        <div class="chart-grid">
+            <div class="chart-stat">
+                <div class="chart-stat-label">GEMBA</div>
+                <div class="chart-stat-value">+4.2</div>
+                <div style="font-size: 9px; color: #8b949e;">점 개선</div>
+            </div>
+            <div class="chart-stat">
+                <div class="chart-stat-label">COMET</div>
+                <div class="chart-stat-value">+3.5%</div>
+                <div style="font-size: 9px; color: #8b949e;">개선</div>
+            </div>
+            <div class="chart-stat">
+                <div class="chart-stat-label">COS</div>
+                <div class="chart-stat-value">+3.1%</div>
+                <div style="font-size: 9px; color: #8b949e;">개선</div>
+            </div>
+            <div class="chart-stat">
+                <div class="chart-stat-label">Q-Score</div>
+                <div class="chart-stat-value">+8.0%</div>
+                <div style="font-size: 9px; color: #8b949e;">증가</div>
+            </div>
+            <div class="chart-stat">
+                <div class="chart-stat-label">우수품질율</div>
+                <div class="chart-stat-value">+6.9%</div>
+                <div style="font-size: 9px; color: #8b949e;">향상</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // SVG 레이더 차트 생성 함수 (APE 전/후 비교)
+        function createRadarChart(beforeValues, afterValues, meanValues) {
+            const labels = ['GEMBA', 'COMET', 'COS', 'Q-Score', '우수품질율'];
+            const centerX = 200;
+            const centerY = 200;
+            const maxRadius = 150;
+            const angleStep = (2 * Math.PI) / 5;
+            
+            // mean 값을 기준으로 최대값 설정 (mean * 2.5를 최대값으로 사용)
+            const maxValues = meanValues.map(mean => mean * 2.5);
+            
+            // APE 전/후 값들을 mean 기준으로 정규화
+            const normalizedBefore = beforeValues.map((val, index) => {
+                const normalized = Math.abs(val) / maxValues[index] * maxRadius;
+                return Math.min(normalized, maxRadius);
+            });
+            
+            const normalizedAfter = afterValues.map((val, index) => {
+                const normalized = Math.abs(val) / maxValues[index] * maxRadius;
+                return Math.min(normalized, maxRadius);
+            });
+            
+            let svgContent = `
+                <svg class="radar-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 배경 격자 -->
+                    <g class="radar-grid-group">
+            `;
+            
+            // 동심원 격자 (5단계) - mean 기준으로 표시
+            for (let i = 1; i <= 5; i++) {
+                const radius = (maxRadius / 5) * i;
+                svgContent += `<circle cx="${centerX}" cy="${centerY}" r="${radius}" class="radar-grid"/>`;
+                
+                // 격자 단계별 배율 라벨 (mean의 배수로 표시)
+                const multiplier = (i * 0.5); // 0.5x, 1.0x, 1.5x, 2.0x, 2.5x mean
+                const labelX = centerX + radius * 0.7;
+                const labelY = centerY - radius * 0.7;
+                svgContent += `<text x="${labelX}" y="${labelY}" class="radar-grid-label" style="font-size: 10px; fill: #8b949e; opacity: 0.7;">${multiplier}×</text>`;
+            }
+            
+            // 축선 그리기
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2; // -90도부터 시작
+                const endX = centerX + Math.cos(angle) * maxRadius;
+                const endY = centerY + Math.sin(angle) * maxRadius;
+                svgContent += `<line x1="${centerX}" y1="${centerY}" x2="${endX}" y2="${endY}" class="radar-axis"/>`;
+            }
+            
+            svgContent += `</g>`;
+            
+            // APE 전 데이터 폴리곤 (회색, 반투명)
+            let beforePolygonPoints = '';
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const radius = normalizedBefore[i];
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                beforePolygonPoints += `${x},${y} `;
+            }
+            
+            svgContent += `<polygon points="${beforePolygonPoints}" style="fill: rgba(107, 114, 128, 0.2); stroke: rgba(107, 114, 128, 0.6); stroke-width: 2;"/>`;
+            
+            // APE 후 데이터 폴리곤 (초록색)
+            let afterPolygonPoints = '';
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const radius = normalizedAfter[i];
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                afterPolygonPoints += `${x},${y} `;
+            }
+            
+            svgContent += `<polygon points="${afterPolygonPoints}" class="radar-polygon"/>`;
+            
+            // APE 전 데이터 포인트 (회색)
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const radius = normalizedBefore[i];
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                
+                svgContent += `<circle cx="${x}" cy="${y}" r="3" style="fill: rgba(107, 114, 128, 0.8); stroke: white; stroke-width: 1;"/>`;
+            }
+            
+            // APE 후 데이터 포인트 (초록색)
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const radius = normalizedAfter[i];
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                
+                svgContent += `<circle cx="${x}" cy="${y}" r="4" class="radar-point"/>`;
+                
+                // 개선 수치 표시
+                const improvement = afterValues[i] - beforeValues[i];
+                const valueX = x + (x > centerX ? 15 : -15);
+                const valueY = y + (y > centerY ? 15 : -10);
+                const displayValue = improvement > 0 ? `+${improvement.toFixed(1)}` : improvement.toFixed(1);
+                svgContent += `<text x="${valueX}" y="${valueY}" class="radar-value-label" style="font-size: 11px; font-weight: 600; fill: #00d084; text-anchor: middle;">${displayValue}</text>`;
+            }
+            
+            // 라벨 (메트릭 이름)
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const labelRadius = maxRadius + 30;
+                const x = centerX + Math.cos(angle) * labelRadius;
+                const y = centerY + Math.sin(angle) * labelRadius;
+                svgContent += `<text x="${x}" y="${y}" class="radar-label">${labels[i]}</text>`;
+            }
+            
+            // 범례 (APE 전/후 구분 및 mean 값 표시)
+            svgContent += `
+                <g class="radar-legend" transform="translate(10, 320)">
+                    <text x="0" y="0" style="font-size: 10px; fill: #8b949e; font-weight: 500;">범례:</text>
+                    <circle cx="10" cy="15" r="3" style="fill: rgba(107, 114, 128, 0.8);"/>
+                    <text x="20" y="18" style="font-size: 9px; fill: #8b949e;">APE 전</text>
+                    <circle cx="80" cy="15" r="3" style="fill: rgba(16, 185, 129, 1);"/>
+                    <text x="90" y="18" style="font-size: 9px; fill: #8b949e;">APE 후</text>
+                    <text x="0" y="35" style="font-size: 9px; fill: #8b949e;">Mean 기준: GEMBA ${meanValues[0]}, COMET ${meanValues[1]}%, COS ${meanValues[2]}%, Q-Score ${meanValues[3]}%, 우수품질율 ${meanValues[4]}%</text>
+                </g>
+            `;
+            
+            svgContent += `</svg>`;
+            return svgContent;
+        }
+
+        // 테스트 데이터 (APE 전/후 비교)
+        const beforeApe = [65.2, 78.5, 82.3, 71.8, 45.2]; // GEMBA, COMET, COS, Q-Score, 우수품질율
+        const afterApe = [69.4, 82.0, 85.4, 79.8, 52.1];  // APE 적용 후
+        const meanValues = [67.0, 80.0, 83.5, 75.5, 48.0]; // 각 메트릭의 평균값
+        
+        document.getElementById('radar-chart-content').innerHTML = createRadarChart(beforeApe, afterApe, meanValues);
+        
+        // 실제 데이터 표시를 위해 통계값도 업데이트
+        const stats = document.querySelectorAll('.chart-stat-value');
+        stats[0].textContent = '+4.2'; // GEMBA 개선
+        stats[1].textContent = '+3.5%'; // COMET 개선
+        stats[2].textContent = '+3.1%'; // COS 개선  
+        stats[3].textContent = '+8.0%'; // Q-Score 개선
+        stats[4].textContent = '+6.9%'; // 우수품질율 개선
+        
+        // 추가 정보 표시
+        console.log('APE 전:', beforeApe);
+        console.log('APE 후:', afterApe);
+        console.log('개선량:', afterApe.map((val, i) => val - beforeApe[i]));
+        console.log('Mean 값:', meanValues);
+    </script>
+</body>
+</html>

@@ -46,19 +46,17 @@ FAIL_GATE_CONDITIONS = {
 
 global_stats = None
 
-# GPT 클라이언트 초기화
 load_dotenv()
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def compute_global_stats(data: List[Dict[str, Any]]) -> Dict[str, Dict[str, float]]:
-    """Compute global statistics for Z-score normalization"""
     normal_data = [record for record in data if record.get('flag', {}).get('gemba_reason') != 'no_parse']
     
     if not normal_data:
         return {
-            'comet': {'mean': 0.828, 'std': 0.036},
-            'cos': {'mean': 0.859, 'std': 0.048},
-            'gemba': {'mean': 80.0, 'std': 8.944}
+            'comet': {'mean': 0.0, 'std': 0.0},
+            'cos': {'mean': 0.0, 'std': 0.0},
+            'gemba': {'mean': 0.0, 'std': 0.0}
         }
     
     stats = {}
@@ -75,7 +73,6 @@ def compute_global_stats(data: List[Dict[str, Any]]) -> Dict[str, Dict[str, floa
     return stats
 
 def check_fail_gate(cos: float, comet: float, gemba: float, is_no_parse: bool = False) -> bool:
-    """Check if record passes fail gate conditions"""
     if cos < FAIL_GATE_CONDITIONS['cos_min']:
         return True
     if comet < FAIL_GATE_CONDITIONS['comet_min']:
@@ -85,7 +82,6 @@ def check_fail_gate(cos: float, comet: float, gemba: float, is_no_parse: bool = 
     return False
 
 def calculate_weighted_q_score(gemba: float, comet: float, cos: float, gemba_reason: str = None) -> float:
-    """Calculate Q-score using weighted Z-scores"""
     global global_stats
     
     if not global_stats:
@@ -110,7 +106,6 @@ def calculate_weighted_q_score(gemba: float, comet: float, cos: float, gemba_rea
     return q_score
 
 def get_quality_grade_by_scores(gemba: float, comet: float, cos: float, q_score: float = None, tag: str = None, gemba_reason: str = None) -> str:
-    """Get quality grade using Q-score based logic"""
     
     is_no_parse = (gemba_reason == "no_parse")
     actual_gemba = gemba if not is_no_parse else 0.0

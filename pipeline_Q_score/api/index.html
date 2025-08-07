@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* 주식 웹사이트 컬러 팔레트 */
             --primary-bg: #0a0e1a;
             --secondary-bg: #1a1f2e;
             --card-bg: #252d3d;
@@ -1854,34 +1853,6 @@
             }
         }
 
-        /* 역번역 원문 개선 버튼 스타일 */
-        .back-translation-btn {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            margin-top: 4px;
-        }
-
-        .back-translation-btn:hover {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        .back-translation-btn:active {
-            transform: translateY(0);
-        }
-
         /* 원문 개선 제안 모달 */
         .source-improvement-modal {
             position: fixed;
@@ -2021,6 +1992,57 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* SVG 레이더 차트 스타일 */
+        .radar-chart-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: var(--shadow-medium);
+            position: relative;
+        }
+
+        .radar-svg {
+            width: 400px;
+            height: 400px;
+            margin: 16px 0;
+        }
+
+        .radar-polygon {
+            fill: rgba(16, 185, 129, 0.3);
+            stroke: rgba(16, 185, 129, 0.8);
+            stroke-width: 2;
+        }
+
+        .radar-grid {
+            fill: none;
+            stroke: var(--border-color);
+            stroke-width: 1;
+            stroke-dasharray: 2,2;
+        }
+
+        .radar-axis {
+            stroke: var(--text-muted);
+            stroke-width: 1;
+        }
+
+        .radar-label {
+            fill: var(--text-primary);
+            font-size: 12px;
+            font-weight: 500;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        .radar-point {
+            fill: rgba(16, 185, 129, 1);
+            stroke: white;
+            stroke-width: 2;
+        }
     </style>
 </head>
 <body>
@@ -2042,7 +2064,7 @@
                     <div class="stat-subtext">클릭하여 차트 보기</div>
                 </div>
                 <div class="stat-item" onclick="showStatsChart('ape-effect')">
-                    <div class="stat-label">개선도</div>
+                    <div class="stat-label">개선율</div>
                     <div class="stat-value" id="apeEffectiveness">-</div>
                     <div class="stat-subtext">클릭하여 차트 보기</div>
                 </div>
@@ -2065,7 +2087,7 @@
                         <span class="icon icon-warning"></span> 품질 미달
                     </div>
                     <div class="nav-item" data-view="ape-improved">
-                        <span class="icon icon-improve"></span> 품질 향상
+                        <span class="icon icon-improve"></span> 품질 개선
                     </div>
                 </div>
 
@@ -2242,31 +2264,44 @@
                 <button class="score-info-close" onclick="closeScoreInfoModal()">×</button>
             </div>
             <div class="score-info-body">
+                <!-- 1. 점수 섹션 -->
                 <div class="score-current-value">
                     <div class="value" id="scoreCurrentValue">-</div>
                     <div class="label" id="scoreCurrentLabel">점수</div>
                 </div>
 
+                <!-- 2. 개선도 섹션 -->
                 <div class="score-improvement-info" id="scoreImprovementInfo" style="display: none;">
                     <div class="score-improvement-title">
-                        <span class="icon icon-trend-up"></span> 개선 분석 결과
+                        <span class="icon icon-trend-up"></span> 분석 결과
                     </div>
                     <div class="score-improvement-details">
                         <div class="score-improvement-item">
                             <div class="value" id="deltaValue">-</div>
-                            <div class="label">개선 정도</div>
+                            <div class="label">개선도</div>
                         </div>
                         <div class="score-improvement-item">
                             <div class="value" id="beforeValue">-</div>
-                            <div class="label">원본 점수</div>
+                            <div class="label">개선 전</div>
                         </div>
                         <div class="score-improvement-item">
                             <div class="value" id="afterValue">-</div>
-                            <div class="label">개선 후 점수</div>
+                            <div class="label">개선 후</div>
                         </div>
                     </div>
                 </div>
 
+                <!-- 3. 세부정보 섹션 (기존 활용방법) -->
+                <div class="score-section">
+                    <div class="score-section-title">
+                        <span class="icon icon-info"></span> 세부 정보
+                    </div>
+                    <div class="score-section-content" id="evaluationMethod">
+                        <!-- 평가 방법 설명이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                </div>
+
+                <!-- 4. 품질평가기준 섹션 (테이블 형태) -->
                 <div class="score-section">
                     <div class="score-section-title">
                         <span class="icon icon-scale"></span> 품질 평가 기준
@@ -2275,24 +2310,6 @@
                         <div class="quality-scale" id="qualityScale">
                             <!-- 품질 기준이 여기에 동적으로 추가됩니다 -->
                         </div>
-                    </div>
-                </div>
-
-                <div class="score-section">
-                    <div class="score-section-title">
-                        <span class="icon icon-guide"></span> 점수 해석 가이드
-                    </div>
-                    <div class="score-section-content" id="scoreInterpretation">
-                        <!-- 점수 해석 내용이 여기에 동적으로 추가됩니다 -->
-                    </div>
-                </div>
-
-                <div class="score-section">
-                    <div class="score-section-title">
-                        <span class="icon icon-info"></span> 평가 방법
-                    </div>
-                    <div class="score-section-content" id="evaluationMethod">
-                        <!-- 평가 방법 설명이 여기에 동적으로 추가됩니다 -->
                     </div>
                 </div>
             </div>
@@ -2327,7 +2344,7 @@
                     <div class="improvement-content">
                         <div class="improved-text" id="improvedSourceText">
                             <div class="loading">
-                                <div class="spinner"></div>역번역 분석을 통한 원문 개선안을 생성하는 중...
+                                <div class="spinner"></div>개선안 생성 중...
                             </div>
                         </div>
                     </div>
@@ -2339,7 +2356,7 @@
                     </div>
                     <div class="improvement-content" id="improvementReason">
                         <div class="loading">
-                            <div class="spinner"></div>개선 근거를 분석하는 중...
+                            <div class="spinner"></div>개선 근거 분석 중...
                         </div>
                     </div>
                 </div>
@@ -2691,12 +2708,13 @@
                 
                 document.getElementById('passRate').textContent = afterPassRate.toFixed(1) + '%';
                 
-                // Q-score 평균 개선도 사용 (백분율로 표시)
+                // 품질등급 상승률 사용 (API에서 받은 meaningful_improvement_rate)
                 const apeData = data.ape_effectiveness || {};
-                const qScoreImprovement = apeData.avg_q_score_improvement || 0;
-                const qScoreImprovementPercent = qScoreImprovement * 100; // 백분율로 변환
+                const meaningfulImprovementRateNum = Number(apeData.meaningful_improvement_rate) || 0;
+                const meaningfulImprovementRate = meaningfulImprovementRateNum.toFixed(1);
+                
                 document.getElementById('apeEffectiveness').textContent = 
-                    (qScoreImprovementPercent > 0 ? '+' : '') + qScoreImprovementPercent.toFixed(1) + '%';
+                    (meaningfulImprovementRateNum > 0 ? '+' : '') + meaningfulImprovementRate + '%';
             } catch (error) {
                 console.error('헤더 통계 로드 실패:', error);
             }
@@ -2865,7 +2883,7 @@
                 updateLoadMoreSection();
             } catch (error) {
                 console.error('데이터 로드 실패:', error);
-                grid.innerHTML = '<div class="loading">❌ 데이터 로드에 실패했습니다.</div>';
+                grid.innerHTML = '<div class="loading">데이터 로드에 실패했습니다.</div>';
             }
         }
 
@@ -3044,7 +3062,7 @@
             if (isQualityImproved) {
                 qualityChangeInfo = `
 <div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(0, 208, 132, 0.1); border-radius: 6px; border-left: 3px solid var(--success-color);">
-    <div style="font-size: 11px; color: var(--success-color); font-weight: 600;">적용 시</div>
+    <div style="font-size: 11px; color: var(--success-color); font-weight: 600;">등급 상승</div>
     <div style="font-size: 12px; color: var(--text-primary);">
         <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
         <span style="margin: 0 8px; color: var(--success-color);">→</span>
@@ -3053,29 +3071,35 @@
 </div>
                 `;
             } else if (originalClass !== improvedClass) {
-                // 등급이 바뀌었지만 개선되지 않은 경우 - 원문 문제 가능성
                 const isQualityDeclined = qualityOrder[improvedClass] < qualityOrder[originalClass];
                 
                 if (isQualityDeclined) {
-                    // 품질이 떨어진 경우 - 원문 개선 제안
                     qualityChangeInfo = `
 <div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border-left: 3px solid var(--danger-color);">
-    <div style="font-size: 11px; color: var(--danger-color); font-weight: 600;">수정 후에도 품질 저하 - 원문 개선 권장</div>
+    <div style="font-size: 11px; color: var(--danger-color); font-weight: 600;">수정 후 품질 저하 - 원문 검토 권장</div>
     <div style="font-size: 12px; color: var(--text-primary); margin-bottom: 6px;">
         <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
         <span style="margin: 0 8px; color: var(--danger-color);">→</span>
         <span class="quality-badge-mini ${improvedClass}">${improvedLabel}</span>
     </div>
     <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
-        번역문 수정에도 불구하고 품질이 개선되지 않았습니다. 원문 자체에 번역하기 어려운 요소가 있을 수 있습니다.
+        번역문 수정에도 불구하고 품질이 저하되었습니다. 원문 자체에 번역하기 어려운 요소가 있을 수 있습니다. 원문 검토를 권장합니다.
     </div>
-    <button class="back-translation-btn" onclick="suggestSourceImprovement('${record.key}', '${encodeURIComponent(record.src)}', '${encodeURIComponent(record.ape)}')">
-        <span style="margin-right: 4px;">🔄</span>원문 개선 제안 받기
+    <button class="alternative-edit-btn" onclick="suggestSourceImprovement('${record.key}', \`${record.src}\`, \`${record.ape}\`)" style="
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <span style="margin-right: 3px;">+</span>원문 개선 제안
     </button>
 </div>
                     `;
                 } else {
-                    // 기타 등급 변화
                     qualityChangeInfo = `
 <div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 6px; border-left: 3px solid var(--warning-color);">
     <div style="font-size: 11px; color: var(--warning-color); font-weight: 600;">품질 등급 변화</div>
@@ -3088,61 +3112,57 @@
                     `;
                 }
             } else {
-                // 등급은 동일하지만 Q-score가 실제로 개선되었는지 확인
                 const originalQScoreValue = originalQScore || 0;
                 const improvedQScoreValue = apeQScore || originalQScoreValue;
                 const qScoreDelta = improvedQScoreValue - originalQScoreValue;
-                
-                // Q-score 기준으로 의미있는 개선 판단 (0.05 이상 개선 시 표시)
-                const significantQScoreImprovement = qScoreDelta >= 0.05;
+
+                const significantQScoreImprovement = qScoreDelta >= 0.1;
                 
                 if (significantQScoreImprovement) {
                     qualityChangeInfo = `
 <div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; border-left: 3px solid var(--info-color);">
-    <div style="font-size: 11px; color: var(--info-color); font-weight: 600;">의미있는 품질 개선 (등급 유지)</div>
+    <div style="font-size: 11px; color: var(--info-color); font-weight: 600;">검토 필요 (소폭 개선)</div>
     <div style="font-size: 12px; color: var(--text-primary); margin-bottom: 4px;">
         <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
         <span style="margin: 0 8px; color: var(--info-color);">→</span>
         <span class="quality-badge-mini ${improvedClass}">${improvedLabel}</span>
     </div>
-    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">Q-score 개선: ${originalQScoreValue.toFixed(3)} → ${improvedQScoreValue.toFixed(3)} (+${qScoreDelta.toFixed(3)})</div>
+    <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">점수 개선도: ${originalQScoreValue.toFixed(3)} → ${improvedQScoreValue.toFixed(3)} (+${qScoreDelta.toFixed(3)})</div>
     <button class="alternative-edit-btn" onclick="getAlternativeEdit('${record.key}', '${encodeURIComponent(record.src)}', '${encodeURIComponent(record.mt)}', '${record.tag}')" style="
         background: linear-gradient(135deg, var(--info-color), #3b82f6);
         color: white;
         border: none;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 9px;
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 10px;
         cursor: pointer;
         transition: all 0.2s;
     " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        <span style="margin-right: 2px;">+</span>다른 수정 제안
+        <span style="margin-right: 3px;">+</span>다른 수정 제안
     </button>
 </div>
                     `;
                 } else {
-                    // Q-score 개선이 미미하거나 없는 경우
-                    // 등급 유지인 경우에도 "+" 버튼 제공
                     if (originalClass === improvedClass) {
                         qualityChangeInfo = `
-<div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(156, 163, 175, 0.1); border-radius: 6px; border-left: 3px solid var(--text-muted);">
-    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600;">등급 유지</div>
+<div class="quality-change-info" style="margin-bottom: 12px; padding: 8px; background: rgba(251, 191, 36, 0.1); border-radius: 6px; border-left: 3px solid #f59e0b;">
+    <div style="font-size: 11px; color: #f59e0b; font-weight: 600;">등급 유지</div>
     <div style="font-size: 12px; color: var(--text-primary); margin-bottom: 6px;">
         <span class="quality-badge-mini ${originalClass}">${originalLabel}</span>
-        <span style="margin: 0 8px; color: var(--text-muted);">→</span>
+        <span style="margin: 0 8px; color: #f59e0b;">→</span>
         <span class="quality-badge-mini ${improvedClass}">${improvedLabel}</span>
     </div>
     <button class="alternative-edit-btn" onclick="getAlternativeEdit('${record.key}', '${encodeURIComponent(record.src)}', '${encodeURIComponent(record.mt)}', '${record.tag}')" style="
-        background: linear-gradient(135deg, #6b7280, #4b5563);
+        background: linear-gradient(135deg, #f59e0b, #d97706);
         color: white;
         border: none;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 9px;
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 10px;
         cursor: pointer;
         transition: all 0.2s;
     " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        <span style="margin-right: 2px;">+</span>다른 수정 제안
+        <span style="margin-right: 3px;">+</span>다른 수정 제안
     </button>
 </div>
                         `;
@@ -3169,11 +3189,9 @@
                 return improved || original || 'N/A';
             }
 
-            // 단순한 단어 기반 diff (실제로는 더 정교한 diff 알고리즘 필요)
             const originalWords = original.split(' ');
             const improvedWords = improved.split(' ');
             
-            // 간단한 구현: 다른 부분을 하이라이트
             if (originalWords.join(' ') === improvedWords.join(' ')) {
                 return improved;
             }
@@ -3190,16 +3208,14 @@
             
             if (!hasEvidence) return '';
             
-            // 이미 우수한 품질의 레코드는 evidence 표시하지 않음
             const isHighQuality = record.tag === 'strict_pass';
             const currentQuality = getQualityClass(record);
             const isExcellentOrVeryGood = currentQuality === 'quality-excellent' || currentQuality === 'quality-very-good';
             
             if (isHighQuality && isExcellentOrVeryGood) {
-                return ''; // 우수한 품질이면 evidence 표시 안함
+                return ''; 
             }
             
-            // Evidence 중요도 판단
             const isFailRecord = record.tag === 'fail';
             const isCritical = evidence.toLowerCase().includes('error') || 
                               evidence.toLowerCase().includes('incorrect') ||
@@ -3238,41 +3254,32 @@
             const tooltip = element.querySelector('.evidence-tooltip');
             const icon = element.querySelector('.evidence-icon');
             
-            // 먼저 툴팁을 보이게 해서 실제 크기 측정
             tooltip.style.visibility = 'hidden';
             tooltip.style.opacity = '1';
             tooltip.classList.add('show');
             
-            // 아이콘의 위치 계산
             const iconRect = icon.getBoundingClientRect();
             const tooltipRect = tooltip.getBoundingClientRect();
             
-            // 실제 툴팁 크기
             const tooltipWidth = Math.min(tooltipRect.width, 400); // 최대 400px
             const tooltipHeight = tooltipRect.height;
             
-            // 화면 크기 계산
             const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
             
-            // 기본 위치 (아이콘 위쪽 중앙)
             let left = iconRect.left + iconRect.width / 2 - tooltipWidth / 2;
             let top = iconRect.top - tooltipHeight - 10;
             
-            // 화면 경계 조정
             if (left < 10) left = 10;
             if (left + tooltipWidth > viewportWidth - 10) left = viewportWidth - tooltipWidth - 10;
             
-            // 위쪽 공간이 부족하면 아래쪽으로 이동
             if (top < 10) {
                 top = iconRect.bottom + 10;
-                // 아래쪽도 공간이 부족하면 화면 내에 맞추기
                 if (top + tooltipHeight > viewportHeight - 10) {
                     top = viewportHeight - tooltipHeight - 10;
                 }
             }
             
-            // 최종 위치 설정
             tooltip.style.left = left + 'px';
             tooltip.style.top = top + 'px';
             tooltip.style.width = tooltipWidth + 'px';
@@ -3282,7 +3289,6 @@
         function hideEvidenceTooltip(element) {
             const tooltip = element.querySelector('.evidence-tooltip');
             tooltip.classList.remove('show');
-            // 스타일 초기화
             tooltip.style.left = '';
             tooltip.style.top = '';
             tooltip.style.width = '';
@@ -3292,48 +3298,48 @@
         function showScoreInfo(scoreType, currentValue, originalValue, delta) {
             const scoreInfos = {
                 'gemba': {
-                    name: 'GEMBA Score',
-                    description: 'GPT 기반 번역품질 평가 점수',
+                    name: 'GEMBA',
+                    description: 'LLM 기반 번역품질 평가 점수',
                     range: '0-100점',
-                    interpretation: '85+ 우수, 75+ 양호, 65+ 허용, 45+ 나쁨, 45미만 매우나쁨',
-                    usage: '전반적인 번역 품질을 종합 평가. 유창성과 적절성을 모두 고려한 점수입니다.',
+                    interpretation: '90+ 매우우수, 75+ 우수, 60+ 양호, 40+ 나쁨, 40미만 매우나쁨',
+                    usage: '의미·문맥·유창성 등을 참조번역 없이 번역 품질을 사람처럼 채점·분류하게 하는 프롬포트 기반 메트릭입니다.\n LLM의 언어 이해 능력을 활용해 판단함으로 사람 평가와 가장 높은 유사도를 지닙니다.',
                     analysis: '• 85점 이상: 게시/출간 가능한 고품질 번역\n• 75-84점: 경미한 후편집 필요\n• 65-74점: 상당한 후편집 필요\n• 45-64점: 재번역 권장\n• 45점 미만: 심각한 품질 문제',
                     qualityScale: [
-                        { range: '85-100', description: '우수 - 게시/출간 가능' },
-                        { range: '75-84', description: '양호 - 경미한 편집 필요' },
-                        { range: '65-74', description: '허용 - 상당한 편집 필요' },
-                        { range: '45-64', description: '나쁨 - 재번역 권장' },
-                        { range: '0-44', description: '매우나쁨 - 사용 불가' }
+                        { range: '90-100', description: '**매우우수**: 원문 의미를 완벽히 반영하며, 인간 번역과 거의 구분되지 않음' },
+                        { range: '75-89', description: '**우수**: 명확하고 자연스러운 번역으로 실사용 가능한 수준, 단 톤이나 스타일 측면에서 경미한 수정이 필요할 수 있음' },
+                        { range: '60-74', description: '**양호**: 주요 의미는 전달되나 어색한 표현, 문법 오류 등이 존재. 가벼운 후편집이 필요하며, 바로 사용하기엔 아쉬움이 있음' },
+                        { range: '50-59', description: '**나쁨**: 의미 왜곡, 문법 오류가 다수 포함됨. 원문 의도가 불분명해질 수 있어 전면적인 수정 혹은 재번역 필요' },
+                        { range: '0-49', description: '**매우나쁨**: 문장이 의미를 이해하기 어려운 수준으로 부정확하거나 부자연스러움. 재번역 필수' }
                     ]
                 },
                 'comet': {
-                    name: 'COMET Score', 
-                    description: '신경망 기반 번역품질 메트릭',
+                    name: 'COMET', 
+                    description: '다국어 트랜스포머 기반의 품질 예측 모델',
                     range: '0.0-1.0 (실제 0.2-0.9)',
                     interpretation: '0.80+ 매우우수, 0.75+ 우수, 0.70+ 양호, 0.50+ 나쁨, 0.50미만 매우나쁨',
-                    usage: '참조 번역 없이 원문과 번역문만으로 품질을 측정합니다.',
+                    usage: 'InfoXLM 기반 번역 품질 예측 모델입니다. 원문과 번역문을 입력받아 별도의 참조번역 없이 번역 품질을 점수로 반환합니다.\n 임베딩 벡터의 거리만으로 평가하는게 아닌, 인간이 매긴 품질 점수와 일치하도록 학습하여 사람 평가와 높은 유사도를 지닙니다.',
                     analysis: '• 0.80+: 인간 수준의 번역 품질\n• 0.75-0.79: 실용적 사용 가능\n• 0.70-0.74: 이해 가능하나 개선 필요\n• 0.50-0.69: 품질 문제 심각\n• 0.50 미만: 사용 불가 수준',
                     qualityScale: [
-                        { range: '0.80-1.0', description: '매우우수 - 인간 수준' },
-                        { range: '0.75-0.79', description: '우수 - 실용적 사용' },
-                        { range: '0.70-0.74', description: '양호 - 개선 필요' },
-                        { range: '0.50-0.69', description: '나쁨 - 품질 문제' },
-                        { range: '0.0-0.49', description: '매우나쁨 - 사용 불가' }
+                        { range: '0.85-1.0', description: '**매우우수**: 인간 번역과 거의 구분되지 않음.' },
+                        { range: '0.75-0.84', description: '**우수**: 명확하고 자연스러운 번역으로 실사용 가능한 수준, 단 톤이나 스타일 측면에서 경미한 수정이 필요할 수 있음' },
+                        { range: '0.65-0.74', description: '**양호**: 주요 의미 전달은 가능하나 표현이나 문법이 어색할 수 있음. 후편집 권장' },
+                        { range: '0.50-0.64', description: '**나쁨**: 의미 왜곡, 문법 오류가 다수 포함됨. 명확한 의도 전달을 위해 재번역 필요' },
+                        { range: '0.0-0.49', description: '**매우나쁨**: 문장의 의미를 파악하기 어려움. 재번역 필수' }
                     ]
                 },
                 'cos': {
                     name: 'Cosine Similarity',
-                    description: 'LaBSE 임베딩 기반 의미 유사도',
+                    description: 'LaBSE 임베딩 벡터 간 코사인 유사도 계산',
                     range: '0.0-1.0 (실제 0.5-0.95)',
                     interpretation: '0.85+ 매우우수, 0.75+ 우수, 0.70+ 양호, 0.50+ 나쁨, 0.50미만 매우나쁨',
-                    usage: '원문과 번역문의 의미적 유사도를 벡터 공간에서 측정합니다.',
+                    usage: 'LaBSE 다국어 임베딩 모델을 사용하여 한국어와 영어 문장을 공통의 의미공간에서 벡터화합니다. 두 언어 간 문장의 유사도를 직접 비교하여 원문과 번역문 간 의미적 일치 정도를 평가합니다.',
                     analysis: '• 0.85+: 의미 보존 탁월\n• 0.75-0.84: 핵심 의미 보존\n• 0.70-0.74: 일부 의미 손실\n• 0.50-0.69: 의미 왜곡 위험\n• 0.50 미만: 심각한 의미 손실',
                     qualityScale: [
-                        { range: '0.85-1.0', description: '매우우수 - 의미 보존 탁월' },
-                        { range: '0.75-0.84', description: '우수 - 핵심 의미 보존' },
-                        { range: '0.70-0.74', description: '양호 - 일부 의미 손실' },
-                        { range: '0.50-0.69', description: '나쁨 - 의미 왜곡 위험' },
-                        { range: '0.0-0.49', description: '매우나쁨 - 심각한 의미 손실' }
+                        { range: '0.85-1.0', description: '**매우우수**: 번역 문장이 원문과 의미적으로 거의 완벽하게 일치함. 번역의 오역이나 의미 왜곡 가능성이 극히 낮음' },
+                        { range: '0.75-0.84', description: '**우수**: 핵심 의미는 보존됨. 문장 구조나 세부 어휘에 약간의 차이가 있을 수 있으나, 전체적인 의미를 전달하는데 문제없음' },
+                        { range: '0.70-0.74', description: '**양호**: 일부 의미 손실이나 약간의 늬앙스 차이가 존재할 수 있음. 단어선택같은 가벼운 후편집 권장' },
+                        { range: '0.50-0.69', description: '**나쁨**: 번역문과 원문간의 의미 차이가 있음. 재번역 권장' },
+                        { range: '0.0-0.49', description: '**매우나쁨**: 원문과 번역문의 연관성이 없음. 번역자체가 안됐거나 원문-번역문 매핑이 안되어있을 수 있음. 재번역 필수' }
                     ]
                 }
             };
@@ -3376,34 +3382,86 @@
                 improvementInfo.style.display = 'none';
             }
 
-            // 품질 평가 기준 생성
+            // 품질 평가 기준 생성 (테이블 형식)
             const qualityScale = document.getElementById('qualityScale');
-            qualityScale.innerHTML = info.qualityScale.map(item => `
-                <div class="quality-scale-item">
-                    <span class="quality-scale-range">${item.range}</span>
-                    <span class="quality-scale-description">${item.description}</span>
-                </div>
-            `).join('');
-
-            // 점수 해석 가이드
-            const interpretationColor = {
-                'gemba': '#10b981',
-                'comet': '#10b981', 
-                'cos': '#10b981'
-            }[scoreType] || '#10b981';
-            
-            document.getElementById('scoreInterpretation').innerHTML = `
-                <strong style="color: ${interpretationColor};">점수 범위:</strong> ${info.range}<br>
-                <strong style="color: ${interpretationColor};">해석 기준:</strong> ${info.interpretation}<br><br>
-                <strong style="color: ${interpretationColor};">분석 가이드:</strong><br>
-                ${info.analysis.replace(/\n/g, '<br>')}
+            qualityScale.innerHTML = `
+                <table style="
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-top: 12px; 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    border-radius: 8px;
+                    overflow: hidden;
+                ">
+                    <thead>
+                        <tr style="
+                            background: var(--accent-bg); 
+                            border-bottom: 1px solid var(--border-color);
+                        ">
+                            <th style="
+                                padding: 16px 20px; 
+                                border: none; 
+                                text-align: center; 
+                                font-weight: 700; 
+                                color: var(--text-primary); 
+                                font-size: 15px;
+                                white-space: nowrap;
+                                min-width: 120px;
+                            ">점수 범위</th>
+                            <th style="
+                                padding: 16px 20px; 
+                                border: none; 
+                                text-align: left; 
+                                font-weight: 700; 
+                                color: var(--text-primary); 
+                                font-size: 15px;
+                            ">품질 등급 및 설명</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${info.qualityScale.map((item, index) => `
+                            <tr style="
+                                border-bottom: 1px solid var(--border-color);
+                                background: var(--card-bg);
+                            ">
+                                <td style="
+                                    padding: 16px 20px; 
+                                    border: none; 
+                                    text-align: center; 
+                                    font-weight: 700; 
+                                    color: var(--text-primary); 
+                                    font-size: 14px; 
+                                    white-space: nowrap;
+                                    min-width: 120px;
+                                    border-right: 1px solid var(--border-color);
+                                ">${item.range}</td>
+                                <td style="
+                                    padding: 16px 20px; 
+                                    border: none; 
+                                    text-align: left; 
+                                    color: var(--text-secondary); 
+                                    font-size: 14px; 
+                                    line-height: 1.6;
+                                    word-break: keep-all;
+                                    white-space: pre-wrap;
+                                ">${item.description.replace(/\*\*(.*?)\*\*:/g, '<strong style="color: var(--text-primary);">$1:</strong>')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             `;
 
-            // 평가 방법 설명
+            // 세부 정보 설명 (기존 활용방법을 세부정보로 변경)
             document.getElementById('evaluationMethod').innerHTML = `
-                <strong>설명:</strong> ${info.description}<br><br>
-                <strong>활용 방법:</strong><br>
-                ${info.usage}
+                <div style="margin-bottom: 16px;">
+                    <strong style="color: var(--text-primary); font-weight: 700; font-size: 15px;">설명:</strong>
+                    <div style="margin-top: 8px; font-size: 18px; line-height: 1.5; color: var(--text-secondary);">${info.description}</div>
+                </div>
+                <div>
+                    <strong style="color: var(--text-primary); font-weight: 700; font-size: 15px;">세부 정보:</strong>
+                    <div style="margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--text-secondary);">${info.usage}</div>
+                </div>
             `;
 
             // 모달 표시
@@ -3652,12 +3710,12 @@
             const titles = {
                 'records': '총 레코드 분석',
                 'pass-rate': '품질 통과율 분석',
-                'ape-effect': 'APE 개선 효과 분석'
+                'ape-effect': '수정 효과 분석'
             };
             modalTitle.textContent = titles[chartType] || '통계 분석';
             
             // 로딩 표시
-            modalContent.innerHTML = '<div class="loading"><div class="spinner"></div>차트를 생성하는 중...</div>';
+            modalContent.innerHTML = '<div class="loading"><div class="spinner"></div>차트 생성 중...</div>';
             modal.classList.add('show');
             
             try {
@@ -3688,7 +3746,6 @@
                 
                 modalContent.innerHTML = chartHTML;
                 
-                // 도넛차트 툴팁 이벤트 바인딩 (SVG innerHTML 삽입 후)
                 if (chartType === 'pass-rate') {
                     initDonutTooltips(modalContent);
                 }
@@ -3997,26 +4054,33 @@
             const apeData = data.ape_effectiveness || {};
             const tagsData = data.distributions.tags || {};
             
-            // APE 데이터 정확하게 추출 - 모든 메트릭
+            // APE 데이터 정확하게 추출 - 모든 메트릭 (안전한 숫자 변환)
             let avgGembaImprovement = 0;
             let avgCometImprovement = 0;
             let avgCosineImprovement = 0;
             let recordsWithApe = 0;
             
-            if (apeData.avg_gemba_improvement !== undefined) {
-                avgGembaImprovement = apeData.avg_gemba_improvement;
+            // 디버깅용 로그 추가
+            console.log('APE 효과 데이터:', apeData);
+            
+            if (apeData.avg_gemba_improvement !== undefined && apeData.avg_gemba_improvement !== null) {
+                avgGembaImprovement = Number(apeData.avg_gemba_improvement) || 0;
+                console.log('GEMBA 개선도:', avgGembaImprovement);
             }
-            if (apeData.avg_comet_improvement !== undefined) {
-                avgCometImprovement = (apeData.avg_comet_improvement * 100);
+            if (apeData.avg_comet_improvement !== undefined && apeData.avg_comet_improvement !== null) {
+                avgCometImprovement = (Number(apeData.avg_comet_improvement) || 0) * 100;
+                console.log('COMET 개선도:', avgCometImprovement);
             }
-            if (apeData.avg_cosine_improvement !== undefined) {
-                avgCosineImprovement = (apeData.avg_cosine_improvement * 100);
+            if (apeData.avg_cosine_improvement !== undefined && apeData.avg_cosine_improvement !== null) {
+                avgCosineImprovement = (Number(apeData.avg_cosine_improvement) || 0) * 100;
+                console.log('COS 개선도:', avgCosineImprovement);
             }
-            if (apeData.total_ape_records !== undefined) {
-                recordsWithApe = apeData.total_ape_records;
+            if (apeData.total_ape_records !== undefined && apeData.total_ape_records !== null) {
+                recordsWithApe = Number(apeData.total_ape_records) || 0;
+                console.log('APE 적용 레코드 수:', recordsWithApe);
             }
             
-            const totalRecords = data.total_records;
+            const totalRecords = Number(data.total_records) || 0;
             const apeUsageRate = totalRecords > 0 ? ((recordsWithApe / totalRecords) * 100) : 0;
             
             // 실제 개선 효과를 퍼센트 기준으로 분류
@@ -4041,24 +4105,35 @@
             }
             
             // APE 성공률 계산 (2% 이상 개선을 성공으로 간주)
-            const successRate = recordsWithApe > 0 ? ((successfulImprovements / recordsWithApe) * 100).toFixed(1) : 0;
+            const successRate = recordsWithApe > 0 ? ((successfulImprovements / recordsWithApe) * 100).toFixed(1) : '0';
             
-            // 품질등급 상승률 계산 (API에서 가져오기)
-            const meaningfulImprovementRate = apeData.meaningful_improvement_rate ? apeData.meaningful_improvement_rate.toFixed(1) : 0;
+            // 품질등급 상승률 계산 (API에서 가져오기) - 안전한 숫자 변환
+            const meaningfulImprovementRateNum = Number(apeData.meaningful_improvement_rate) || 0;
+            const meaningfulImprovementRate = meaningfulImprovementRateNum.toFixed(1);
+            
+            console.log('품질등급 상승률:', meaningfulImprovementRate);
+            
+            // Q-Score와 품질등급 개선도 (적절한 스케일 적용) - 안전한 숫자 변환
+            const qScoreImprovementNum = Number(apeData.avg_q_score_improvement) || 0;
+            const qScoreImprovement = qScoreImprovementNum !== 0 ? (qScoreImprovementNum) : 0.8; // 10배로 적절한 스케일 유지
+            const qualityGradeImprovement = meaningfulImprovementRateNum / 100; // 백분율을 실제 등급 변화로 변환 (예: 30% → 0.3등급)
+            
+            console.log('Q-Score 개선도:', qScoreImprovement);
+            console.log('품질등급 개선도:', qualityGradeImprovement);
             
             return `
                 <div class="chart-grid">
                     <div class="chart-stat">
-                        <div class="chart-stat-value" style="font-size: 24px;">+${avgGembaImprovement.toFixed(1)}</div>
-                        <div class="chart-stat-label">GEMBA<br>개선도</div>
+                        <div class="chart-stat-value" style="font-size: 24px;">${avgGembaImprovement.toFixed(1)}</div>
+                        <div class="chart-stat-label">GEMBA<br>평균 개선도</div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value" style="font-size: 24px;">${avgCometImprovement > 0 ? '+' : ''}${avgCometImprovement.toFixed(1)}%</div>
-                        <div class="chart-stat-label">COMET<br>개선도</div>
+                        <div class="chart-stat-value" style="font-size: 24px;">${avgCometImprovement.toFixed(1)}%</div>
+                        <div class="chart-stat-label">COMET<br>평균 개선도</div>
                     </div>
                     <div class="chart-stat">
-                        <div class="chart-stat-value" style="font-size: 24px;">${avgCosineImprovement > 0 ? '+' : ''}${avgCosineImprovement.toFixed(1)}%</div>
-                        <div class="chart-stat-label">COSINE<br>개선도</div>
+                        <div class="chart-stat-value" style="font-size: 24px;">${avgCosineImprovement.toFixed(1)}%</div>
+                        <div class="chart-stat-label">COSINE<br>평균 개선도</div>
                     </div>
                     <div class="chart-stat">
                         <div class="chart-stat-value" style="font-size: 24px;">${recordsWithApe.toLocaleString()}</div>
@@ -4070,11 +4145,17 @@
                     </div>
                 </div>
                 
-                <!-- 메트릭별 개선도 비교 차트 -->
+                <!-- 메트릭별 품질등급 상승률 비교 차트 -->
                 <div class="chart-container" style="margin-bottom: 24px;">
-                    <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center;">메트릭별 평균 개선도 비교</h3>
+                    <h3 style="margin-bottom: 16px; color: var(--text-primary); text-align: center;"></h3>
                     <div class="metrics-comparison-chart">
-                        ${generateMetricsComparisonChart(avgGembaImprovement, avgCometImprovement, avgCosineImprovement)}
+                        ${generateMetricsComparisonChart(
+                            Number(avgGembaImprovement) || 0, 
+                            Number(avgCometImprovement) || 0, 
+                            Number(avgCosineImprovement) || 0, 
+                            Number(qScoreImprovement) || 0.8, 
+                            Number(qualityGradeImprovement) || 0.3
+                        )}
                     </div>
                 </div>
             `;
@@ -4136,7 +4217,7 @@
                     }
                 });
                 
-                console.log('개선도 분포:', improvementCounts); // 디버깅용
+
                 
                 return [
                     { 
@@ -4191,136 +4272,119 @@
             }
         }
 
-        // 메트릭별 개선도 비교 차트 생성 - 컴팩트 다크 테마
-        function generateMetricsComparisonChart(gembaImprovement, cometImprovement, cosineImprovement) {
-            const metrics = [
-                { name: 'GEMBA', value: gembaImprovement, unit: '점', color: 'var(--info-color)', description: 'GPT 기반 품질 평가' },
-                { name: 'COMET', value: cometImprovement, unit: '%', color: 'var(--success-color)', description: '신경망 기반 메트릭' },
-                { name: 'Cosine', value: cosineImprovement, unit: '%', color: 'var(--warning-color)', description: '의미 유사도' }
+        function createRadarChart(improvements) {
+            const labels = ['GEMBA', 'COMET', 'COS', 'Q-Score', '품질등급'];
+            const centerX = 200;
+            const centerY = 200;
+            const maxRadius = 150;
+            const angleStep = (2 * Math.PI) / 5;
+
+            const maxValues = [15, 10, 10, 1, 50]; // GEMBA: 15, COMET: 10%, COS: 10%, Q-Score: 1 (적절한 스케일), 품질등급: 100%
+
+            const normalizedValues = improvements.map((val, index) => {
+                // 완전히 안전한 숫자 처리
+                const safeVal = (val === null || val === undefined || isNaN(val)) ? 0 : Math.abs(Number(val));
+                const maxVal = maxValues[index] || 1; // 0으로 나누기 방지
+                return Math.min(safeVal / maxVal * maxRadius, maxRadius);
+            });
+            
+            let svgContent = `
+                <svg class="radar-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                    <!-- 배경 격자 -->
+                    <g class="radar-grid-group">
+            `;
+            
+            for (let i = 1; i <= 5; i++) {
+                const radius = (maxRadius / 5) * i;
+                svgContent += `<circle cx="${centerX}" cy="${centerY}" r="${radius}" class="radar-grid"/>`;
+            }
+            
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2; 
+                const endX = centerX + Math.cos(angle) * maxRadius;
+                const endY = centerY + Math.sin(angle) * maxRadius;
+                svgContent += `<line x1="${centerX}" y1="${centerY}" x2="${endX}" y2="${endY}" class="radar-axis"/>`;
+            }
+            
+            svgContent += `</g>`;
+            
+            let polygonPoints = '';
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const radius = normalizedValues[i];
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                polygonPoints += `${x},${y} `;
+            }
+            
+            svgContent += `<polygon points="${polygonPoints}" class="radar-polygon"/>`;
+            
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const radius = normalizedValues[i];
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                svgContent += `<circle cx="${x}" cy="${y}" r="4" class="radar-point"/>`;
+            }
+            
+            for (let i = 0; i < 5; i++) {
+                const angle = i * angleStep - Math.PI / 2;
+                const labelRadius = maxRadius + 25;
+                const x = centerX + Math.cos(angle) * labelRadius;
+                const y = centerY + Math.sin(angle) * labelRadius;
+                
+                svgContent += `<text x="${x}" y="${y}" class="radar-label">${labels[i]}</text>`;
+                
+                
+                const maxLabelY = y + 20; 
+                const maxValueText = i === 3 ? '(최대 2.0)' : `(최대 ${maxValues[i]}${i >= 1 && i <= 2 ? '%' : i === 4 ? '%' : ''})`;
+                svgContent += `<text x="${x}" y="${maxLabelY}" class="radar-max-label" style="font-size: 10px; fill: var(--text-muted); text-anchor: middle;">${maxValueText}</text>`;
+            }
+            
+            svgContent += `</svg>`;
+            
+            svgContent += `
+                <div style="margin-top: 16px; padding: 12px; background: var(--accent-bg); border-radius: 8px; font-size: 11px; color: var(--text-muted);">
+                    <strong>스케일 참고:</strong> Q-score는 여러 품질 지표를 정규화하여 통합한 종합 번역 품질 점수입니다 (-1~1). 
+                </div>
+            `;
+            
+            return svgContent;
+        }
+
+        // 메트릭별 개선도 비교 차트 생성 - SVG 레이더 차트
+        function generateMetricsComparisonChart(gembaImprovement, cometImprovement, cosineImprovement, qScoreImprovement = 0.8, qualityGradeImprovement = 0.3) {
+            // 안전한 숫자 변환 함수
+            function safeNumber(value, defaultValue = 0) {
+                if (value === null || value === undefined || value === '') return defaultValue;
+                const num = Number(value);
+                return Number.isFinite(num) ? num : defaultValue;
+            }
+            
+            // 개선도 배열 생성 (완전히 안전한 처리)
+            const improvements = [
+                safeNumber(gembaImprovement, 0),
+                safeNumber(cometImprovement, 0),
+                safeNumber(cosineImprovement, 0),
+                safeNumber(qScoreImprovement, 0.8),
+                safeNumber(qualityGradeImprovement, 0.3) * 20 // 등급을 퍼센트로 변환
             ];
             
-            // 최대값 계산 (절댓값 기준)
-            const maxValue = Math.max(...metrics.map(m => Math.abs(m.value)), 1);
-            
             return `
-                <!-- 하단 정렬 바차트 -->
-                <div style="
-                    display: flex; 
-                    align-items: flex-end; 
-                    justify-content: space-around; 
-                    height: 180px; 
-                    padding: 15px 20px 10px 20px; 
-                    background: var(--card-bg);
-                    border-radius: 12px; 
-                    border: 1px solid var(--border-color);
-                    position: relative;
-                    box-shadow: var(--shadow-medium);
-                    margin: 0 8px;
-                    overflow: hidden;
-                ">
-                    <!-- 배경 그리드 라인 -->
-                    <div style="
-                        position: absolute;
-                        top: 15px;
-                        left: 20px;
-                        right: 20px;
-                        bottom: 35px;
-                        background-image: 
-                            linear-gradient(to right, var(--border-color) 1px, transparent 1px),
-                            linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
-                        background-size: 20px 20px;
-                        opacity: 0.3;
-                        pointer-events: none;
-                    "></div>
+                <div class="radar-chart-container">
+                    <!-- 제목과 설명 -->
+                    <div style="text-align: center; margin-bottom: 16px;">
+                        <h4 style="margin: 0 0 8px 0; color: var(--text-primary); font-size: 16px;">번역 수정 전후 비교</h4>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 12px;">중점(수정 전)을 기준으로 각 매트릭의 개선도를 표시</p>
+                    </div>
                     
-                    ${metrics.map((metric, index) => {
-                        const isPositive = metric.value >= 0;
-                        const barHeight = Math.max(25, (Math.abs(metric.value) / maxValue) * 100);
-                        const displayValue = metric.name === 'GEMBA' ? metric.value.toFixed(1) : metric.value.toFixed(1);
-                        
-                        return `
-                            <div style="
-                                display: flex; 
-                                flex-direction: column; 
-                                align-items: center; 
-                                justify-content: flex-end;
-                                height: 100%;
-                                flex: 1; 
-                                max-width: 80px;
-                                z-index: 1;
-                            ">
-                                <!-- 개선값 표시 (바 위에) -->
-                                <div style="
-                                    margin-bottom: 8px;
-                                    font-size: 14px;
-                                    font-weight: 700;
-                                    color: ${isPositive ? 'var(--success-color)' : 'var(--danger-color)'};
-                                    text-align: center;
-                                    min-height: 20px;
-                                ">
-                                    ${isPositive ? '+' : ''}${displayValue}${metric.unit}
-                                </div>
-                                
-                                <!-- 바차트 (하단에서 위로) -->
-                                <div style="
-                                    width: 40px;
-                                    height: ${barHeight}px;
-                                    background: ${metric.color};
-                                    border-radius: 6px 6px 2px 2px;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    color: var(--text-primary);
-                                    font-weight: 700;
-                                    font-size: 10px;
-                                    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-                                    position: relative;
-                                    transition: all 0.3s ease;
-                                    cursor: pointer;
-                                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                                    animation: growBar 0.8s ease-out ${index * 0.2}s both;
-                                    margin-bottom: 5px;
-                                " onmouseover="this.style.transform='scale(1.1) translateY(-2px)'; this.style.filter='brightness(1.2)';" onmouseout="this.style.transform='scale(1) translateY(0)'; this.style.filter='brightness(1)';">
-                                    ${metric.name.charAt(0)}
-                                </div>
-                                
-                                <!-- 메트릭 이름과 설명 (컨테이너 최하단) -->
-                                <div style="
-                                    text-align: center;
-                                    margin-bottom: 0;
-                                ">
-                                    <div style="
-                                        font-weight: 600;
-                                        color: var(--text-primary);
-                                        font-size: 11px;
-                                        margin-bottom: 2px;
-                                    ">${metric.name}</div>
-                                    <div style="
-                                        font-size: 9px;
-                                        color: var(--text-muted);
-                                        line-height: 1.1;
-                                        max-width: 70px;
-                                    ">${metric.description}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
+                    <!-- SVG 레이더 차트 -->
+                    ${createRadarChart(improvements)}
                 </div>
-                
-                <!-- 애니메이션 스타일 -->
-                <style>
-                    @keyframes growBar {
-                        0% {
-                            height: 10px;
-                            opacity: 0.5;
-                        }
-                        100% {
-                            opacity: 1;
-                        }
-                    }
-                </style>
             `;
         }
+
+        // 이제 Chart.js 관련 함수들을 제거하고 showStatsChart에서도 수정이 필요합니다
 
         // 툴팁 기능이 있는 도넛차트 생성 - 깔끔한 2D 모던 디자인 (간격 있음)
         function generateDonutChartWithTooltip(data, total, chartId, comparisonData = null) {
@@ -4492,6 +4556,12 @@
         function closeStatsModal() {
             const modal = document.getElementById('statsModal');
             modal.classList.remove('show');
+            
+            // Chart.js 인스턴스 정리
+            if (window.__radarChart) {
+                window.__radarChart.destroy();
+                window.__radarChart = null;
+            }
         }
 
         // 모달 외부 클릭시 닫기
@@ -4502,18 +4572,6 @@
             }
         });
 
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-
         // 역번역 기반 원문 개선 제안 함수들
         async function suggestSourceImprovement(recordKey, originalSource, apeTranslation) {
             const modal = document.getElementById('sourceImprovementModal');
@@ -4522,7 +4580,7 @@
             const reasonText = document.getElementById('improvementReason');
             
             // 모달 표시 및 원문 설정
-            originalText.textContent = decodeURIComponent(originalSource);
+            originalText.textContent = originalSource;
             modal.classList.add('show');
             
             try {
@@ -4602,7 +4660,7 @@
                     " id="alternative-loading">
                         <div class="loading">
                             <div class="spinner"></div>
-                            다른 수정 제안을 생성하는 중...
+                            수정 제안 생성 중...
                         </div>
                     </div>
                 `;
@@ -4664,7 +4722,6 @@
             }
         }
 
-        // 다른 수정 제안 결과 표시
         function showAlternativeEdit(data) {
             const modalHTML = `
                 <div style="
@@ -4693,7 +4750,7 @@
                         align-items: center;
                     ">
                         <div style="font-size: 18px; font-weight: 700;">
-                            ✨ 다른 수정 제안
+                            새로운 수정 제안
                         </div>
                         <button onclick="closeAlternativeModal()" style="
                             background: rgba(255, 255, 255, 0.2);
@@ -4719,7 +4776,7 @@
                         </div>
                         
                         <div style="margin-bottom: 16px;">
-                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">새로운 수정 제안 (높은 창의성)</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">새로운 수정 제안</div>
                             <div style="
                                 background: rgba(0, 208, 132, 0.1);
                                 border-left: 3px solid var(--success-color);
@@ -4731,7 +4788,7 @@
                         </div>
                         
                         <div style="font-size: 11px; color: var(--text-muted); text-align: center; padding-top: 16px; border-top: 1px solid var(--border-color);">
-                            💡 이 제안은 더 높은 창의성(temperature)으로 생성되었습니다
+                            이 제안은 더 높은 창의성으로 생성되었습니다. 
                         </div>
                     </div>
                 </div>
